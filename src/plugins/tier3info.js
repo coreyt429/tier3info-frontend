@@ -63,8 +63,10 @@ export async function tier3info_restful_request(request) {
   })
     .then((response) => {
       if (request.callback) {
+        console.log('Response data to callback:', response.data)
         request.callback(response.data)
       } else {
+        console.log('Response data to return:', response.data)
         return response.data
       }
     })

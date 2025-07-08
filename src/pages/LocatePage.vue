@@ -96,7 +96,7 @@ async function executeSearch() {
   console.log('Search Query:', searchQuery.value)
   // const response = await axios.get('https://todo.coreyt.com/locate')
   const request = {
-    method: 'GET',
+    method: 'POST',
     path: '/locate',
     body: {
       query_string: searchQuery.value,

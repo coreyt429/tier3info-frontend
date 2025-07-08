@@ -120,8 +120,11 @@ onMounted(async () => {
       path: '/menu',
     }
     const response = await tier3info_restful_request(request)
+    console.log('Menu links response:', response)
     linksList.value = response.data
+    console.log('Links list:', linksList.value)
     linksListFiltered.value = [...linksList.value]
+    console.log('Filtered links list:', linksListFiltered.value)
   } catch (error) {
     console.error('Error fetching menu links:', error)
   }
