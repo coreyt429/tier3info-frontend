@@ -2,101 +2,132 @@
   <q-layout view="lHh Lpr lFf">
     <q-header elevated>
       <q-toolbar>
-        <q-btn
-          flat
-          dense
-          round
-          icon="menu"
-          aria-label="Menu"
-          @click="toggleLeftDrawer"
-        />
+        <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
 
-        <q-toolbar-title>
-          Quasar App
-        </q-toolbar-title>
+        <q-toolbar-title> Voice Engineering Information Center </q-toolbar-title>
 
-        <div>Quasar v{{ $q.version }}</div>
+        <div>Tier3info v{{ appVersion }}</div>
       </q-toolbar>
     </q-header>
 
-    <q-drawer
-      v-model="leftDrawerOpen"
-      show-if-above
-      bordered
-    >
+    <q-drawer v-model="leftDrawerOpen" show-if-above bordered class="bg-warning">
       <q-list>
-        <q-item-label
-          header
-        >
-          Essential Links
-        </q-item-label>
-
-        <EssentialLink
-          v-for="link in linksList"
-          :key="link.title"
-          v-bind="link"
+        <!-- <q-item-label header> Menu </q-item-label> -->
+        <q-input
+          filled
+          dense
+          debounce="300"
+          v-model="filter"
+          placeholder="Search menu..."
+          class="q-mb-sm"
+          clearable
+          prepend-inner-icon="search"
+          @keyup.enter="onMenuEnter"
+          @update:model-value="onMenuSearchChange"
         />
+        <EssentialLink v-for="link in linksListFiltered" :key="link.title" v-bind="link" />
       </q-list>
     </q-drawer>
 
     <q-page-container>
       <router-view />
     </q-page-container>
+    <q-ajax-bar
+      :hijack-filter="myFilterFn"
+      ref="bar"
+      position="bottom"
+      color="accent"
+      size="10px"
+    />
   </q-layout>
 </template>
 
 <script setup>
+import { version as appVersion } from '../../package.json'
 import { ref } from 'vue'
 import EssentialLink from 'components/EssentialLink.vue'
 
-const linksList = [
-  {
-    title: 'Docs',
-    caption: 'quasar.dev',
-    icon: 'school',
-    link: 'https://quasar.dev'
-  },
-  {
-    title: 'Github',
-    caption: 'github.com/quasarframework',
-    icon: 'code',
-    link: 'https://github.com/quasarframework'
-  },
-  {
-    title: 'Discord Chat Channel',
-    caption: 'chat.quasar.dev',
-    icon: 'chat',
-    link: 'https://chat.quasar.dev'
-  },
-  {
-    title: 'Forum',
-    caption: 'forum.quasar.dev',
-    icon: 'record_voice_over',
-    link: 'https://forum.quasar.dev'
-  },
-  {
-    title: 'Twitter',
-    caption: '@quasarframework',
-    icon: 'rss_feed',
-    link: 'https://twitter.quasar.dev'
-  },
-  {
-    title: 'Facebook',
-    caption: '@QuasarFramework',
-    icon: 'public',
-    link: 'https://facebook.quasar.dev'
-  },
-  {
-    title: 'Quasar Awesome',
-    caption: 'Community Quasar projects',
-    icon: 'favorite',
-    link: 'https://awesome.quasar.dev'
+const filter = ref('')
+
+function onMenuEnter() {
+  console.log('Enter key pressed' + linksListFiltered.value.length)
+  if (linksListFiltered.value.length === 1) {
+    const singleLink = linksListFiltered.value[0]
+    if (singleLink.link) {
+      // Navigate to the link
+      console.log('Single link found. Navigating to:', singleLink.link)
+      window.location.href = singleLink.link
+    } else {
+      if (singleLink.children && singleLink.children.length === 1) {
+        let child = singleLink.children[0]
+        while (child.children && child.children.length === 1) {
+          child = child.children[0]
+        }
+        if (child.link) {
+          console.log('Navigating to child link:', child.link)
+          window.location.href = child.link
+        } else {
+          console.log('No valid link found in the child hierarchy.')
+        }
+      } else {
+        console.log('No single child or link found.')
+      }
+    }
+  } else {
+    console.log('Enter pressed. Filter value:', filter.value)
   }
-]
+}
+
+function onMenuSearchChange(val) {
+  // Now receives the latest value as 'val'
+  console.log('Key pressed. Filter value:', val)
+  const search = val.toLowerCase()
+
+  function filterLinks(links) {
+    return links
+      .map((item) => {
+        const matches =
+          item.title.toLowerCase().includes(search) ||
+          item.caption.toLowerCase().includes(search) ||
+          item.link.toLowerCase().includes(search)
+
+        if (item.children) {
+          const filteredChildren = filterLinks(item.children)
+          if (filteredChildren.length > 0 || matches) {
+            return { ...item, children: filteredChildren }
+          }
+        }
+
+        return matches ? { ...item } : null
+      })
+      .filter((item) => item !== null)
+  }
+
+  linksListFiltered.value = filterLinks(linksList.value)
+}
+
+import { onMounted } from 'vue'
+import axios from 'axios'
+
+const linksList = ref([])
+const linksListFiltered = ref([])
+onMounted(async () => {
+  try {
+    const response = await axios.get('https://todo.coreyt.com/menu')
+    linksList.value = response.data
+    linksListFiltered.value = [...linksList.value]
+  } catch (error) {
+    console.error('Error fetching menu links:', error)
+  }
+})
 
 const leftDrawerOpen = ref(false)
 
-function toggleLeftDrawer () {
+function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value
+}
+function myFilterFn() {
+  console.log('Ajax bar filter function called')
+  return true
 }
 </script>
