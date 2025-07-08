@@ -67,7 +67,7 @@ export async function tier3info_restful_request(request) {
         request.callback(response.data)
       } else {
         console.log('Response data to return:', response.data)
-        return response.data
+        return response
       }
     })
     .catch((error) => {
