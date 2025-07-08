@@ -81,12 +81,26 @@ const selectedItem = ref(null)
 const filter = ref('')
 const columns = [
   { name: 'id', required: true, label: 'ID', align: 'left', field: 'id', sortable: true },
-  { name: 'name', label: 'Name', align: 'left', field: 'name', sortable: true },
+  { name: 'cluster', label: 'Cluster', align: 'left', field: 'name', sortable: true },
   {
-    name: 'description',
-    label: 'Description',
+    name: 'enterprise_id',
+    label: 'Enterprise ID',
     align: 'left',
-    field: 'description',
+    field: 'enterprise_id',
+    sortable: true,
+  },
+  {
+    name: 'group_id',
+    label: 'Group ID',
+    align: 'left',
+    field: 'group_id',
+    sortable: true,
+  },
+  {
+    name: 'user_id',
+    label: 'User ID',
+    align: 'left',
+    field: 'user_id',
     sortable: true,
   },
 ]
@@ -105,7 +119,10 @@ async function executeSearch() {
   console.log('Request:', request)
   const response = await tier3info_restful_request(request)
   console.log('Response:', response)
-  rows.value = response.data
+  rows.value = Object.entries(response.data).map(([id, record]) => {
+    return { id, ...record }
+  })
+  console.log('Rows:', rows.value)
 }
 
 function selectItem(row) {

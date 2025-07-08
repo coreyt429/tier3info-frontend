@@ -121,8 +121,8 @@ onMounted(async () => {
     console.log('Menu links response:', response)
     linksList.value = response.data
     console.log('Links list:', linksList.value)
-    linksListFiltered.value = filterLinks(linksList.value)
-    console.log('Filtered links list:', linksListFiltered.value)
+    linksListFiltered.value = linksList.value // Initialize filtered list with all links
+    console.log('Initial filtered links list:', linksListFiltered.value)
   } catch (error) {
     console.error('Error fetching menu links:', error)
   }
