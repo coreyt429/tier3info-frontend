@@ -78,32 +78,30 @@ function onMenuEnter() {
   }
 }
 
+function filterLinks(links, filterValue = '') {
+  return links
+    .map((item) => {
+      const matches =
+        item.title.toLowerCase().includes(filterValue) ||
+        item.caption.toLowerCase().includes(filterValue) ||
+        item.link.toLowerCase().includes(filterValue)
+
+      if (item.children) {
+        const filteredChildren = filterLinks(item.children)
+        if (filteredChildren.length > 0 || matches) {
+          return { ...item, children: filteredChildren }
+        }
+      }
+
+      return matches ? { ...item } : null
+    })
+    .filter((item) => item !== null)
+}
+
 function onMenuSearchChange(val) {
   // Now receives the latest value as 'val'
   console.log('Key pressed. Filter value:', val)
-  const search = val.toLowerCase()
-
-  function filterLinks(links) {
-    return links
-      .map((item) => {
-        const matches =
-          item.title.toLowerCase().includes(search) ||
-          item.caption.toLowerCase().includes(search) ||
-          item.link.toLowerCase().includes(search)
-
-        if (item.children) {
-          const filteredChildren = filterLinks(item.children)
-          if (filteredChildren.length > 0 || matches) {
-            return { ...item, children: filteredChildren }
-          }
-        }
-
-        return matches ? { ...item } : null
-      })
-      .filter((item) => item !== null)
-  }
-
-  linksListFiltered.value = filterLinks(linksList.value)
+  linksListFiltered.value = filterLinks(linksList.value, val.toLowerCase())
 }
 
 import { onMounted } from 'vue'
@@ -123,7 +121,7 @@ onMounted(async () => {
     console.log('Menu links response:', response)
     linksList.value = response.data
     console.log('Links list:', linksList.value)
-    linksListFiltered.value = [...linksList.value]
+    linksListFiltered.value = filterLinks(linksList.value)
     console.log('Filtered links list:', linksListFiltered.value)
   } catch (error) {
     console.error('Error fetching menu links:', error)
