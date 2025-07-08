@@ -107,13 +107,19 @@ function onMenuSearchChange(val) {
 }
 
 import { onMounted } from 'vue'
-import axios from 'axios'
+// import axios from 'axios'
+import { tier3info_restful_request } from 'src/plugins/tier3info.js'
 
 const linksList = ref([])
 const linksListFiltered = ref([])
 onMounted(async () => {
   try {
-    const response = await axios.get('https://todo.coreyt.com/menu')
+    // const response = await axios.get('https://todo.coreyt.com/menu')
+    const request = {
+      method: 'GET',
+      path: '/menu',
+    }
+    const response = await tier3info_restful_request(request)
     linksList.value = response.data
     linksListFiltered.value = [...linksList.value]
   } catch (error) {

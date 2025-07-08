@@ -72,7 +72,8 @@
 <script setup>
 import { ref } from 'vue'
 import { exportFile, useQuasar } from 'quasar'
-import axios from 'axios'
+import { tier3info_restful_request } from 'src/plugins/tier3info.js'
+// import axios from 'axios'
 
 const searchQuery = ref('')
 const rows = ref([])
@@ -93,7 +94,17 @@ const visibleColumns = ref(columns.map((col) => col.name))
 const pagination = ref({ rowsPerPage: 0 })
 async function executeSearch() {
   console.log('Search Query:', searchQuery.value)
-  const response = await axios.get('https://todo.coreyt.com/locate')
+  // const response = await axios.get('https://todo.coreyt.com/locate')
+  const request = {
+    method: 'GET',
+    path: '/locate',
+    body: {
+      query_string: searchQuery.value,
+    },
+  }
+  console.log('Request:', request)
+  const response = await tier3info_restful_request(request)
+  console.log('Response:', response)
   rows.value = response.data
 }
 
