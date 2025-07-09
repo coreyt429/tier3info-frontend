@@ -5,11 +5,17 @@ var tier3info_preferences = null
 
 function get_session_id() {
   const cookies = document.cookie.split('; ')
+  console.log(cookies)
   for (let i = 0; i < cookies.length; i++) {
     const cookie = cookies[i].split('=')
+    console.log(cookie)
     if (cookie[0] == 'sessionId') {
       sessionId = cookie[1]
     }
+  } 
+  console.log(sessionId)
+  if(import.meta.env.VITE_TIER3INFO_API_KEY){
+    sessionId = import.meta.env.VITE_TIER3INFO_API_KEY
   }
   return sessionId
 }
@@ -44,18 +50,17 @@ export async function tier3info_restful_request(request) {
       fetchOptions.body = request.body
     }
   }
+  if (import.meta.env.VITE_TIER3INFO_API_BASE) {
+    request.path = import.meta.env.VITE_TIER3INFO_API_BASE + request.path
+  }
+
   console.log(request.path)
   console.log(fetchOptions)
-
   return axios({
     url: request.path,
     method: request.method,
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-      'Client-Identifier': 'tier3info_javascript',
-      Authorization: 'Bearer ' + get_session_id(),
-    },
+    headers: fetchOptions.headers,
+    withCredentials: true,
     data:
       request.method.toUpperCase() === 'POST' || request.method.toUpperCase() === 'PUT'
         ? request.body
@@ -71,6 +76,9 @@ export async function tier3info_restful_request(request) {
       }
     })
     .catch((error) => {
+      console.error('Axios error:', error)
+      console.error('Response:', error.response)
+      console.error('Request:', error.request)
       if (error.response) {
         const response = error.response
         if (response.status === 403) {

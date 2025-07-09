@@ -5,7 +5,7 @@
       :key="props.title"
       :clickable="!props.children || !props.children.length"
       :tag="!props.children || !props.children.length ? 'a' : undefined"
-      :target="!props.children || !props.children.length ? '_blank' : undefined"
+      :target="!props.children || !props.children.length ? props.target : undefined"
       :href="!props.children || !props.children.length ? props.link : undefined"
     >
       <q-item-section v-if="props.icon" avatar>
@@ -28,7 +28,7 @@
       :key="props.title + '-parent'"
       clickable="!props.children || !props.children.length"
       :tag="!props.children || !props.children.length ? 'a' : undefined"
-      :target="!props.children || !props.children.length ? '_blank' : undefined"
+      :target="!props.children || !props.children.length ? props.target : undefined"
       :href="!props.children || !props.children.length ? props.link : undefined"
     >
       <q-item-section>
@@ -74,6 +74,7 @@ const props = defineProps({
   caption: { type: String, default: '' },
   link: { type: String, default: '#' },
   icon: { type: String, default: '' },
+  target: { type: String, default: '' },
   children: { type: Array, default: () => [] },
   parent: { type: String, default: '' },
 })

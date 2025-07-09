@@ -1,6 +1,6 @@
 <template>
   <q-page class="flex flex-start">
-    <div class="q-pa-md bg-blue-grey-3" style="width: 100%; max-width: 800px">
+    <div class="q-pa-md bg-blue-grey-3" style="width: 100%;">
       <!-- Row 1: Search Input and Button -->
       <div class="row q-mb-md">
         <q-input
@@ -111,7 +111,7 @@ async function executeSearch() {
   // const response = await axios.get('https://todo.coreyt.com/locate')
   const request = {
     method: 'POST',
-    path: '/locate',
+    path: '/locate/',
     body: {
       query_string: searchQuery.value,
     },

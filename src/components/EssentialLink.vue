@@ -20,6 +20,10 @@ const props = defineProps({
     type: String,
     default: '#',
   },
+  target: {
+    type: String,
+    default: '',
+  },
   icon: {
     type: String,
     default: '',

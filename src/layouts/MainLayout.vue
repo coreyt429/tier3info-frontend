@@ -112,7 +112,6 @@ const linksList = ref([])
 const linksListFiltered = ref([])
 onMounted(async () => {
   try {
-    // const response = await axios.get('https://todo.coreyt.com/menu')
     const request = {
       method: 'GET',
       path: '/menu',
