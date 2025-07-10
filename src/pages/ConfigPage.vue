@@ -55,10 +55,10 @@
 <script setup>
 import { tier3info_restful_request } from 'src/plugins/tier3info.js'
 import { useRoute } from 'vue-router'
-import { reactive, ref, computed } from 'vue'
+import { reactive, ref, computed, watch } from 'vue'
 import { VAceEditor } from 'vue3-ace-editor'
 import 'src/plugins/ace-config'
-// import yaml from 'js-yaml'
+import yaml from 'js-yaml'
 // import { mdiBookOpenBlankVariant } from '@quasar/extras/mdi-v5'
 
 const states = reactive({
@@ -99,19 +99,19 @@ const buttons = ref([
 ])
 
 // Watch for changes to selectedOption and fetch YAML content
-// watch(selectedOption, async (option) => {
-//   console.log('Selected option changed:', option)
-//   if (option) {
-//     const response = await tier3info_restful_request({
-//       path: `${endpoint.value}/${option}`,
-//       method: 'GET',
-//     })
-//     console.log('Response from server:', response)
-//     const yaml_string = yaml.dump(response)
-//     console.log('YAML content:', yaml_string)
-//     states.content = yaml_string
-//   }
-// })
+watch(selectedOption, async (option) => {
+  console.log('Selected option changed:', option)
+  if (option) {
+    const response = await tier3info_restful_request({
+      path: `${endpoint.value}/${option}`,
+      method: 'GET',
+    })
+    console.log('Response from server:', response)
+    const yaml_string = yaml.dump(response)
+    console.log('YAML content:', yaml_string)
+    states.content = yaml_string
+  }
+})
 </script>
 
 <style lang="scss" scoped>
