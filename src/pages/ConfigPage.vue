@@ -99,6 +99,7 @@ const buttons = ref([
 
 // Watch for changes to selectedOption and fetch YAML content
 watch(selectedOption, async (option) => {
+  console.log('Selected option changed:', option)
   if (option) {
     const response = await tier3info_restful_request({
       path: `${endpoint.value}/${option}`,
