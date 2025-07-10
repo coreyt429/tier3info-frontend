@@ -54,9 +54,8 @@
 
 <script setup>
 import { tier3info_restful_request } from 'src/plugins/tier3info.js'
-import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { reactive } from 'vue'
+import { reactive, watch, ref, computed } from 'vue'
 import { VAceEditor } from 'vue3-ace-editor'
 import 'src/plugins/ace-config'
 // import yaml from 'js-yaml'
@@ -68,20 +67,20 @@ const states = reactive({
   content: '',
 })
 
-// watch(
-//   () => states.lang,
-//   async (lang) => {
-//     states.content = (
-//       await {
-//         json: import('../../package.json?raw'),
-//         javascript: import('../plugins/ace-config.js?raw'),
-//         html: import('../../index.html?raw'),
-//         yaml: import('../../test.yaml?raw'),
-//       }[lang]
-//     ).default
-//   },
-//   { immediate: true },
-// )
+watch(
+  () => states.lang,
+  async (lang) => {
+    states.content = (
+      await {
+        json: import('../../package.json?raw'),
+        javascript: import('../plugins/ace-config.js?raw'),
+        html: import('../../index.html?raw'),
+        yaml: import('../../test.yaml?raw'),
+      }[lang]
+    ).default
+  },
+  { immediate: true },
+)
 
 const route = useRoute()
 const title = computed(() => route.meta.title || 'Default Page Title')
