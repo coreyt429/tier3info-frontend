@@ -62,7 +62,9 @@ onMounted(() => {
 const filter = ref('')
 
 function onMenuEnter() {
+  console.log('onMenuEnter called with menu count:', filter.value.length)
   if (linksListFiltered.value.length === 1) {
+    console.log('Single link found, navigating to:', linksListFiltered.value[0].link)
     const singleLink = linksListFiltered.value[0]
     if (singleLink.link) {
       // Navigate to the link
@@ -83,7 +85,11 @@ function onMenuEnter() {
       }
     }
   } else if (linksListFiltered.value.length === 0) {
+    console.log('No links found, navigating to locate with query:', filter.value)
+    console.log('Navigating to locate with query:', encodeURIComponent(filter.value))
     window.location.href = `/#/locate?query=${encodeURIComponent(filter.value)}`
+  } else {
+    console.log('Multiple links found, not navigating:', linksListFiltered.value.length)
   }
 }
 
@@ -108,6 +114,7 @@ function filterLinks(links, filterValue = '') {
 }
 
 function onMenuSearchChange(val) {
+  console.log('onMenuSearchChange called with:', val)
   // Now receives the latest value as 'val'
   linksListFiltered.value = filterLinks(linksList.value, val.toLowerCase())
 }
