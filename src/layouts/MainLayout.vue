@@ -103,7 +103,7 @@ function filterLinks(links, filterValue = '') {
         item.link.toLowerCase().includes(filterValue)
 
       if (item.children) {
-        const filteredChildren = filterLinks(item.children)
+        const filteredChildren = filterLinks(item.children, filterValue)
         if (filteredChildren.length > 0 || matches) {
           return { ...item, children: filteredChildren }
         }
