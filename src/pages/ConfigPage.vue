@@ -63,7 +63,7 @@ import yaml from 'js-yaml'
 
 const states = reactive({
   lang: 'yaml',
-  theme: 'monokai',
+  theme: 'github_dark',
   content: '',
 })
 
