@@ -4,7 +4,7 @@
       <q-toolbar>
         <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
 
-        <q-toolbar-title> {{ mainTitle }} </q-toolbar-title>
+        <q-toolbar-title> {{ titleStore.mainTitle }} </q-toolbar-title>
 
         <div>Tier3info v{{ appVersion }}</div>
       </q-toolbar>
@@ -51,7 +51,11 @@ import { ref } from 'vue'
 import EssentialLink from 'components/EssentialLink.vue'
 import { useTitleStore } from 'stores/titleStore'
 const titleStore = useTitleStore()
-const mainTitle = titleStore.mainTitle
+titleStore.setMainTitle('Voice Engineering Information Center test21')
+// const mainTitle = titleStore.mainTitle
+titleStore.setMainTitle('Voice Engineering Information Center test22')
+
+// const mainTitle = ref('Voice Engineering Information Center')
 const filter = ref('')
 
 function onMenuEnter() {
