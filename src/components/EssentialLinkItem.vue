@@ -79,7 +79,7 @@ const props = defineProps({
   parent: { type: String, default: '' },
 })
 
-const isOpen = ref(false)
+const isOpen = ref(true)
 function toggle() {
   isOpen.value = !isOpen.value
 }

@@ -148,16 +148,23 @@ onMounted(async () => {
         caption: 'Go to homepage',
       },
       {
-        title: 'Locate',
-        icon: 'search',
-        link: '/#/locate',
-        caption: 'Find Stuff',
-      },
-      {
-        title: 'Configuration',
-        link: '/#/config',
-        icon: 'settings',
-        caption: 'Set stuff up',
+        title: 'Tools',
+        icon: 'build',
+        caption: 'Useful tools',
+        children: [
+          {
+            title: 'Locate',
+            icon: 'search',
+            link: '/#/locate',
+            caption: 'Find Stuff',
+          },
+          {
+            title: 'Configuration',
+            link: '/#/config',
+            icon: 'settings',
+            caption: 'Set stuff up',
+          },
+        ],
       },
     ]
     linksListFiltered.value = linksList.value
