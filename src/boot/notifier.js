@@ -12,23 +12,23 @@ export default ({ app }) => {
     let color
     switch (type) {
       case 'success':
-        color = 'green'
+        color = 'positive'
         break
       case 'positive':
-        color = 'green'
+        color = 'positive'
         break
       case 'error':
-        color = 'red'
+        color = 'negative'
         break
       case 'negative':
-        color = 'red'
+        color = 'negative'
         break
       case 'warning':
-        color = 'orange'
+        color = 'warning'
         break
       case 'info':
       default:
-        color = 'blue'
+        color = 'info'
         break
     }
 

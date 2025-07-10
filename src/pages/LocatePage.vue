@@ -73,6 +73,7 @@
 import { ref } from 'vue'
 import { exportFile, useQuasar } from 'quasar'
 import { tier3info_restful_request } from 'src/plugins/tier3info.js'
+import { locate_cache_key_fields } from 'src/plugins/locate.js'
 // import axios from 'axios'
 import { useTitleStore } from 'stores/titleStore'
 const titleStore = useTitleStore()
@@ -83,31 +84,83 @@ const rows = ref([])
 const selectedItem = ref(null)
 const filter = ref('')
 const columns = [
-  { name: 'id', required: true, label: 'ID', align: 'left', field: 'id', sortable: true },
+  { name: 'id', label: 'ID', align: 'left', field: 'id', sortable: true },
+  { name: 'type', label: 'Type', align: 'left', field: 'type', sortable: true },
+  { name: 'type_id', label: 'Id', align: 'left', field: 'type_id', sortable: true },
+
   { name: 'cluster', label: 'Cluster', align: 'left', field: 'name', sortable: true },
   {
     name: 'enterprise_id',
-    label: 'Enterprise ID',
+    label: 'Enterprise Id',
     align: 'left',
     field: 'enterprise_id',
     sortable: true,
   },
   {
     name: 'group_id',
-    label: 'Group ID',
+    label: 'Group Id',
     align: 'left',
     field: 'group_id',
     sortable: true,
   },
   {
     name: 'user_id',
-    label: 'User ID',
+    label: 'User Id',
     align: 'left',
     field: 'user_id',
     sortable: true,
   },
+  {
+    name: 'last_name',
+    label: 'Last Name',
+    align: 'left',
+    field: 'last_name',
+    sortable: true,
+  },
+  {
+    name: 'first_name',
+    label: 'First Name',
+    align: 'left',
+    field: 'first_name',
+    sortable: true,
+  },
+  {
+    name: 'dn',
+    label: 'DN',
+    align: 'left',
+    field: 'dn',
+    sortable: true,
+  },
+  {
+    name: 'extension',
+    label: 'Extension',
+    align: 'left',
+    field: 'extension',
+    sortable: true,
+  },
+  {
+    name: 'device_id',
+    label: 'Device ID',
+    align: 'left',
+    field: 'device_id',
+    sortable: true,
+  },
+  {
+    name: 'device_type',
+    label: 'Device Type',
+    align: 'left',
+    field: 'device_type',
+    sortable: true,
+  },
+  {
+    name: 'mac_address',
+    label: 'MAC Address',
+    align: 'left',
+    field: 'mac_address',
+    sortable: true,
+  },
 ]
-const visibleColumns = ref(columns.map((col) => col.name))
+const visibleColumns = ref(columns.filter((col) => col.name !== 'id').map((col) => col.name))
 const pagination = ref({ rowsPerPage: 0 })
 async function executeSearch() {
   console.log('Search Query:', searchQuery.value)
@@ -127,7 +180,11 @@ async function executeSearch() {
     return
   }
   rows.value = Object.entries(response.data).map(([id, record]) => {
-    return { id, ...record }
+    return {
+      id: id,
+      [locate_cache_key_fields[record.type]]: record[locate_cache_key_fields[record.type]],
+      ...record,
+    }
   })
   console.log('Rows:', rows.value)
 }
