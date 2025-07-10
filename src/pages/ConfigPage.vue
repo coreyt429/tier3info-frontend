@@ -92,7 +92,7 @@ console.log('Config options:', response.data)
 const selectOptions = ref(response.data)
 // const selectOptions = ref(['dashboard', 'bwlog'])
 
-const selectedOption = ref(response.data[0] || null)
+const selectedOption = ref(null)
 // const editorContent = ref('test content')
 const editorLabel = ref('Editor Label')
 const buttons = ref([
@@ -114,6 +114,8 @@ watch(selectedOption, async (option) => {
     states.content = yaml_string
   }
 })
+
+selectedOption.value = response.data[0] || null
 </script>
 
 <style lang="scss" scoped>
