@@ -31,6 +31,10 @@ const routes = [
           title: 'Tier3info Configuration',
           label: 'Configuration',
           endpoint: '/cfg',
+          buttons: [
+            { label: 'Save', color: 'primary', action: () => console.log('Save clicked') },
+            { label: 'Reset', color: 'negative', action: () => console.log('Reset clicked') },
+          ],
         },
       },
     ],

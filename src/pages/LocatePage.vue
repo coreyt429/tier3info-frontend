@@ -1,6 +1,6 @@
 <template>
   <q-page class="flex flex-start">
-    <div class="q-pa-md bg-blue-grey-3" style="width: 100%;">
+    <div class="q-pa-md bg-blue-grey-3" style="width: 100%">
       <!-- Row 1: Search Input and Button -->
       <div class="row q-mb-md">
         <q-input
@@ -74,6 +74,9 @@ import { ref } from 'vue'
 import { exportFile, useQuasar } from 'quasar'
 import { tier3info_restful_request } from 'src/plugins/tier3info.js'
 // import axios from 'axios'
+import { useTitleStore } from 'stores/titleStore'
+const titleStore = useTitleStore()
+titleStore.setMainTitle('Locate Tool')
 
 const searchQuery = ref('')
 const rows = ref([])

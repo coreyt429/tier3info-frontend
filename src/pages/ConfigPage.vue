@@ -55,34 +55,18 @@ import { VAceEditor } from 'vue3-ace-editor'
 import 'src/plugins/ace-config'
 import yaml from 'js-yaml'
 
-// import { mdiBookOpenBlankVariant } from '@quasar/extras/mdi-v5'
-
 const states = reactive({
   lang: 'yaml',
   theme: 'github_dark',
   content: '',
 })
 
-// watch(
-//   () => states.lang,
-//   async (lang) => {
-//     states.content = (
-//       await {
-//         json: import('../../package.json?raw'),
-//         javascript: import('../plugins/ace-config.js?raw'),
-//         html: import('../../index.html?raw'),
-//         yaml: import('../../test.yaml?raw'),
-//       }[lang]
-//     ).default
-//   },
-//   { immediate: true },
-// )
-
 const route = useRoute()
 import { useTitleStore } from 'stores/titleStore'
 const titleStore = useTitleStore()
 titleStore.setMainTitle(route.meta.title || 'ConfigPage Title Not Set')
 const endpoint = computed(() => route.meta.endpoint || '/cfg')
+const buttons = computed(() => route.meta.buttons || [])
 
 const selectLabel = computed(() => route.meta.label || 'Config:')
 const response = await tier3info_restful_request({ path: endpoint.value, method: 'GET' })
@@ -93,10 +77,6 @@ const selectOptions = ref(response.data)
 const selectedOption = ref(null)
 // const editorContent = ref('test content')
 const editorLabel = ref('Editor Label')
-const buttons = ref([
-  { label: 'Save', color: 'primary', action: () => console.log('Save clicked') },
-  { label: 'Cancel', color: 'negative', action: () => console.log('Cancel clicked') },
-])
 
 // Watch for changes to selectedOption and fetch YAML content
 watch(selectedOption, async (option) => {
