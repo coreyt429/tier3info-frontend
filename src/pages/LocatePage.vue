@@ -1,20 +1,20 @@
 <template>
   <q-page class="flex flex-start">
-    <div class="q-pa-md bg-blue-grey-3" style="width: 100%">
+    <div class="q-pa-md" style="width: 100%">
       <!-- Row 1: Search Input and Button -->
-      <div class="row q-mb-md">
+      <div class="row q-mb-md q-pa-md bg-white shadow-2 rounded">
         <q-input
           v-model="searchQuery"
           label="Search"
           outlined
           dense
-          class="col-9"
+          class="col-9 bg-primary text-white"
           @keyup.enter="executeSearch"
         />
         <q-btn label="Search" color="primary" class="col-2 q-ml-sm" @click="executeSearch" />
       </div>
       <!-- Separator Line -->
-      <!-- <q-separator class="q-my-md" /> -->
+      <q-separator class="q-my-md" />
       <!-- Row 2: Search Results Table -->
       <div v-if="rows.length > 0" class="q-mb-md" style="max-height: 500px; overflow-y: auto">
         <q-table
@@ -111,7 +111,6 @@ const visibleColumns = ref(columns.map((col) => col.name))
 const pagination = ref({ rowsPerPage: 0 })
 async function executeSearch() {
   console.log('Search Query:', searchQuery.value)
-  // const response = await axios.get('https://todo.coreyt.com/locate')
   const request = {
     method: 'POST',
     path: '/locate/',
