@@ -89,10 +89,10 @@ const endpoint = computed(() => route.meta.endpoint || '/cfg')
 const selectLabel = computed(() => route.meta.label || 'Config:')
 const response = await tier3info_restful_request({ path: endpoint.value, method: 'GET' })
 console.log('Config options:', response.data)
-// const selectOptions = ref(response.data)
-const selectOptions = ref(['dashboard', 'bwlog'])
+const selectOptions = ref(response.data)
+// const selectOptions = ref(['dashboard', 'bwlog'])
 
-const selectedOption = ref(null)
+const selectedOption = ref(response.data[0] || null)
 // const editorContent = ref('test content')
 const editorLabel = ref('Editor Label')
 const buttons = ref([
