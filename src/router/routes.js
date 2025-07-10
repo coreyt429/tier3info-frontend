@@ -13,21 +13,28 @@ const routes = [
     component: () => import('layouts/MainLayout.vue'),
     children: [{ path: '', component: () => import('pages/LocatePage.vue') }],
   },
+
   {
     path: '/config',
-    component: {
-      render() {
-        return h(Suspense, null, {
-          default: h(ConfigPage),
-          fallback: h('div', 'Loading...'),
-        })
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '/',
+        component: {
+          render() {
+            return h(Suspense, null, {
+              default: h(ConfigPage),
+              fallback: h('div', 'Loading...'),
+            })
+          },
+        },
+        meta: {
+          title: 'Tier3info Configuration',
+          label: 'Configuration',
+          endpoint: '/cfg',
+        },
       },
-    },
-    meta: {
-      title: 'Config Page',
-      label: 'Configuration',
-      endpoint: '/cfg',
-    },
+    ],
   },
   //   {
   //   path: '/config',
