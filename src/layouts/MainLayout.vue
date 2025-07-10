@@ -76,14 +76,14 @@ function onMenuEnter() {
         if (child.link) {
           window.location.href = child.link
         } else {
-          console.log('No valid link found in the child hierarchy.')
+          window.location.href = `/#/locate?query=${encodeURIComponent(filter.value)}`
         }
       } else {
-        console.log('No single child or link found.')
+        window.location.href = `/#/locate?query=${encodeURIComponent(filter.value)}`
       }
     }
-  } else {
-    console.log('Enter pressed. Filter value:', filter.value)
+  } else if (linksListFiltered.value.length === 0) {
+    window.location.href = `/#/locate?query=${encodeURIComponent(filter.value)}`
   }
 }
 

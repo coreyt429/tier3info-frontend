@@ -70,7 +70,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { exportFile, useQuasar } from 'quasar'
 import { tier3info_restful_request } from 'src/plugins/tier3info.js'
 import { locate_cache_key_fields } from 'src/plugins/locate.js'
@@ -186,6 +186,17 @@ function exportTable() {
     })
   }
 }
+
+const props = defineProps({
+  query: Object,
+})
+
+onMounted(() => {
+  if (props.query?.query) {
+    searchQuery.value = props.query.query
+    executeSearch()
+  }
+})
 </script>
 <style lang="sass">
 .my-sticky-header-table

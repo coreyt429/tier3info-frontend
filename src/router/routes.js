@@ -11,7 +11,13 @@ const routes = [
   {
     path: '/locate',
     component: () => import('layouts/MainLayout.vue'),
-    children: [{ path: '', component: () => import('pages/LocatePage.vue') }],
+    children: [
+      {
+        path: '',
+        component: () => import('pages/LocatePage.vue'),
+        props: (route) => ({ query: route.query }),
+      },
+    ],
   },
   {
     path: '/config',
