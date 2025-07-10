@@ -13,13 +13,12 @@ const routes = [
     component: () => import('layouts/MainLayout.vue'),
     children: [{ path: '', component: () => import('pages/LocatePage.vue') }],
   },
-
   {
-    path: '/config',
+    path: '/config_test',
     component: () => import('layouts/MainLayout.vue'),
     children: [
       {
-        path: '/',
+        path: '',
         component: {
           render() {
             return h(Suspense, null, {
