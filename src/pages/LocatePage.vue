@@ -191,12 +191,24 @@ const props = defineProps({
   query: Object,
 })
 
+import { watch } from 'vue'
+
 onMounted(() => {
   if (props.query?.query) {
     searchQuery.value = props.query.query
     executeSearch()
   }
 })
+
+watch(
+  () => props.query?.query,
+  (newQuery) => {
+    if (newQuery) {
+      searchQuery.value = newQuery
+      executeSearch()
+    }
+  },
+)
 </script>
 <style lang="sass">
 .my-sticky-header-table
