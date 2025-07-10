@@ -35,17 +35,28 @@ const routes = [
       },
     ],
   },
-  //   {
-  //   path: '/config',
-  //   component: () => import('layouts/MainLayout.vue'),
-  //   children: [
-  //     {
-  //       path: '',
-  //       component: () => import('pages/ConfigPage.vue'),
-  //       meta: { title: 'Tier3info Configuration', endpoint: '/cfg/' },
-  //     },
-  //   ],
-  // },
+  {
+    path: '/certs',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        component: {
+          render() {
+            return h(Suspense, null, {
+              default: h(ConfigPage),
+              fallback: h('div', 'Loading...'),
+            })
+          },
+        },
+        meta: {
+          title: 'Certificate Management',
+          label: 'Certificate',
+          endpoint: '/broadworks/certificates',
+        },
+      },
+    ],
+  },
   // Always leave this as last one,
   // but you can also remove it
   {
