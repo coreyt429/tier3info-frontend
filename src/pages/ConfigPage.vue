@@ -67,7 +67,25 @@ import { useTitleStore } from 'stores/titleStore'
 const titleStore = useTitleStore()
 titleStore.setMainTitle(route.meta.title || 'ConfigPage Title Not Set')
 const endpoint = computed(() => route.meta.endpoint || '/cfg')
-const buttons = computed(() => route.meta.buttons || [])
+
+const button_definitions = {
+  Save: {
+    label: 'Save',
+    icon: 'save',
+    color: 'positive',
+    action: () => save_editorContent(selectedOption.value),
+  },
+  Reset: {
+    label: 'Reset',
+    icon: 'refresh',
+    color: 'negative',
+    action: () => load_editorContent(selectedOption.value),
+  },
+}
+const buttons = computed(() => {
+  const metaButtons = route.meta.buttons || []
+  return metaButtons.map((key) => button_definitions[key]).filter(Boolean)
+})
 
 const selectLabel = computed(() => route.meta.label || 'Config:')
 const response = await tier3info_restful_request({ path: endpoint.value, method: 'GET' })
@@ -79,18 +97,46 @@ const selectedOption = ref(null)
 // const editorContent = ref('test content')
 const editorLabel = ref('Editor Label')
 
-// Watch for changes to selectedOption and fetch YAML content
-watch(selectedOption, async (option) => {
-  console.log('Selected option changed:', option)
+async function load_editorContent(option) {
+  console.log('Loading content for option:', option)
   if (option) {
-    const response = await tier3info_restful_request({
+    const request = {
       path: `${endpoint.value}/${option}`,
       method: 'GET',
-    })
+    }
+    const response = await tier3info_restful_request(request)
     console.log('Response from server:', response)
     const yaml_string = yaml.dump(response.data)
     console.log('YAML content:', yaml_string)
     states.content = yaml_string
+  }
+}
+
+async function save_editorContent(option) {
+  console.log('Saving content for option:', option)
+  if (option) {
+    try {
+      const jsonData = yaml.load(states.content) // Convert YAML to JSON
+      const request = {
+        path: `${endpoint.value}/${option}`,
+        method: 'PUT',
+        data: {
+          content: jsonData, // Store JSON content
+        },
+      }
+      const response = await tier3info_restful_request(request)
+      console.log('Response from server:', response)
+    } catch (error) {
+      console.error('Error converting YAML to JSON:', error)
+    }
+  }
+}
+
+// Watch for changes to selectedOption and fetch YAML content
+watch(selectedOption, async (option) => {
+  console.log('Selected option changed:', option)
+  if (option) {
+    load_editorContent(option)
   }
 })
 
