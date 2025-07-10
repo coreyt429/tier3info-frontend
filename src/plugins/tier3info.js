@@ -12,9 +12,9 @@ function get_session_id() {
     if (cookie[0] == 'sessionId') {
       sessionId = cookie[1]
     }
-  } 
+  }
   console.log(sessionId)
-  if(import.meta.env.VITE_TIER3INFO_API_KEY){
+  if (import.meta.env.VITE_TIER3INFO_API_KEY) {
     sessionId = import.meta.env.VITE_TIER3INFO_API_KEY
   }
   return sessionId
@@ -107,7 +107,7 @@ export async function tier3info_restful_request(request) {
 // Function to fetch preferences from the server
 function fetchPreferencesFromServer() {
   tier3info_restful_request({
-    path: '/preferences',
+    path: '/preferences/',
     callback: tier3info_preferences_set,
   })
 }
