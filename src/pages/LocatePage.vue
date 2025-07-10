@@ -84,81 +84,20 @@ const rows = ref([])
 const selectedItem = ref(null)
 const filter = ref('')
 const columns = [
-  { name: 'id', label: 'ID', align: 'left', field: 'id', sortable: true },
-  { name: 'type', label: 'Type', align: 'left', field: 'type', sortable: true },
-  { name: 'type_id', label: 'Id', align: 'left', field: 'type_id', sortable: true },
-
-  { name: 'cluster', label: 'Cluster', align: 'left', field: 'name', sortable: true },
-  {
-    name: 'enterprise_id',
-    label: 'Enterprise Id',
-    align: 'left',
-    field: 'enterprise_id',
-    sortable: true,
-  },
-  {
-    name: 'group_id',
-    label: 'Group Id',
-    align: 'left',
-    field: 'group_id',
-    sortable: true,
-  },
-  {
-    name: 'user_id',
-    label: 'User Id',
-    align: 'left',
-    field: 'user_id',
-    sortable: true,
-  },
-  {
-    name: 'last_name',
-    label: 'Last Name',
-    align: 'left',
-    field: 'last_name',
-    sortable: true,
-  },
-  {
-    name: 'first_name',
-    label: 'First Name',
-    align: 'left',
-    field: 'first_name',
-    sortable: true,
-  },
-  {
-    name: 'dn',
-    label: 'DN',
-    align: 'left',
-    field: 'dn',
-    sortable: true,
-  },
-  {
-    name: 'extension',
-    label: 'Extension',
-    align: 'left',
-    field: 'extension',
-    sortable: true,
-  },
-  {
-    name: 'device_id',
-    label: 'Device ID',
-    align: 'left',
-    field: 'device_id',
-    sortable: true,
-  },
-  {
-    name: 'device_type',
-    label: 'Device Type',
-    align: 'left',
-    field: 'device_type',
-    sortable: true,
-  },
-  {
-    name: 'mac_address',
-    label: 'MAC Address',
-    align: 'left',
-    field: 'mac_address',
-    sortable: true,
-  },
+  { name: 'id', label: 'ID', field: 'id' },
+  { name: 'type', label: 'Type', field: 'type' },
+  { name: 'type_id', label: 'Id', field: 'type_id' },
+  { name: 'cluster', label: 'Cluster', field: 'cluster' },
+  { name: 'enterprise_id', label: 'Enterprise Id', field: 'enterprise_id' },
+  { name: 'group_id', label: 'Group Id', field: 'group_id' },
+  { name: 'user_id', label: 'User Id', field: 'user_id' },
+  { name: 'last_name', label: 'Last Name', field: 'last_name' },
+  { name: 'first_name', label: 'First Name', field: 'first_name' },
+  { name: 'dn', label: 'DN', field: 'dn' },
+  { name: 'extension', label: 'Extension', field: 'extension' },
+  { name: 'device_id', label: 'Device ID', field: 'device_id' },
+  { name: 'device_type', label: 'Device Type', field: 'device_type' },
+  { name: 'mac_address', label: 'MAC Address', field: 'mac_address' },
 ]
 const visibleColumns = ref(columns.filter((col) => col.name !== 'id').map((col) => col.name))
 const pagination = ref({ rowsPerPage: 0 })
@@ -180,9 +119,15 @@ async function executeSearch() {
     return
   }
   rows.value = Object.entries(response.data).map(([id, record]) => {
+    const recordType = record.type || 'unknown'
+    const key_field = locate_cache_key_fields[recordType] || 'unkown'
+    const type_id = record[key_field] || 'unknown'
+    console.log(
+      `Processing record with ID: ${id}, Type: ${recordType}, Key Field: ${key_field}, Type ID: ${type_id}`,
+    )
     return {
       id: id,
-      [locate_cache_key_fields[record.type]]: record[locate_cache_key_fields[record.type]],
+      type_id: type_id,
       ...record,
     }
   })
