@@ -1,5 +1,5 @@
 <template>
-  <q-layout view="lHh Lpr lFf">
+  <q-layout view="lHh Lpr lFf" :class="{ 'bg-grey-10 text-white': $q.dark.isActive }">
     <q-header elevated>
       <q-toolbar>
         <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
@@ -43,6 +43,9 @@
 </template>
 
 <script setup>
+import { useQuasar } from 'quasar'
+const $q = useQuasar()
+
 import { version as appVersion } from '../../package.json'
 import { ref } from 'vue'
 import EssentialLink from 'components/EssentialLink.vue'
@@ -106,19 +109,20 @@ function onMenuSearchChange(val) {
 
 import { onMounted } from 'vue'
 // import axios from 'axios'
-import { tier3info_restful_request } from 'src/plugins/tier3info.js'
+// import { tier3info_restful_request } from 'src/plugins/tier3info.js'
 
 const linksList = ref([])
 const linksListFiltered = ref([])
 onMounted(async () => {
   try {
-    const request = {
-      method: 'GET',
-      path: '/menu',
-    }
-    const response = await tier3info_restful_request(request)
-    console.log('Menu links response:', response)
-    linksList.value = response.data
+    // const request = {
+    //   method: 'GET',
+    //   path: '/menu',
+    // }
+    // const response = await tier3info_restful_request(request)
+    // console.log('Menu links response:', response)
+    // linksList.value = response.data
+    linksList.value = []
     console.log('Links list:', linksList.value)
     linksListFiltered.value = linksList.value // Initialize filtered list with all links
     console.log('Initial filtered links list:', linksListFiltered.value)
