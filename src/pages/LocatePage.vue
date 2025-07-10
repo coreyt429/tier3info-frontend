@@ -8,7 +8,7 @@
           label="Search"
           outlined
           dense
-          class="col-9 bg-primary text-white"
+          class="col-9 bg-grey-4"
           @keyup.enter="executeSearch"
         />
         <q-btn label="Search" color="primary" class="col-2 q-ml-sm" @click="executeSearch" />
@@ -121,6 +121,11 @@ async function executeSearch() {
   console.log('Request:', request)
   const response = await tier3info_restful_request(request)
   console.log('Response:', response)
+  if (!response || !response.data) {
+    console.error('Invalid response data:', response)
+    rows.value = [{ id: 'No Matches Found', name: 'No Matches Found' }]
+    return
+  }
   rows.value = Object.entries(response.data).map(([id, record]) => {
     return { id, ...record }
   })

@@ -1,5 +1,5 @@
 <template>
-  <q-layout view="lHh Lpr lFf" :class="{ 'bg-grey-10 text-primary': $q.dark.isActive }">
+  <q-layout view="lHh Lpr lFf" class="bg-grey-10 text-primary">
     <q-header elevated>
       <q-toolbar>
         <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
@@ -10,7 +10,7 @@
       </q-toolbar>
     </q-header>
 
-    <q-drawer v-model="leftDrawerOpen" show-if-above bordered class="bg-warning">
+    <q-drawer v-model="leftDrawerOpen" show-if-above bordered class="bg-warning text-primary">
       <q-list>
         <!-- <q-item-label header> Menu </q-item-label> -->
         <q-input
@@ -44,26 +44,28 @@
 
 <script setup>
 import { useQuasar } from 'quasar'
-const $q = useQuasar()
-
 import { version as appVersion } from '../../package.json'
 import { ref } from 'vue'
 import EssentialLink from 'components/EssentialLink.vue'
 import { useTitleStore } from 'stores/titleStore'
 const titleStore = useTitleStore()
 titleStore.setMainTitle('Voice Engineering Information Center')
+
+const $q = useQuasar()
+
+onMounted(() => {
+  $q.dark.set(false) // Force dark mode off
+})
 // const mainTitle = titleStore.mainTitle
 
 // const mainTitle = ref('Voice Engineering Information Center')
 const filter = ref('')
 
 function onMenuEnter() {
-  console.log('Enter key pressed' + linksListFiltered.value.length)
   if (linksListFiltered.value.length === 1) {
     const singleLink = linksListFiltered.value[0]
     if (singleLink.link) {
       // Navigate to the link
-      console.log('Single link found. Navigating to:', singleLink.link)
       window.location.href = singleLink.link
     } else {
       if (singleLink.children && singleLink.children.length === 1) {
@@ -72,7 +74,6 @@ function onMenuEnter() {
           child = child.children[0]
         }
         if (child.link) {
-          console.log('Navigating to child link:', child.link)
           window.location.href = child.link
         } else {
           console.log('No valid link found in the child hierarchy.')
@@ -108,7 +109,6 @@ function filterLinks(links, filterValue = '') {
 
 function onMenuSearchChange(val) {
   // Now receives the latest value as 'val'
-  console.log('Key pressed. Filter value:', val)
   linksListFiltered.value = filterLinks(linksList.value, val.toLowerCase())
 }
 
@@ -117,6 +117,7 @@ import { tier3info_restful_request } from 'src/plugins/tier3info.js'
 
 const linksList = ref([])
 const linksListFiltered = ref([])
+
 onMounted(async () => {
   try {
     const request = {
@@ -124,14 +125,32 @@ onMounted(async () => {
       path: '/menu',
     }
     const response = await tier3info_restful_request(request)
-    console.log('Menu links response:', response)
     linksList.value = response.data
     // linksList.value = []
-    console.log('Links list:', linksList.value)
     linksListFiltered.value = linksList.value // Initialize filtered list with all links
-    console.log('Initial filtered links list:', linksListFiltered.value)
   } catch (error) {
     console.error('Error fetching menu links:', error)
+    linksList.value = [
+      {
+        title: 'Home',
+        link: '/',
+        icon: 'home',
+        caption: 'Go to homepage',
+      },
+      {
+        title: 'Locate',
+        icon: 'search',
+        link: '/#/locate',
+        caption: 'Find Stuff',
+      },
+      {
+        title: 'Configuration',
+        link: '/#/config',
+        icon: 'settings',
+        caption: 'Set stuff up',
+      },
+    ]
+    linksListFiltered.value = linksList.value
   }
 })
 

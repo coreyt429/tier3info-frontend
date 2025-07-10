@@ -1,49 +1,59 @@
 <template>
-  <q-page class="q-pa-md column items-start">
-    <!-- Configurable Select with Label -->
-    <div class="q-pa-md">
-      <q-item>
-        <q-item-section>
-          <q-item-label>{{ selectLabel }}</q-item-label>
-        </q-item-section>
-        <q-item-section>
-          <q-select v-model="selectedOption" :options="selectOptions" outlined dense />
-        </q-item-section>
-      </q-item>
-    </div>
+  <q-page class="flex flex-start">
+    <div class="q-pa-md" style="width: 100%">
+      <!-- Configurable Select with Label -->
+      <div class="q-pt-none q-px-md q-pb-md bg-grey-2 text-black">
+        <q-row class="items-center q-gutter-sm">
+          <q-col cols="12" sm="3">
+            <div class="text-subtitle2 text-black">{{ selectLabel }}</div>
+          </q-col>
+          <q-col cols="12" sm="6" class="full-width">
+            <q-select
+              v-model="selectedOption"
+              :options="selectOptions"
+              outlined
+              dense
+              color="primary"
+              label-color="primary"
+              class="bg-grey-2 text-black full-width"
+            />
+          </q-col>
+        </q-row>
+      </div>
 
-    <!-- Configurable Ace Editor with Label -->
-    <div class="q-pa-md full-width">
-      <q-item class="q-pa-md column" style="resize: vertical; overflow: auto">
-        <q-item-label class="q-mb-sm">{{ editorLabel }}</q-item-label>
-        <VAceEditor
-          ref="aceRef"
-          v-model:value="states.content"
-          class="vue-ace-editor"
-          :placeholder="`Enter your ${states.lang} code here`"
-          :lang="states.lang"
-          :theme="states.theme"
-          :options="{
-            useWorker: true,
-            enableBasicAutocompletion: true,
-            enableSnippets: true,
-            enableLiveAutocompletion: true,
-          }"
+      <!-- Configurable Ace Editor with Label -->
+      <q-row class="q-pa-md q-col-gutter-md">
+        <q-col cols="12" class="full-width">
+          <div class="text-subtitle2 text-white q-mb-sm">{{ editorLabel }}</div>
+          <VAceEditor
+            ref="aceRef"
+            v-model:value="states.content"
+            class="vue-ace-editor full-width"
+            :placeholder="`Enter your ${states.lang} code here`"
+            :lang="states.lang"
+            :theme="states.theme"
+            :options="{
+              useWorker: true,
+              enableBasicAutocompletion: true,
+              enableSnippets: true,
+              enableLiveAutocompletion: true,
+            }"
+          />
+        </q-col>
+      </q-row>
+
+      <!-- Configurable Buttons -->
+      <div class="q-pa-md row justify-center">
+        <q-btn
+          v-for="(button, index) in buttons"
+          :key="index"
+          :label="button.label"
+          :icon="button.icon"
+          :color="button.color"
+          @click="button.action"
+          class="q-mx-sm"
         />
-      </q-item>
-    </div>
-
-    <!-- Configurable Buttons -->
-    <div class="q-pa-md row justify-center">
-      <q-btn
-        v-for="(button, index) in buttons"
-        :key="index"
-        :label="button.label"
-        :icon="button.icon"
-        :color="button.color"
-        @click="button.action"
-        class="q-mx-sm"
-      />
+      </div>
     </div>
   </q-page>
 </template>
@@ -100,11 +110,19 @@ document.addEventListener('keydown', (event) => {
 
 const selectLabel = computed(() => route.meta.label || 'Config:')
 const response = await tier3info_restful_request({ path: endpoint.value, method: 'GET' })
-console.log('Config options:', response.data)
-const selectOptions = ref(response.data)
-// const selectOptions = ref(['dashboard', 'bwlog'])
-
-const selectedOption = ref(null)
+const selectOptions = ref([])
+if (!response || !response.data) {
+  console.error('Failed to fetch options from server:')
+  selectOptions.value = ['dummy_option1', 'dummy_option2'] // Fallback options if request fails
+  // Handle error or set fallback options
+} else {
+  console.log('Response from server:', response)
+  // Assuming response.data is an array of options
+  selectOptions.value = response.data
+}
+console.log('Select options:', selectOptions.value)
+const selectedOption = ref(selectOptions.value[0] || null)
+console.log('Selected option:', selectedOption.value)
 // const editorContent = ref('test content')
 const editorLabel = ref('Editor Label')
 
@@ -116,6 +134,11 @@ async function load_editorContent(option) {
       method: 'GET',
     }
     const response = await tier3info_restful_request(request)
+    if (!response || !response.data) {
+      console.error('Failed to load content from server:', response)
+      states.content = 'Error: content not loaded\noption: ' + option
+      return
+    }
     console.log('Response from server:', response)
     const yaml_string = yaml.dump(response.data)
     console.log('YAML content:', yaml_string)
@@ -135,8 +158,23 @@ async function save_editorContent(option) {
       }
       const response = await tier3info_restful_request(request)
       console.log('Response from server:', response)
+      if (response && response.status === 200) {
+        this.$q.notify({
+          type: 'positive',
+          message: 'Content saved successfully!',
+        })
+      } else {
+        this.$q.notify({
+          type: 'negative',
+          message: 'Failed to save content. Please try again.',
+        })
+      }
     } catch (error) {
       console.error('Error converting YAML to JSON:', error)
+      this.$q.notify({
+        type: 'negative',
+        message: 'Error saving content. Invalid YAML format.',
+      })
     }
   }
 }
@@ -148,8 +186,7 @@ watch(selectedOption, async (option) => {
     load_editorContent(option)
   }
 })
-
-selectedOption.value = response.data[0] || null
+load_editorContent(selectedOption.value) // Initial load
 </script>
 
 <style lang="scss" scoped>
@@ -171,8 +208,9 @@ main {
   font-size: 16px;
   border: 1px solid;
   width: 100%;
-  height: 100%;
+  height: auto;
   min-height: 300px;
+  max-height: 80vh;
   resize: vertical;
   overflow: auto;
 }

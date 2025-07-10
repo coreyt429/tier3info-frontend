@@ -16,8 +16,10 @@
   },
   "dependencies": {
     "@quasar/extras": "^1.16.4",
+    "@vueuse/core": "^13.5.0",
     "ace-builds": "^1.43.1",
     "axios": "^1.10.0",
+    "mitt": "^3.0.1",
     "pinia": "^3.0.3",
     "quasar": "^2.16.0",
     "vue": "^3.4.18",
