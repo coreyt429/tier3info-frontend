@@ -50,7 +50,8 @@ import { version as appVersion } from '../../package.json'
 import { ref } from 'vue'
 import EssentialLink from 'components/EssentialLink.vue'
 import { useTitleStore } from 'stores/titleStore'
-const { mainTitle } = useTitleStore()
+const titleStore = useTitleStore()
+const mainTitle = titleStore.mainTitle
 const filter = ref('')
 
 function onMenuEnter() {
