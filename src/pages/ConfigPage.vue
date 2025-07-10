@@ -87,6 +87,17 @@ const buttons = computed(() => {
   return metaButtons.map((key) => button_definitions[key]).filter(Boolean)
 })
 
+// Map Ctrl+S / Cmd+S to Save action
+document.addEventListener('keydown', (event) => {
+  if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+    event.preventDefault()
+    const saveButton = buttons.value.find((button) => button.label === 'Save')
+    if (saveButton) {
+      saveButton.action()
+    }
+  }
+})
+
 const selectLabel = computed(() => route.meta.label || 'Config:')
 const response = await tier3info_restful_request({ path: endpoint.value, method: 'GET' })
 console.log('Config options:', response.data)
