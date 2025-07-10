@@ -120,9 +120,7 @@ async function save_editorContent(option) {
       const request = {
         path: `${endpoint.value}/${option}`,
         method: 'PUT',
-        data: {
-          content: jsonData, // Store JSON content
-        },
+        body: jsonData, // Store JSON content
       }
       const response = await tier3info_restful_request(request)
       console.log('Response from server:', response)
