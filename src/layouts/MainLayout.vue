@@ -94,7 +94,8 @@ function onMenuEnter() {
 }
 
 function filterLinks(links, filterValue = '') {
-  return links
+  console.log('filterLinks called with filterValue:', filterValue)
+  const filteredLinks = links
     .map((item) => {
       const matches =
         item.title.toLowerCase().includes(filterValue) ||
@@ -111,6 +112,8 @@ function filterLinks(links, filterValue = '') {
       return matches ? { ...item } : null
     })
     .filter((item) => item !== null)
+  console.log('Filtered links:', filteredLinks)
+  return filteredLinks
 }
 
 function onMenuSearchChange(val) {
