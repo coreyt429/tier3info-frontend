@@ -14,7 +14,7 @@ const routes = [
     children: [{ path: '', component: () => import('pages/LocatePage.vue') }],
   },
   {
-    path: '/config_test',
+    path: '/config',
     component: () => import('layouts/MainLayout.vue'),
     children: [
       {

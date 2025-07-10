@@ -109,7 +109,7 @@ watch(selectedOption, async (option) => {
       method: 'GET',
     })
     console.log('Response from server:', response)
-    const yaml_string = yaml.dump(response)
+    const yaml_string = yaml.dump(response.data)
     console.log('YAML content:', yaml_string)
     states.content = yaml_string
   }
