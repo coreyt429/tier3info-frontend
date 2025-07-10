@@ -51,9 +51,8 @@ import { ref } from 'vue'
 import EssentialLink from 'components/EssentialLink.vue'
 import { useTitleStore } from 'stores/titleStore'
 const titleStore = useTitleStore()
-titleStore.setMainTitle('Voice Engineering Information Center test21')
+titleStore.setMainTitle('Voice Engineering Information Center')
 // const mainTitle = titleStore.mainTitle
-titleStore.setMainTitle('Voice Engineering Information Center test22')
 
 // const mainTitle = ref('Voice Engineering Information Center')
 const filter = ref('')

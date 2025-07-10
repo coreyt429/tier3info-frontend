@@ -39,6 +39,7 @@
         v-for="(button, index) in buttons"
         :key="index"
         :label="button.label"
+        :icon="button.icon"
         :color="button.color"
         @click="button.action"
         class="q-mx-sm"
