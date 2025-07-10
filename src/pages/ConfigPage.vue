@@ -88,7 +88,7 @@ const title = computed(() => route.meta.title || 'Default Page Title')
 const endpoint = computed(() => route.meta.endpoint || '/cfg')
 
 const selectLabel = computed(() => route.meta.label || 'Config:')
-const selectOptions = ref(tier3info_restful_request.get({ path: endpoint.value }))
+const selectOptions = ref(tier3info_restful_request({ path: endpoint.value, method: 'GET' }))
 const selectedOption = ref(null)
 // const editorContent = ref('test content')
 const editorLabel = ref('Editor Label')
@@ -100,7 +100,10 @@ const buttons = ref([
 // Watch for changes to selectedOption and fetch YAML content
 watch(selectedOption, async (option) => {
   if (option) {
-    const response = await tier3info_restful_request.get({ path: `${endpoint.value}/${option}` })
+    const response = await tier3info_restful_request({
+      path: `${endpoint.value}/${option}`,
+      method: 'GET',
+    })
     states.content = yaml.dump(response)
   }
 })
