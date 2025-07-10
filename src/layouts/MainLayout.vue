@@ -4,7 +4,7 @@
       <q-toolbar>
         <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
 
-        <q-toolbar-title> Voice Engineering Information Center </q-toolbar-title>
+        <q-toolbar-title> {{ mainTitle }} </q-toolbar-title>
 
         <div>Tier3info v{{ appVersion }}</div>
       </q-toolbar>
@@ -49,7 +49,8 @@ const $q = useQuasar()
 import { version as appVersion } from '../../package.json'
 import { ref } from 'vue'
 import EssentialLink from 'components/EssentialLink.vue'
-
+import { useTitleStore } from 'stores/titleStore'
+const { mainTitle } = useTitleStore()
 const filter = ref('')
 
 function onMenuEnter() {

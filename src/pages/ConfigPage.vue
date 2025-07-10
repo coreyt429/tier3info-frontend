@@ -1,10 +1,5 @@
 <template>
   <q-page class="q-pa-md column items-start">
-    <!-- Configurable Title Banner -->
-    <div class="q-pa-md text-h5 text-center bg-secondary text-white full-width q-mt-none">
-      {{ title }}
-    </div>
-
     <!-- Configurable Select with Label -->
     <div class="q-pa-md">
       <q-item>
@@ -59,6 +54,7 @@ import { reactive, ref, computed, watch } from 'vue'
 import { VAceEditor } from 'vue3-ace-editor'
 import 'src/plugins/ace-config'
 import yaml from 'js-yaml'
+
 // import { mdiBookOpenBlankVariant } from '@quasar/extras/mdi-v5'
 
 const states = reactive({
@@ -83,7 +79,9 @@ const states = reactive({
 // )
 
 const route = useRoute()
-const title = computed(() => route.meta.title || 'Default Page Title')
+import { useTitleStore } from 'stores/titleStore'
+const { mainTitle } = useTitleStore()
+mainTitle.value = route.meta.title || 'ConfigPage Title Not Set'
 const endpoint = computed(() => route.meta.endpoint || '/cfg')
 
 const selectLabel = computed(() => route.meta.label || 'Config:')
