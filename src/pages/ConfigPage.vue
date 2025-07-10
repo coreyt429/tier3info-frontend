@@ -68,20 +68,20 @@ const states = reactive({
   content: '',
 })
 
-watch(
-  () => states.lang,
-  async (lang) => {
-    states.content = (
-      await {
-        json: import('../../package.json?raw'),
-        javascript: import('../plugins/ace-config.js?raw'),
-        html: import('../../index.html?raw'),
-        yaml: import('../../test.yaml?raw'),
-      }[lang]
-    ).default
-  },
-  { immediate: true },
-)
+// watch(
+//   () => states.lang,
+//   async (lang) => {
+//     states.content = (
+//       await {
+//         json: import('../../package.json?raw'),
+//         javascript: import('../plugins/ace-config.js?raw'),
+//         html: import('../../index.html?raw'),
+//         yaml: import('../../test.yaml?raw'),
+//       }[lang]
+//     ).default
+//   },
+//   { immediate: true },
+// )
 
 const route = useRoute()
 const title = computed(() => route.meta.title || 'Default Page Title')

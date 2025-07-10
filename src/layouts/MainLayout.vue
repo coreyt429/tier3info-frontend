@@ -108,21 +108,20 @@ function onMenuSearchChange(val) {
 }
 
 import { onMounted } from 'vue'
-// import axios from 'axios'
-// import { tier3info_restful_request } from 'src/plugins/tier3info.js'
+import { tier3info_restful_request } from 'src/plugins/tier3info.js'
 
 const linksList = ref([])
 const linksListFiltered = ref([])
 onMounted(async () => {
   try {
-    // const request = {
-    //   method: 'GET',
-    //   path: '/menu',
-    // }
-    // const response = await tier3info_restful_request(request)
-    // console.log('Menu links response:', response)
-    // linksList.value = response.data
-    linksList.value = []
+    const request = {
+      method: 'GET',
+      path: '/menu',
+    }
+    const response = await tier3info_restful_request(request)
+    console.log('Menu links response:', response)
+    linksList.value = response.data
+    // linksList.value = []
     console.log('Links list:', linksList.value)
     linksListFiltered.value = linksList.value // Initialize filtered list with all links
     console.log('Initial filtered links list:', linksListFiltered.value)
