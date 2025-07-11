@@ -5,5 +5,7 @@
 </template>
 
 <script setup>
-//
+import { useTitleStore } from 'stores/titleStore'
+const titleStore = useTitleStore()
+titleStore.setMainTitle('Voice Engineering Information Center')
 </script>

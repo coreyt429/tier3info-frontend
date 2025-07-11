@@ -1,30 +1,45 @@
 <template>
   <q-page class="flex flex-start">
     <div class="q-pa-md" style="width: 100%">
-      <!-- Configurable Select with Label -->
-      <div class="q-pt-none q-px-md q-pb-md bg-grey-2 text-black">
-        <q-row class="items-center q-gutter-sm">
-          <q-col cols="12" sm="3">
-            <div class="text-subtitle2 text-black">{{ selectLabel }}</div>
-          </q-col>
-          <q-col cols="12" sm="6" class="full-width">
-            <q-select
-              v-model="selectedOption"
-              :options="selectOptions"
+      <q-card class="q-mt-md bordered">
+        <q-card-section class="row items-center">
+          <q-select
+            v-model="selectedOption"
+            :options="selectOptions"
+            rounded
+            outlined
+            :label="`Select ${selectLabel}`"
+            class="col-8"
+          />
+          <div class="col-4 flex justify-end">
+            <q-btn-toggle
+              v-model="states.lang"
+              :options="[
+                { label: 'YAML', value: 'yaml' },
+                { label: 'JSON', value: 'json' },
+              ]"
+              no-caps
+              rounded
+              unelevated
               outlined
-              dense
-              color="primary"
-              label-color="primary"
-              class="bg-grey-2 text-black full-width"
+              toggle-color="positive"
+              color="grey-3"
+              text-color="primary"
+              class="q-ml-md"
             />
-          </q-col>
-        </q-row>
-      </div>
-
+          </div>
+          <!-- </q-col>
+            </q-row>
+          </div> -->
+        </q-card-section>
+      </q-card>
       <!-- Configurable Ace Editor with Label -->
-      <q-row class="q-pa-md q-col-gutter-md">
-        <q-col cols="12" class="full-width">
-          <div class="text-subtitle2 text-white q-mb-sm">{{ editorLabel }}</div>
+      <q-card v-if="states.content !== null" class="q-mt-md">
+        <q-card-section class="row items-center">
+          <div class="text-h6 text-black q-mb-sm">{{ editorLabel }}</div>
+        </q-card-section>
+        <q-separator />
+        <q-card-section class="row items-center">
           <VAceEditor
             ref="aceRef"
             v-model:value="states.content"
@@ -39,21 +54,23 @@
               enableLiveAutocompletion: true,
             }"
           />
-        </q-col>
-      </q-row>
-
-      <!-- Configurable Buttons -->
-      <div class="q-pa-md row justify-center">
-        <q-btn
-          v-for="(button, index) in buttons"
-          :key="index"
-          :label="button.label"
-          :icon="button.icon"
-          :color="button.color"
-          @click="button.action"
-          class="q-mx-sm"
-        />
-      </div>
+        </q-card-section>
+        <q-separator />
+        <q-card-section class="row items-center">
+          <!-- Configurable Buttons -->
+          <div class="q-pa-md row justify-center">
+            <q-btn
+              v-for="(button, index) in buttons"
+              :key="index"
+              :label="button.label"
+              :icon="button.icon"
+              :color="button.color"
+              @click="button.action"
+              class="q-mx-sm"
+            />
+          </div>
+        </q-card-section>
+      </q-card>
     </div>
   </q-page>
 </template>
@@ -69,7 +86,7 @@ import yaml from 'js-yaml'
 const states = reactive({
   lang: 'yaml',
   theme: 'github_dark',
-  content: '',
+  content: null,
 })
 
 const route = useRoute()
@@ -121,10 +138,10 @@ if (!response || !response.data) {
   selectOptions.value = response.data
 }
 console.log('Select options:', selectOptions.value)
-const selectedOption = ref(selectOptions.value[0] || null)
+const selectedOption = ref(null)
 console.log('Selected option:', selectedOption.value)
 // const editorContent = ref('test content')
-const editorLabel = ref('Editor Label')
+const editorLabel = ref(null)
 
 async function load_editorContent(option) {
   console.log('Loading content for option:', option)
@@ -136,13 +153,23 @@ async function load_editorContent(option) {
     const response = await tier3info_restful_request(request)
     if (!response || !response.data) {
       console.error('Failed to load content from server:', response)
-      states.content = 'Error: content not loaded\noption: ' + option
+      if (states.lang === 'yaml') {
+        states.content = 'Error: content not loaded\noption: ' + option
+      } else {
+        states.content = JSON.stringify({ error: 'Content not loaded', option: option }, null, 2)
+      }
+      editorLabel.value = 'Error: content not loaded: ' + option
       return
     }
     console.log('Response from server:', response)
     const yaml_string = yaml.dump(response.data)
     console.log('YAML content:', yaml_string)
-    states.content = yaml_string
+    if (states.lang === 'yaml') {
+      states.content = yaml.dump(response.data)
+    } else {
+      states.content = JSON.stringify(response.data, null, 2)
+    }
+    editorLabel.value = `Editing: ${option}`
   }
 }
 
@@ -186,7 +213,21 @@ watch(selectedOption, async (option) => {
     load_editorContent(option)
   }
 })
-load_editorContent(selectedOption.value) // Initial load
+
+// watch for changes to states.lang and update editor content accordingly
+watch(
+  () => states.lang,
+  (newLang) => {
+    console.log('Language changed:', newLang)
+    if (states.content !== null) {
+      if (newLang === 'yaml') {
+        states.content = yaml.dump(yaml.load(states.content))
+      } else {
+        states.content = JSON.stringify(yaml.load(states.content), null, 2)
+      }
+    }
+  },
+)
 </script>
 
 <style lang="scss" scoped>

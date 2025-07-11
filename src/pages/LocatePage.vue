@@ -1,70 +1,84 @@
 <template>
   <q-page class="flex flex-start">
-    <div class="q-pa-md" style="width: 100%">
+    <div class="q-pa-md" style="width: 100%; max-width: 800px">
       <!-- Row 1: Search Input and Button -->
-      <div class="row q-mb-md q-pa-md bg-white shadow-2 rounded">
-        <q-input
-          v-model="searchQuery"
-          label="Search"
-          outlined
-          dense
-          class="col-9 bg-grey-4"
-          @keyup.enter="executeSearch"
-        />
-        <q-btn label="Search" color="primary" class="col-2 q-ml-sm" @click="executeSearch" />
-      </div>
-      <!-- Separator Line -->
-      <q-separator class="q-my-md" />
+      <q-card class="q-mt-md">
+        <q-card-section class="row items-center">
+          <q-input
+            v-model="searchQuery"
+            label="Search"
+            outlined
+            dense
+            class="col-9"
+            @keyup.enter="executeSearch"
+          />
+          <q-btn label="Search" color="primary" class="col-2 q-ml-sm" @click="executeSearch" />
+        </q-card-section>
+      </q-card>
       <!-- Row 2: Search Results Table -->
-      <div v-if="rows.length > 0" class="q-mb-md" style="max-height: 500px; overflow-y: auto">
-        <q-table
-          class="my-sticky-header-table"
-          flat
-          bordered
-          :grid="$q.screen.xs"
-          :rows="rows"
-          :columns="columns"
-          dense
-          row-key="id"
-          :filter="filter"
-          virtual-scroll
-          v-model:pagination="pagination"
-          :visible-columns="visibleColumns"
-          @row-click="selectItem"
-        >
-          <template v-slot:top-left>
-            <q-select
-              v-model="visibleColumns"
-              multiple
-              outlined
+      <q-card v-if="rows.length > 0" class="q-mt-md">
+        <q-card-section class="row items-center">
+          <div class="q-mb-md" style="max-height: 500px; overflow-y: auto">
+            <q-table
+              class="my-sticky-header-table"
+              flat
+              bordered
+              :grid="$q.screen.xs"
+              :rows="rows"
+              :columns="columns"
               dense
-              options-dense
-              :display-value="$q.lang.table.columns"
-              emit-value
-              map-options
-              :options="columns"
-              option-value="name"
-              options-cover
-              style="min-width: 150px"
-            />
-          </template>
-          <template v-slot:top-right>
-            <q-input borderless dense debounce="300" v-model="filter" placeholder="Filter">
-              <template v-slot:append>
-                <q-icon name="search" />
+              row-key="id"
+              :filter="filter"
+              virtual-scroll
+              v-model:pagination="pagination"
+              :visible-columns="visibleColumns"
+              @row-click="selectItem"
+            >
+              <template v-slot:top-left>
+                <q-select
+                  v-model="visibleColumns"
+                  multiple
+                  outlined
+                  dense
+                  options-dense
+                  :display-value="$q.lang.table.columns"
+                  emit-value
+                  map-options
+                  :options="columns"
+                  option-value="name"
+                  options-cover
+                  style="min-width: 150px"
+                />
               </template>
-            </q-input>
-            <q-space />
-            <q-btn color="primary" icon-right="archive" label="csv" no-caps @click="exportTable" />
-          </template>
-        </q-table>
-      </div>
+              <template v-slot:top-right>
+                <q-input borderless dense debounce="300" v-model="filter" placeholder="Filter">
+                  <template v-slot:append>
+                    <q-icon name="search" />
+                  </template>
+                </q-input>
+                <q-space />
+                <q-btn
+                  color="primary"
+                  icon-right="archive"
+                  label="csv"
+                  no-caps
+                  @click="exportTable"
+                />
+              </template>
+            </q-table>
+          </div>
+        </q-card-section>
+      </q-card>
 
       <!-- Row 3: Detail Area -->
-      <div v-if="selectedItem" class="q-pa-md bg-grey-2">
-        <h6>Details</h6>
-        <p>{{ selectedItem }}</p>
-      </div>
+      <q-card v-if="selectedItem" class="q-mt-md">
+        <q-card-section class="row items-center">
+          <div class="q-pa-md bg-grey-2">
+            <h6>Details</h6>
+            <p>{{ selectedItem }}</p>
+          </div>
+        </q-card-section>
+      </q-card>
     </div>
   </q-page>
 </template>
@@ -115,7 +129,7 @@ async function executeSearch() {
   console.log('Response:', response)
   if (!response || !response.data) {
     console.error('Invalid response data:', response)
-    rows.value = [{ id: 'No Matches Found', name: 'No Matches Found' }]
+    rows.value = [{ id: 'No Matches Found', type: 'No Matches Found' }]
     return
   }
   rows.value = Object.entries(response.data).map(([id, record]) => {

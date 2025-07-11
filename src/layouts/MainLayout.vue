@@ -4,9 +4,13 @@
       <q-toolbar>
         <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
 
-        <q-toolbar-title> {{ titleStore.mainTitle }} </q-toolbar-title>
-
-        <div>Tier3info v{{ appVersion }}</div>
+        <q-toolbar-title class="col-7"> {{ titleStore.mainTitle }} </q-toolbar-title>
+        <div class="col-2">
+          <q-badge color="positive" class="q-mx-xs">99</q-badge>
+          <q-badge color="warning" class="q-mx-xs">19</q-badge>
+          <q-badge color="negative" class="q-mx-xs">29</q-badge>
+        </div>
+        <div class="col-2 text-right">v{{ appVersion }}</div>
       </q-toolbar>
     </q-header>
 
@@ -130,12 +134,19 @@ const linksListFiltered = ref([])
 
 onMounted(async () => {
   try {
+    const cachedLinks = localStorage.getItem('linksList')
+    if (cachedLinks) {
+      linksList.value = JSON.parse(cachedLinks)
+      linksListFiltered.value = linksList.value
+      return
+    }
     const request = {
       method: 'GET',
       path: '/menu',
     }
     const response = await tier3info_restful_request(request)
     linksList.value = response.data
+    localStorage.setItem('linksList', JSON.stringify(linksList.value))
     // linksList.value = []
     linksListFiltered.value = linksList.value // Initialize filtered list with all links
   } catch (error) {
@@ -168,6 +179,7 @@ onMounted(async () => {
       },
     ]
     linksListFiltered.value = linksList.value
+    localStorage.setItem('linksList', JSON.stringify(linksList.value))
   }
 })
 
