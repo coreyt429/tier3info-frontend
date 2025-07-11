@@ -34,6 +34,7 @@
         </q-card-section>
       </q-card>
       <!-- Configurable Ace Editor with Label -->
+      <!-- FIXME: add copy and download buttons above editor -->
       <q-card v-if="states.content !== null" class="q-mt-md">
         <q-card-section class="row items-center">
           <div class="text-h6 text-black q-mb-sm">{{ editorLabel }}</div>
