@@ -52,6 +52,7 @@
               enableBasicAutocompletion: true,
               enableSnippets: true,
               enableLiveAutocompletion: true,
+              wrapBehavioursEnabled: false,
             }"
           />
         </q-card-section>
