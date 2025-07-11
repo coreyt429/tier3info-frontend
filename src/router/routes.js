@@ -109,6 +109,7 @@ const routes = [
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [{ path: '', component: () => import('pages/IndexPage.vue') }],
+    meta: { requiresAuth: true },
   },
   {
     path: '/locate',
@@ -118,6 +119,7 @@ const routes = [
         path: '',
         component: () => import('pages/LocatePage.vue'),
         props: (route) => ({ query: route.query }),
+        meta: { requiresAuth: true },
       },
     ],
   },
@@ -138,7 +140,7 @@ Object.keys(configPageMap).forEach((path) => {
             })
           },
         },
-        meta: configPageMap[path],
+        meta: { ...configPageMap[path], requiresAuth: true },
       },
     ],
   })
