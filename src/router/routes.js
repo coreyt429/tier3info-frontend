@@ -65,7 +65,7 @@ const configPageMap = {
     title: 'Broadworks CLI Templates',
     label: 'CLI Template',
     endpoint: '/broadworks/cli_templates',
-    buttons: ['Save', 'Reset'],
+    buttons: ['Save', 'Reset', 'Add', 'Delete'],
   },
   '/oracle/sbc': {
     title: 'Oracle SBC',
