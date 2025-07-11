@@ -76,7 +76,7 @@
 </template>
 
 <script setup>
-import { tier3info_restful_request } from 'src/plugins/tier3info.js'
+import { tier3info_restful_request, emit_notification } from 'src/plugins/tier3info.js'
 import { useRoute } from 'vue-router'
 import { reactive, ref, computed, watch } from 'vue'
 import { VAceEditor } from 'vue3-ace-editor'
@@ -186,19 +186,19 @@ async function save_editorContent(option) {
       const response = await tier3info_restful_request(request)
       console.log('Response from server:', response)
       if (response && response.status === 200) {
-        this.$q.notify({
+        emit_notification({
           type: 'positive',
           message: 'Content saved successfully!',
         })
       } else {
-        this.$q.notify({
+        emit_notification({
           type: 'negative',
           message: 'Failed to save content. Please try again.',
         })
       }
     } catch (error) {
       console.error('Error converting YAML to JSON:', error)
-      this.$q.notify({
+      emit_notification({
         type: 'negative',
         message: 'Error saving content. Invalid YAML format.',
       })

@@ -99,17 +99,7 @@ export async function tier3info_restful_request(request) {
       } else {
         message = `An unexpected error occurred. ${error.message}`
       }
-      const eventBus = window.eventBus // Assuming you have an event bus set up
-      if (eventBus) {
-        console.log('Emitting show-notification event')
-        const errorMessage = message || 'An unexpected error occurred.' // Ensure message is defined
-        eventBus.emit('show-notification', {
-          type: 'error',
-          message: `Error: ${error.response?.status || 'Unknown'} ${errorMessage}`,
-        })
-      } else {
-        console.error('Event bus not found. Unable to show notification.')
-      }
+      emit_notification('error', `Error: ${error.response?.status || 'Unknown'} ${message}`) // Emit notification with error message
     })
 }
 
@@ -146,6 +136,20 @@ function loadPreferences() {
   } else {
     // Fetch preferences from the server if not found or older than 24 hours
     fetchPreferencesFromServer()
+  }
+}
+
+export function emit_notification(type, message) {
+  const eventBus = window.eventBus // Assuming you have an event bus set up
+  if (eventBus) {
+    console.log('Emitting show-notification event')
+    const errorMessage = message || 'An unexpected error occurred.' // Ensure message is defined
+    eventBus.emit('show-notification', {
+      type: type,
+      message: errorMessage,
+    })
+  } else {
+    console.error('Event bus not found. Unable to show notification.')
   }
 }
 
