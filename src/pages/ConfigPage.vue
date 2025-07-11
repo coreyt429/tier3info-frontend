@@ -186,22 +186,13 @@ async function save_editorContent(option) {
       const response = await tier3info_restful_request(request)
       console.log('Response from server:', response)
       if (response && response.status === 200) {
-        emit_notification({
-          type: 'positive',
-          message: 'Content saved successfully!',
-        })
+        emit_notification('positive', 'Content saved successfully!')
       } else {
-        emit_notification({
-          type: 'negative',
-          message: 'Failed to save content. Please try again.',
-        })
+        emit_notification('negative', 'Failed to save content. Please try again.')
       }
     } catch (error) {
       console.error('Error converting YAML to JSON:', error)
-      emit_notification({
-        type: 'negative',
-        message: 'Error saving content. Invalid YAML format.',
-      })
+      emit_notification('negative', 'Error saving content. Invalid YAML format.')
     }
   }
 }
