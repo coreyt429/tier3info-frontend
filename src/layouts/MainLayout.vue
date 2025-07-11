@@ -137,12 +137,13 @@ onMounted(async () => {
     const cachedLinks = localStorage.getItem('linksList')
     if (cachedLinks) {
       linksList.value = JSON.parse(cachedLinks)
-      linksListFiltered.value = linksList.value
-      return
+      // uncomment when menu stabilizes
+      // linksListFiltered.value = linksList.value
+      // return
     }
     const request = {
       method: 'GET',
-      path: '/menu',
+      path: '/menu/user',
     }
     const response = await tier3info_restful_request(request)
     linksList.value = response.data
