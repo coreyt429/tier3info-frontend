@@ -71,6 +71,51 @@
           </div>
         </q-card-section>
       </q-card>
+      <!-- Add and Delete Dialogs -->
+      <q-dialog v-model="add_dialog" persistent :backdrop-filter="backdropFilter">
+        <q-card style="min-width: 350px">
+          <q-card-section>
+            <div class="text-h6">Enter an Id for new {{ selectLabel }}</div>
+          </q-card-section>
+
+          <q-card-section class="q-pt-none">
+            <q-input dense v-model="add_id" autofocus @keyup.enter="add_dialog = false" />
+          </q-card-section>
+
+          <q-card-actions align="right" class="text-primary">
+            <q-btn label="Cancel" color="secondary" icon="cancel" v-close-popup />
+            <q-btn
+              icon="add"
+              color="positive"
+              label="Add"
+              v-close-popup
+              @click="add_editorContent_confirm"
+            />
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
+
+      <q-dialog v-model="delete_dialog" persistent :backdrop-filter="backdropFilter">
+        <q-card>
+          <q-card-section class="row items-center">
+            <q-avatar icon="warning" color="negative" text-color="white" />
+            <span class="q-ml-sm"
+              >You are about to delete {{ selectLabel }} {{ selectedOption }}.</span
+            >
+          </q-card-section>
+
+          <q-card-actions align="right">
+            <q-btn label="Cancel" color="secondary" icon="cancel" v-close-popup />
+            <q-btn
+              label="Delete"
+              icon="delete"
+              color="negative"
+              v-close-popup
+              @click="delete_editorContent_confirm()"
+            />
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
     </div>
   </q-page>
 </template>
@@ -82,6 +127,11 @@ import { reactive, ref, computed, watch } from 'vue'
 import { VAceEditor } from 'vue3-ace-editor'
 import 'src/plugins/ace-config'
 import yaml from 'js-yaml'
+const backdropFilter = ref('brightness(60%)')
+const add_dialog = ref(false)
+const add_id = ref(null)
+const delete_dialog = ref(false)
+const delete_confirm = ref(false)
 
 const states = reactive({
   lang: 'yaml',
@@ -99,14 +149,26 @@ const button_definitions = {
   Save: {
     label: 'Save',
     icon: 'save',
-    color: 'positive',
+    color: 'primary',
     action: () => save_editorContent(selectedOption.value),
   },
   Reset: {
     label: 'Reset',
     icon: 'refresh',
-    color: 'negative',
+    color: 'secondary',
     action: () => load_editorContent(selectedOption.value),
+  },
+  Add: {
+    label: 'Add',
+    icon: 'add',
+    color: 'positive',
+    action: () => add_editorContent(),
+  },
+  Delete: {
+    label: 'Delete',
+    icon: 'delete',
+    color: 'negative',
+    action: () => delete_editorContent(),
   },
 }
 const buttons = computed(() => {
@@ -128,6 +190,7 @@ document.addEventListener('keydown', (event) => {
 const selectLabel = computed(() => route.meta.label || 'Config:')
 const response = await tier3info_restful_request({ path: endpoint.value, method: 'GET' })
 const selectOptions = ref([])
+const reloadOnChange = ref(true)
 if (!response || !response.data) {
   console.error('Failed to fetch options from server:')
   selectOptions.value = ['dummy_option1', 'dummy_option2'] // Fallback options if request fails
@@ -197,11 +260,66 @@ async function save_editorContent(option) {
   }
 }
 
+function delete_editorContent() {
+  delete_dialog.value = true
+  delete_confirm.value = false
+}
+
+async function delete_editorContent_confirm() {
+  console.log('Deleting content for option:', selectedOption.value)
+  if (selectedOption.value) {
+    const request = {
+      path: `${endpoint.value}/${selectedOption.value}`,
+      method: 'DELETE',
+    }
+    const response = await tier3info_restful_request(request)
+    console.log('Response from server:', response)
+    if (response && response.status === 200) {
+      emit_notification('positive', 'Content deleted successfully!')
+    } else {
+      emit_notification('negative', 'Failed to delete content. Please try again.')
+    }
+  }
+}
+
+function add_editorContent() {
+  console.log('Adding content for option:', selectedOption.value)
+  add_dialog.value = true
+  add_id.value = null // Reset add_id for new entry
+}
+
+function add_editorContent_confirm() {
+  add_dialog.value = false
+  if (add_id.value) {
+    const newContent = route.meta.template || {
+      id: add_id.value,
+      data: {}, // Initialize with empty data or default values
+    }
+    // Replace any fields in newContent with the value 'ID' to newId
+    Object.keys(newContent).forEach((key) => {
+      if (newContent[key] === 'ID') {
+        newContent[key] = add_id.value
+      }
+    })
+    states.content =
+      states.lang === 'yaml' ? yaml.dump(newContent) : JSON.stringify(newContent, null, 2)
+    editorLabel.value = `Editing: ${add_id.value}`
+    reloadOnChange.value = false // Disable reload on change for new content
+    selectedOption.value = add_id.value // Set the new ID as the selected option
+    reloadOnChange.value = true // Re-enable reload on change
+    selectOptions.value.push(add_id.value) // Add new ID to options
+    emit_notification('positive', `New content with ID "${add_id.value}" created.`)
+  } else {
+    emit_notification('negative', 'No ID entered. Content creation canceled.')
+  }
+}
+
 // Watch for changes to selectedOption and fetch YAML content
 watch(selectedOption, async (option) => {
   console.log('Selected option changed:', option)
-  if (option) {
-    load_editorContent(option)
+  if (reloadOnChange.value) {
+    console.log('Reloading content for option:', option)
+    await load_editorContent(option)
   }
 })
 
