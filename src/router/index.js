@@ -28,7 +28,7 @@ export default route(function (/* { store, ssrContext } */) {
 
     if (!sessionId && to.meta.requiresAuth) {
       // if (!sessionId) {
-      next('/index.cgi') // redirect to legacy app or login
+      next('/login') // redirect to login
     } else {
       next()
     }

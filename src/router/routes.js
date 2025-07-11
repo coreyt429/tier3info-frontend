@@ -146,6 +146,13 @@ Object.keys(configPageMap).forEach((path) => {
   })
 })
 
+// Add a route for the login page
+
+routes.push({
+  path: '/login',
+  component: () => import('pages/LoginPage.vue'),
+})
+
 // Always leave this as last one,
 // but you can also remove it
 routes.push({
