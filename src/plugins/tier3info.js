@@ -99,7 +99,7 @@ export async function tier3info_restful_request(request) {
       } else {
         message = `An unexpected error occurred. ${error.message}`
       }
-      emit_notification('error', `Error: ${error.response?.status || 'Unknown'} ${message}`) // Emit notification with error message
+      emit_notification('negative', `Error: ${error.response?.status || 'Unknown'} ${message}`) // Emit notification with error message
     })
 }
 

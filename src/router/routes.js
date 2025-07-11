@@ -21,7 +21,7 @@ const configPageMap = {
     endpoint: '/acl',
     buttons: ['Save', 'Reset'],
   },
-  '/menus': {
+  '/menu': {
     title: 'Tier3info Menu Management',
     label: 'Menu',
     endpoint: '/menus',
@@ -31,6 +31,30 @@ const configPageMap = {
     title: 'Tier3info Bookmarks',
     label: 'Bookmarks',
     endpoint: '/bookmarks',
+    buttons: ['Save', 'Reset'],
+  },
+  '/broadworks/clusters': {
+    title: 'Broadworks Clusters',
+    label: 'Cluster',
+    endpoint: '/broadworks/clusters',
+    buttons: ['Save', 'Reset'],
+  },
+  '/broadworks/cli_templates': {
+    title: 'Broadworks CLI Templates',
+    label: 'CLI Template',
+    endpoint: '/broadworks/cli_templates',
+    buttons: ['Save', 'Reset'],
+  },
+  '/oracle/sbc': {
+    title: 'Oracle SBC',
+    label: 'SBC',
+    endpoint: '/oracle/sbc',
+    buttons: ['Save', 'Reset'],
+  },
+  '/sansay/sbc': {
+    title: 'Sansay SBC',
+    label: 'SBC',
+    endpoint: '/sansay/sbc',
     buttons: ['Save', 'Reset'],
   },
 }
