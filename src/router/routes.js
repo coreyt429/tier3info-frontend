@@ -24,7 +24,7 @@ const configPageMap = {
   '/menu': {
     title: 'Tier3info Menu Management',
     label: 'Menu',
-    endpoint: '/menus',
+    endpoint: '/menu',
     buttons: ['Save', 'Reset'],
   },
   '/bookmarks': {
@@ -55,6 +55,18 @@ const configPageMap = {
     title: 'Sansay SBC',
     label: 'SBC',
     endpoint: '/sansay/sbc',
+    buttons: ['Save', 'Reset'],
+  },
+  '/alerts': {
+    title: 'Tier3info Alerts',
+    label: 'Alert',
+    endpoint: '/alerts',
+    buttons: ['Save', 'Reset'],
+  },
+  '/task_schedule': {
+    title: 'Tier3info Task Schedule',
+    label: 'Task',
+    endpoint: '/task_schedule',
     buttons: ['Save', 'Reset'],
   },
 }
