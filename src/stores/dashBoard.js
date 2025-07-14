@@ -37,18 +37,30 @@ export const useDashBoardStore = defineStore('dashboard', {
         // populate with dummy data if dashboard is empty
         console.warn('Dashboard is empty, populating with dummy data')
         this.dashboard = {
-          item1: { status: 'green', text: 'Item 1 text' },
-          item2: { status: 'yellow', text: 'Item 2 text' },
-          item3: { status: 'red', text: 'Item 3 text' },
+          item1: {
+            color: 'green',
+            label: 'Item 1',
+            count: 1,
+            target: 1,
+            percent: 100,
+            text: 'Okay',
+          },
+          item2: { color: 'yellow', label: 'Item 2', count: 2, target: 5, percent: 40 },
+          item3: { color: 'red', label: 'Item 3', count: 2.34565, target: 3, percent: 78 },
         }
       }
       console.log('Dashboard after check:', this.dashboard)
       Object.keys(this.dashboard).forEach((key) => {
         const item = this.dashboard[key]
-        if (this.counts[item.status] !== undefined) {
-          this.counts[item.status] += 1
-          this.metrics[item.status] = this.metrics[item.status] || []
-          this.metrics[item.status].push(item)
+        if (Object.prototype.hasOwnProperty.call(item, 'text') && item.text != null) {
+          item.textContent = `${item.label}: ${item.text}`
+        } else {
+          item.textContent = `${item.label}: (${Number.isInteger(item.count) ? item.count : item.count.toFixed(2)}/${item.target}) ${item.percent}%`
+        }
+        if (this.counts[item.color] !== undefined) {
+          this.counts[item.color] += 1
+          this.metrics[item.color] = this.metrics[item.color] || []
+          this.metrics[item.color].push(item)
         }
       })
     },

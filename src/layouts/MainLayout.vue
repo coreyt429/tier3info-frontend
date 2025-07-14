@@ -15,7 +15,7 @@
             >
               <q-list>
                 <q-item v-for="(item, index) in dashBoardStore.metrics.green" :key="index">
-                  <q-item-section>{{ item.text }}</q-item-section>
+                  <q-item-section>{{ item.textContent }}</q-item-section>
                 </q-item>
               </q-list>
             </q-menu>
@@ -31,7 +31,7 @@
               <q-list>
                 <q-item v-for="(item, index) in dashBoardStore.metrics.yellow" :key="index">
                   <q-item-section color="warning" text-color="white">{{
-                    item.text
+                    item.textContent
                   }}</q-item-section>
                 </q-item>
               </q-list>
@@ -47,7 +47,7 @@
             >
               <q-list>
                 <q-item v-for="(item, index) in dashBoardStore.metrics.red" :key="index">
-                  <q-item-section>{{ item.text }}</q-item-section>
+                  <q-item-section>{{ item.textContent }}</q-item-section>
                 </q-item>
               </q-list>
             </q-menu>
