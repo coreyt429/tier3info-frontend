@@ -34,7 +34,6 @@
         </q-card-section>
       </q-card>
       <!-- Configurable Ace Editor with Label -->
-      <!-- FIXME: add copy and download buttons above editor -->
       <q-card v-if="states.content !== null" class="q-mt-md">
         <q-card-section class="row items-center">
           <div class="text-h6 text-black q-mb-sm">{{ editorLabel }}</div>
@@ -227,8 +226,6 @@ async function load_editorContent(option) {
       return
     }
     console.log('Response from server:', response)
-    const yaml_string = yaml.dump(response.data)
-    console.log('YAML content:', yaml_string)
     if (states.lang === 'yaml') {
       states.content = yaml.dump(response.data)
     } else {
