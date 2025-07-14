@@ -27,8 +27,8 @@ export const useDashBoardStore = defineStore('dashboard', {
         this.dashboardLoading = false
       }
     },
-    refreshDashboard() {
-      this.fetchDashboard()
+    async refreshDashboard() {
+      await this.fetchDashboard()
       console.log('Dashboard fetched', this.dashboard)
       this.counts = { green: 0, yellow: 0, red: 0 }
       this.metrics = { green: 0, yellow: 0, red: 0 }
