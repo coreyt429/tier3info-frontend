@@ -171,6 +171,18 @@ const button_definitions = {
     color: 'negative',
     action: () => delete_editorContent(),
   },
+  Zip: {
+    label: 'Zip',
+    icon: 'archive',
+    color: 'info',
+    action: () => download_certificate(selectedOption.value, 'zip'),
+  },
+  Pfx: {
+    label: 'Pfx',
+    icon: 'extension',
+    color: 'warning',
+    action: () => download_certificate(selectedOption.value, 'pfx'),
+  },
 }
 const buttons = computed(() => {
   const metaButtons = route.meta.buttons || []
@@ -206,6 +218,29 @@ const selectedOption = ref(null)
 console.log('Selected option:', selectedOption.value)
 // const editorContent = ref('test content')
 const editorLabel = ref(null)
+
+async function download_certificate(option, format) {
+  console.log('Downloading certificate for option:', option, 'Format:', format)
+  if (option) {
+    const request = {
+      path: `${endpoint.value}/${option}/${format}`,
+      method: 'GET',
+    }
+    const response = await tier3info_restful_request(request)
+    console.log('Response from server:', response)
+    if (response && response.status === 200) {
+      emit_notification('positive', 'Certificate downloaded successfully!')
+      const link = document.createElement('a')
+      link.href = `data:application/octet-stream;base64,${response.data.base64}`
+      link.download = response.data.file_name
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    } else {
+      emit_notification('negative', 'Failed to download certificate. Please try again.')
+    }
+  }
+}
 
 async function load_editorContent(option) {
   console.log('Loading content for option:', option)
