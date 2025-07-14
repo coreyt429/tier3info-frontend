@@ -47,6 +47,12 @@ export const useDashBoardStore = defineStore('dashboard', {
           },
           item2: { color: 'yellow', label: 'Item 2', count: 2, target: 5, percent: 40 },
           item3: { color: 'red', label: 'Item 3', count: 2.34565, target: 3, percent: 78 },
+          item4: { color: 'green', label: 'Item 4', count: 3, target: 3, percent: 100 },
+          item5: { color: 'yellow', label: 'Item 5', count: 1, target: 4, percent: 25 },
+          item6: { color: 'red', label: 'Item 6', count: 0, target: 2, percent: 0 },
+          item7: { color: 'green', label: 'Item 7', count: 5, target: 5, percent: 100 },
+          item8: { color: 'yellow', label: 'Item 8', count: 2.5, target: 5, percent: 50 },
+          item9: { color: 'red', label: 'Item 9', count: 1.5, target: 3, percent: 50 },
         }
       }
       console.log('Dashboard after check:', this.dashboard)

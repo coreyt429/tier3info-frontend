@@ -6,49 +6,54 @@
 
         <q-toolbar-title class="col-7"> {{ titleStore.mainTitle }} </q-toolbar-title>
         <div class="col-2 q-gutter-md">
-          <q-btn color="positive" round dense :label="dashBoardStore.counts.green">
-            <q-menu
-              anchor="bottom right"
-              self="top right"
-              transition-show="flip-right"
-              transition-hide="flip-left"
-            >
-              <q-list>
-                <q-item v-for="(item, index) in dashBoardStore.metrics.green" :key="index">
-                  <q-item-section>{{ item.textContent }}</q-item-section>
-                </q-item>
-              </q-list>
-            </q-menu>
-          </q-btn>
-
-          <q-btn color="warning" round dense :label="dashBoardStore.counts.yellow">
+          <q-btn
+            v-for="(color, index) in ['positive', 'warning', 'negative']"
+            :key="index"
+            :color="color"
+            round
+            dense
+            :label="
+              dashBoardStore.counts[
+                color === 'positive' ? 'green' : color === 'warning' ? 'yellow' : 'red'
+              ]
+            "
+          >
             <q-menu
               anchor="bottom middle"
               self="top middle"
-              transition-show="flip-right"
-              transition-hide="flip-left"
+              transition-show="scale"
+              transition-hide="scale"
+              class="bg-grey-10 text-white"
+              dark
+              elevated
+              rounded
+              :elevation="10"
             >
               <q-list>
-                <q-item v-for="(item, index) in dashBoardStore.metrics.yellow" :key="index">
-                  <q-item-section color="warning" text-color="white">{{
-                    item.textContent
-                  }}</q-item-section>
-                </q-item>
-              </q-list>
-            </q-menu>
-          </q-btn>
-
-          <q-btn color="negative" round dense :label="dashBoardStore.counts.red">
-            <q-menu
-              anchor="bottom left"
-              self="top left"
-              transition-show="flip-right"
-              transition-hide="flip-left"
-            >
-              <q-list>
-                <q-item v-for="(item, index) in dashBoardStore.metrics.red" :key="index">
-                  <q-item-section>{{ item.textContent }}</q-item-section>
-                </q-item>
+                <template
+                  v-for="(item, idx) in dashBoardStore.metrics[
+                    color === 'positive' ? 'green' : color === 'warning' ? 'yellow' : 'red'
+                  ]"
+                  :key="idx"
+                >
+                  <q-item clickable v-ripple>
+                    <q-item-section>
+                      {{ item.textContent }}
+                    </q-item-section>
+                  </q-item>
+                  <q-separator
+                    :color="color"
+                    inset
+                    spaced
+                    v-if="
+                      idx <
+                      dashBoardStore.metrics[
+                        color === 'positive' ? 'green' : color === 'warning' ? 'yellow' : 'red'
+                      ].length -
+                        1
+                    "
+                  />
+                </template>
               </q-list>
             </q-menu>
           </q-btn>
@@ -251,3 +256,5 @@ function myFilterFn() {
   return true
 }
 </script>
+
+<style scoped></style>
