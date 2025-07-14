@@ -18,7 +18,9 @@ export const useDashBoardStore = defineStore('dashboard', {
           path: '/dashboard/',
         }
         const response = await tier3info_restful_request(request)
+        console.log('Dashboard response:', response)
         this.dashboard = response.data
+        console.log('Dashboard data:', this.dashboard)
       } catch (error) {
         console.error('Error fetching dashboard:', error)
       } finally {
@@ -27,6 +29,7 @@ export const useDashBoardStore = defineStore('dashboard', {
     },
     refreshDashboard() {
       this.fetchDashboard()
+      console.log('Dashboard fetched', this.dashboard)
       this.counts = { green: 0, yellow: 0, red: 0 }
       this.metrics = { green: 0, yellow: 0, red: 0 }
       if (!this.dashboard || Object.keys(this.dashboard).length === 0) {
