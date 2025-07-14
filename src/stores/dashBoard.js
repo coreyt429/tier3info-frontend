@@ -32,14 +32,17 @@ export const useDashBoardStore = defineStore('dashboard', {
       console.log('Dashboard fetched', this.dashboard)
       this.counts = { green: 0, yellow: 0, red: 0 }
       this.metrics = { green: 0, yellow: 0, red: 0 }
+      console.log('Dashboard before check:', this.dashboard)
       if (!this.dashboard || Object.keys(this.dashboard).length === 0) {
         // populate with dummy data if dashboard is empty
+        console.warn('Dashboard is empty, populating with dummy data')
         this.dashboard = {
           item1: { status: 'green', text: 'Item 1 text' },
           item2: { status: 'yellow', text: 'Item 2 text' },
           item3: { status: 'red', text: 'Item 3 text' },
         }
       }
+      console.log('Dashboard after check:', this.dashboard)
       Object.keys(this.dashboard).forEach((key) => {
         const item = this.dashboard[key]
         if (this.counts[item.status] !== undefined) {
