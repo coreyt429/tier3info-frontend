@@ -5,10 +5,53 @@
         <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
 
         <q-toolbar-title class="col-7"> {{ titleStore.mainTitle }} </q-toolbar-title>
-        <div class="col-2">
-          <q-badge color="positive" class="q-mx-xs">99</q-badge>
-          <q-badge color="warning" class="q-mx-xs">19</q-badge>
-          <q-badge color="negative" class="q-mx-xs">29</q-badge>
+        <div class="col-2 q-gutter-md">
+          <q-btn color="positive" round dense :label="dashBoardStore.counts.green">
+            <q-menu
+              anchor="bottom right"
+              self="top right"
+              transition-show="flip-right"
+              transition-hide="flip-left"
+            >
+              <q-list>
+                <q-item v-for="(item, index) in dashBoardStore.metrics.green" :key="index">
+                  <q-item-section>{{ item.text }}</q-item-section>
+                </q-item>
+              </q-list>
+            </q-menu>
+          </q-btn>
+
+          <q-btn color="warning" round dense :label="dashBoardStore.counts.yellow">
+            <q-menu
+              anchor="bottom middle"
+              self="top middle"
+              transition-show="flip-right"
+              transition-hide="flip-left"
+            >
+              <q-list>
+                <q-item v-for="(item, index) in dashBoardStore.metrics.yellow" :key="index">
+                  <q-item-section color="warning" text-color="white">{{
+                    item.text
+                  }}</q-item-section>
+                </q-item>
+              </q-list>
+            </q-menu>
+          </q-btn>
+
+          <q-btn color="negative" round dense :label="dashBoardStore.counts.red">
+            <q-menu
+              anchor="bottom left"
+              self="top left"
+              transition-show="flip-right"
+              transition-hide="flip-left"
+            >
+              <q-list>
+                <q-item v-for="(item, index) in dashBoardStore.metrics.red" :key="index">
+                  <q-item-section>{{ item.text }}</q-item-section>
+                </q-item>
+              </q-list>
+            </q-menu>
+          </q-btn>
         </div>
         <div class="col-2 text-right">v{{ appVersion }}</div>
       </q-toolbar>
@@ -52,8 +95,22 @@ import { version as appVersion } from '../../package.json'
 import { ref } from 'vue'
 import EssentialLink from 'components/EssentialLink.vue'
 import { useTitleStore } from 'stores/titleStore'
+import { useDashBoardStore } from 'stores/dashBoard'
 const titleStore = useTitleStore()
 titleStore.setMainTitle('Voice Engineering Information Center')
+const dashBoardStore = useDashBoardStore()
+
+import { onUnmounted } from 'vue'
+
+const refreshInterval = 60000 // 1 minute in milliseconds
+dashBoardStore.refreshDashboard()
+const intervalId = setInterval(() => {
+  dashBoardStore.refreshDashboard()
+}, refreshInterval)
+
+onUnmounted(() => {
+  clearInterval(intervalId)
+})
 
 const $q = useQuasar()
 
