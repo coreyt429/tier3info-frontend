@@ -36,7 +36,16 @@
                   ]"
                   :key="idx"
                 >
-                  <q-item clickable v-ripple>
+                  <q-item
+                    clickable
+                    v-ripple
+                    @click="
+                      () => {
+                        dashBoardStore.loadDetails(item)
+                        detailsPanelOpen.value = true
+                      }
+                    "
+                  >
                     <q-item-section>
                       {{ item.textContent }}
                     </q-item-section>
@@ -80,6 +89,19 @@
         <EssentialLink v-for="link in linksListFiltered" :key="link.title" v-bind="link" />
       </q-list>
     </q-drawer>
+    <q-drawer
+      side="right"
+      v-model="detailsPanelOpen"
+      overlay
+      behavior="mobile"
+      elevated
+      class="bg-grey-9 text-white"
+    >
+      <q-scroll-area class="fit q-pa-md">
+        <!-- Dynamic HTML or Vue content here -->
+        <div v-html="dashBoardStore.detailsHtml"></div>
+      </q-scroll-area>
+    </q-drawer>
 
     <q-page-container>
       <router-view />
@@ -91,6 +113,8 @@
       color="accent"
       size="10px"
     />
+
+    <!-- dashBoard Details Display -->
   </q-layout>
 </template>
 
@@ -99,12 +123,13 @@ import { useQuasar } from 'quasar'
 import { version as appVersion } from '../../package.json'
 import { ref } from 'vue'
 import EssentialLink from 'components/EssentialLink.vue'
-import { useTitleStore } from 'stores/titleStore'
-import { useDashBoardStore } from 'stores/dashBoard'
+import { useTitleStore } from 'src/stores/titleStore'
+import { useDashBoardStore } from 'src/stores/dashBoard'
+const dashBoardStore = useDashBoardStore()
+console.debug('Dashboard Store:', dashBoardStore)
 const titleStore = useTitleStore()
 titleStore.setMainTitle('Voice Engineering Information Center')
-const dashBoardStore = useDashBoardStore()
-
+const detailsPanelOpen = ref(false)
 import { onUnmounted } from 'vue'
 
 const refreshInterval = 60000 // 1 minute in milliseconds

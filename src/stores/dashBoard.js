@@ -5,6 +5,8 @@ export const useDashBoardStore = defineStore('dashboard', {
   state: () => ({
     dashboard: {},
     dashboardLoading: false,
+    metricDetails: {},
+    detailsHtml: '',
     counts: { green: 0, yellow: 0, red: 0 },
     metrics: { green: 0, yellow: 0, red: 0 },
   }),
@@ -58,6 +60,7 @@ export const useDashBoardStore = defineStore('dashboard', {
       console.log('Dashboard after check:', this.dashboard)
       Object.keys(this.dashboard).forEach((key) => {
         const item = this.dashboard[key]
+        item.id = key
         if (Object.prototype.hasOwnProperty.call(item, 'text') && item.text != null) {
           item.textContent = `${item.label}: ${item.text}`
         } else {
@@ -69,6 +72,19 @@ export const useDashBoardStore = defineStore('dashboard', {
           this.metrics[item.color].push(item)
         }
       })
+    },
+    async loadDetails(metric) {
+      console.log('Loading details for metric:', metric)
+      const request = {
+        method: 'GET',
+        path: `/dashboard/detail/${metric.id}`,
+      }
+      const response = await tier3info_restful_request(request)
+      console.log('Metric details response:', response)
+      this.metricDetails = response.data
+      console.log('Metric details:', this.metricDetails)
+      this.detailsHtml = response.data
+      console.log('Details HTML:', this.detailsHtml)
     },
   },
 })
