@@ -147,6 +147,10 @@ export const useDashBoardStore = defineStore('dashboard', () => {
         metrics[item.color].push(item)
       }
     })
+    // Sort metrics by label
+    metrics.green.sort((a, b) => a.label.localeCompare(b.label))
+    metrics.yellow.sort((a, b) => a.label.localeCompare(b.label))
+    metrics.red.sort((a, b) => a.label.localeCompare(b.label))
   }
 
   async function loadDetails(metric) {
