@@ -42,7 +42,7 @@
                     @click="
                       () => {
                         dashBoardStore.loadDetails(item)
-                        detailsPanelOpen.value = true
+                        rightDrawerOpen.valueOf = true
                       }
                     "
                   >
@@ -66,6 +66,14 @@
               </q-list>
             </q-menu>
           </q-btn>
+          <q-btn
+            flat
+            dense
+            round
+            icon="chevron_right"
+            aria-label="Toggle Right Drawer"
+            @click="toggleRightDrawer"
+          />
         </div>
         <div class="col-2 text-right">v{{ appVersion }}</div>
       </q-toolbar>
@@ -90,16 +98,20 @@
       </q-list>
     </q-drawer>
     <q-drawer
+      ref="drawerRef"
       side="right"
-      v-model="detailsPanelOpen"
+      v-model="rightDrawerOpen"
       overlay
-      behavior="mobile"
+      behavior="desktop"
       elevated
-      class="bg-grey-9 text-white"
+      show-if-above
+      bordered
+      width="800"
+      class="bg-grey-10 text-primary"
     >
       <q-scroll-area class="fit q-pa-md">
         <!-- Dynamic HTML or Vue content here -->
-        <div v-html="dashBoardStore.detailsHtml"></div>
+        <DynamicDisplay :data="dashBoardStore.detailsJSON" />
       </q-scroll-area>
     </q-drawer>
 
@@ -113,8 +125,6 @@
       color="accent"
       size="10px"
     />
-
-    <!-- dashBoard Details Display -->
   </q-layout>
 </template>
 
@@ -123,13 +133,13 @@ import { useQuasar } from 'quasar'
 import { version as appVersion } from '../../package.json'
 import { ref } from 'vue'
 import EssentialLink from 'components/EssentialLink.vue'
+import DynamicDisplay from 'components/DynamicDisplay.vue'
 import { useTitleStore } from 'src/stores/titleStore'
 import { useDashBoardStore } from 'src/stores/dashBoard'
 const dashBoardStore = useDashBoardStore()
 console.debug('Dashboard Store:', dashBoardStore)
 const titleStore = useTitleStore()
 titleStore.setMainTitle('Voice Engineering Information Center')
-const detailsPanelOpen = ref(false)
 import { onUnmounted } from 'vue'
 
 const refreshInterval = 60000 // 1 minute in milliseconds
@@ -213,7 +223,7 @@ function onMenuSearchChange(val) {
   linksListFiltered.value = filterLinks(linksList.value, val.toLowerCase())
 }
 
-import { onMounted } from 'vue'
+import { onMounted, watch, nextTick } from 'vue'
 import { tier3info_restful_request } from 'src/plugins/tier3info.js'
 
 const linksList = ref([])
@@ -272,14 +282,38 @@ onMounted(async () => {
 })
 
 const leftDrawerOpen = ref(false)
+const rightDrawerOpen = ref(true)
 
 function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value
 }
+function toggleRightDrawer() {
+  rightDrawerOpen.value = !rightDrawerOpen.value
+}
+
+const drawerWidth = ref('fit-content')
+
+watch(
+  () => dashBoardStore.detailsJSON,
+  () => {
+    // Trigger reflow on content change
+    drawerWidth.value = 'auto'
+    nextTick(() => {
+      drawerWidth.value = 'fit-content'
+    })
+  },
+)
+
 function myFilterFn() {
   console.log('Ajax bar filter function called')
   return true
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.auto-grow-drawer {
+  width: fit-content !important;
+  min-width: 300px;
+  max-width: 95vw;
+}
+</style>
