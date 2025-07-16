@@ -32,10 +32,19 @@
         />
         <q-select
           filled
-          v-model="preferences.startRoute"
+          v-model="preferences.defaultRoute"
           label="Favorite Route (new gui)"
-          :options="routeOptions"
+          :options="filteredRouteOptions"
+          option-value="value"
+          option-label="label"
+          emit-value
+          map-options
           class="q-mb-md"
+          use-input
+          fill-input
+          hide-selected
+          input-debounce="200"
+          @filter="filterFn"
         />
         <q-checkbox
           v-model="menuDropDownChecked"
@@ -118,7 +127,7 @@ const routeOptions = computed(() => {
       if (link.children && link.children.length > 0) {
         return extractRoutes(link.children)
       }
-      if (link.link && (link.link.startsWith('/#') || link.link.includes('index.cgi'))) {
+      if (link.link && (link.link.startsWith('/') || link.link.includes('index.cgi'))) {
         return {
           label: link.title,
           value: link.link,
@@ -128,8 +137,39 @@ const routeOptions = computed(() => {
     })
   }
 
-  return extractRoutes(props.linksList)
+  const routes = extractRoutes(props.linksList)
+  return routes.sort((a, b) => a.label.localeCompare(b.label))
 })
+
+const filteredRouteOptions = ref(routeOptions.value)
+
+// Ensure preferences.defaultRoute only stores the value string
+if (
+  preferences.defaultRoute &&
+  typeof preferences.defaultRoute === 'object' &&
+  'value' in preferences.defaultRoute
+) {
+  preferences.defaultRoute = preferences.defaultRoute.value
+}
+
+watch(routeOptions, (newOptions) => {
+  filteredRouteOptions.value = newOptions
+})
+
+const filterFn = (val, update) => {
+  if (val === '') {
+    update(() => {
+      filteredRouteOptions.value = routeOptions.value
+    })
+  } else {
+    const filter = val.toLowerCase()
+    update(() => {
+      filteredRouteOptions.value = routeOptions.value.filter((option) =>
+        option.label.toLowerCase().includes(filter),
+      )
+    })
+  }
+}
 
 console.log('PreferencesControl routeOptions:', routeOptions.value)
 const menuDropDownChecked = computed({
