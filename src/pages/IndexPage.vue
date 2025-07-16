@@ -13,9 +13,14 @@ const preferencesStore = usePreferencesStore()
 const preferences = preferencesStore.preferences
 console.log('IndexPage preferences:', JSON.stringify(preferences, null, 2))
 console.log('IndexPage default route:', preferences.defaultRoute)
-const defaultRouteValue = preferences.defaultRoute?.value
+const defaultRouteValue = preferences.defaultRoute
 
-if (defaultRouteValue && defaultRouteValue !== '/#/' && defaultRouteValue !== undefined) {
+if (
+  defaultRouteValue &&
+  defaultRouteValue !== '/#/' &&
+  defaultRouteValue !== undefined &&
+  defaultRouteValue !== '/'
+) {
   setTimeout(() => {
     window.location.href = defaultRouteValue
   }, 100)
