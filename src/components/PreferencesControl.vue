@@ -32,7 +32,7 @@
         />
         <q-select
           filled
-          v-model="preferences.defaultRoute"
+          v-model="preferences.startRoute"
           label="Favorite Route (new gui)"
           :options="routeOptions"
           class="q-mb-md"

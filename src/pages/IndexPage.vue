@@ -12,15 +12,12 @@ import { usePreferencesStore } from 'src/stores/preferences'
 const preferencesStore = usePreferencesStore()
 const preferences = preferencesStore.preferences
 console.log('IndexPage preferences:', JSON.stringify(preferences, null, 2))
-console.log('IndexPage default route:', preferences.defaultRoute)
-if (
-  preferences.defaultRoute &&
-  preferences.defaultRoute.value &&
-  preferences.defaultRoute.value !== '/#/' &&
-  preferences.defaultRoute.value !== 'undefined'
-) {
+console.log('IndexPage default route:', preferences.startRoute)
+const startRouteValue = preferences.startRoute?.value
+
+if (startRouteValue && startRouteValue !== '/#/' && startRouteValue !== undefined) {
   setTimeout(() => {
-    window.location.href = preferences.defaultRoute.value
+    window.location.href = startRouteValue
   }, 100)
 } else {
   console.warn('No default route set in preferences.')

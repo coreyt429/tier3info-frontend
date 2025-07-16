@@ -6,7 +6,7 @@ const defaultPreferences = {
   TimeFormat: 'YYYY-MM-DD HH:mm:ss',
   TimeZone: 'America/Chicago',
   defaultAction: 'dashboard',
-  defaultRoute: '/#/locate',
+  startRoute: { label: '4.x', value: '/#/locate' },
   menuDropDown: 1,
   menuSearch: 1,
 }
