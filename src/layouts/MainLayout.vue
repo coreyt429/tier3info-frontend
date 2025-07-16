@@ -4,8 +4,8 @@
       <q-toolbar>
         <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
 
-        <q-toolbar-title class="col-7"> {{ titleStore.mainTitle }} </q-toolbar-title>
-        <div class="col-2 q-gutter-md">
+        <q-toolbar-title class="col-6"> {{ titleStore.mainTitle }} </q-toolbar-title>
+        <div class="col-3 row no-wrap q-gutter-md justify-end">
           <q-btn
             v-for="(color, index) in ['positive', 'warning', 'negative']"
             :key="index"
@@ -42,7 +42,7 @@
                     @click="
                       () => {
                         dashBoardStore.loadDetails(item)
-                        openRightDrawer()
+                        openDashBoard()
                       }
                     "
                   >
@@ -97,25 +97,23 @@
         <EssentialLink v-for="link in linksListFiltered" :key="link.title" v-bind="link" />
       </q-list>
     </q-drawer>
-    <q-drawer
-      ref="drawerRef"
-      side="right"
-      v-model="rightDrawerOpen"
-      overlay
-      behavior="mobile"
-      elevated
-      show-if-above
-      bordered
-      width="800"
-      class="bg-grey-10 text-primary"
-    >
-      <q-scroll-area class="fit q-pa-md">
-        <!-- Dynamic HTML or Vue content here -->
-        <DynamicDisplay :data="dashBoardStore.detailsJSON" />
-      </q-scroll-area>
-    </q-drawer>
 
     <q-page-container>
+      <q-slide-transition>
+        <div v-if="dashBoardOpen" class="q-pa-md bg-grey-2 bg-grey-10 text-primary">
+          <q-card flat class="q-pa-sm text-right q-mb-md">
+            <q-btn
+              flat
+              dense
+              round
+              icon="close"
+              aria-label="Close Details"
+              @click="dashBoardOpen = false"
+            ></q-btn>
+          </q-card>
+          <DynamicDisplay :data="dashBoardStore.detailsJSON" />
+        </div>
+      </q-slide-transition>
       <router-view />
     </q-page-container>
     <q-ajax-bar
@@ -223,7 +221,7 @@ function onMenuSearchChange(val) {
   linksListFiltered.value = filterLinks(linksList.value, val.toLowerCase())
 }
 
-import { onMounted, watch, nextTick } from 'vue'
+import { onMounted } from 'vue'
 import { tier3info_restful_request } from 'src/plugins/tier3info.js'
 
 const linksList = ref([])
@@ -282,31 +280,18 @@ onMounted(async () => {
 })
 
 const leftDrawerOpen = ref(false)
-const rightDrawerOpen = ref(false)
+const dashBoardOpen = ref(false)
 
 function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value
 }
 // function toggleRightDrawer() {
-//   rightDrawerOpen.value = !rightDrawerOpen.value
+//   dashBoardOpen.value = !dashBoardOpen.value
 // }
 
-function openRightDrawer() {
-  rightDrawerOpen.value = true
+function openDashBoard() {
+  dashBoardOpen.value = true
 }
-
-const drawerWidth = ref('fit-content')
-
-watch(
-  () => dashBoardStore.detailsJSON,
-  () => {
-    // Trigger reflow on content change
-    drawerWidth.value = 'auto'
-    nextTick(() => {
-      drawerWidth.value = 'fit-content'
-    })
-  },
-)
 
 function myFilterFn() {
   console.log('Ajax bar filter function called')

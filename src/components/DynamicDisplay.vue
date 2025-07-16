@@ -1,13 +1,23 @@
 <template>
   <div>
-    <q-card>
+    <template v-if="useQcard">
+      <q-card>
+        <component
+          v-for="(item, index) in data"
+          :key="index"
+          :is="componentMap[item.type] || 'div'"
+          v-bind="item"
+        />
+      </q-card>
+    </template>
+    <template v-else>
       <component
         v-for="(item, index) in data"
         :key="index"
         :is="componentMap[item.type] || 'div'"
         v-bind="item"
       />
-    </q-card>
+    </template>
   </div>
 </template>
 
@@ -23,6 +33,10 @@ const props = defineProps({
   data: {
     type: Array,
     required: true,
+  },
+  useQcard: {
+    type: Boolean,
+    default: true,
   },
 })
 

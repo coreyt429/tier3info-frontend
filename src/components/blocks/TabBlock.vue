@@ -1,6 +1,12 @@
 <template>
-  <q-card-section>
-    <q-tabs v-model="tab" dense>
+  <q-card-section class="bg-light-grey">
+    <q-tabs
+      v-model="tab"
+      dense
+      active-bg-color="secondary"
+      indicator-color="accent"
+      class="bg-light-grey text-primary"
+    >
       <q-tab v-for="(content, label) in contents" :key="label" :name="label" :label="label" />
     </q-tabs>
   </q-card-section>
@@ -10,7 +16,7 @@
   <q-card-section>
     <q-tab-panels v-model="tab" animated>
       <q-tab-panel v-for="(content, label) in contents" :key="label" :name="label">
-        <DynamicDisplay :data="content" />
+        <DynamicDisplay :data="content" :useQcard="false" />
       </q-tab-panel>
     </q-tab-panels>
   </q-card-section>

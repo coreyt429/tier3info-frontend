@@ -17,6 +17,17 @@
       </q-card>
       <!-- Row 2: Search Results Table -->
       <q-card v-if="rows.length > 0" class="q-mt-md">
+        <DataTable
+          :rows="rows"
+          :columns="columns"
+          :filterable="true"
+          :exportable="true"
+          :pagination-config="pagination"
+          :onClick="selectItem"
+          exportPrefix="locate-export"
+        />
+      </q-card>
+      <!-- <q-card v-if="rows.length > 0" class="q-mt-md">
         <q-card-section class="row items-center">
           <div class="q-mb-md" style="max-height: 500px; overflow-y: auto">
             <q-table
@@ -62,7 +73,7 @@
             </q-table>
           </div>
         </q-card-section>
-      </q-card>
+      </q-card> -->
 
       <!-- Row 3: Detail Area -->
       <q-card v-if="selectedItem" class="q-mt-md">
@@ -79,9 +90,11 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { exportFile, useQuasar } from 'quasar'
+// import { exportFile, useQuasar } from 'quasar'
 import { tier3info_restful_request } from 'src/plugins/tier3info.js'
 import { locate_cache_key_fields } from 'src/plugins/locate.js'
+import DataTable from 'src/components/DataTable.vue'
+
 // import axios from 'axios'
 import { useTitleStore } from 'stores/titleStore'
 const titleStore = useTitleStore()
@@ -90,7 +103,7 @@ titleStore.setMainTitle('Locate Tool')
 const searchQuery = ref('')
 const rows = ref([])
 const selectedItem = ref(null)
-const filter = ref('')
+// const filter = ref('')
 const columns = [
   { name: 'id', label: 'ID', field: 'id' },
   { name: 'type', label: 'Type', field: 'type' },
@@ -107,7 +120,7 @@ const columns = [
   { name: 'device_type', label: 'Device Type', field: 'device_type' },
   { name: 'mac_address', label: 'MAC Address', field: 'mac_address' },
 ]
-const visibleColumns = ref(columns.filter((col) => col.name !== 'id').map((col) => col.name))
+// const visibleColumns = ref(columns.filter((col) => col.name !== 'id').map((col) => col.name))
 const pagination = ref({ rowsPerPage: 0 })
 async function executeSearch() {
   console.log('Search Query:', searchQuery.value)
@@ -145,55 +158,55 @@ async function executeSearch() {
 function selectItem(row) {
   selectedItem.value = row
 }
-function wrapCsvValue(val, formatFn, row) {
-  let formatted = formatFn !== void 0 ? formatFn(val, row) : val
+// function wrapCsvValue(val, formatFn, row) {
+//   let formatted = formatFn !== void 0 ? formatFn(val, row) : val
 
-  formatted = formatted === void 0 || formatted === null ? '' : String(formatted)
+//   formatted = formatted === void 0 || formatted === null ? '' : String(formatted)
 
-  formatted = formatted.split('"').join('""')
-  /**
-   * Excel accepts \n and \r in strings, but some other CSV parsers do not
-   * Uncomment the next two lines to escape new lines
-   */
-  // .split('\n').join('\\n')
-  // .split('\r').join('\\r')
+//   formatted = formatted.split('"').join('""')
+//   /**
+//    * Excel accepts \n and \r in strings, but some other CSV parsers do not
+//    * Uncomment the next two lines to escape new lines
+//    */
+//   // .split('\n').join('\\n')
+//   // .split('\r').join('\\r')
 
-  return `"${formatted}"`
-}
+//   return `"${formatted}"`
+// }
 
-const $q = useQuasar()
+// const $q = useQuasar()
 
-function exportTable() {
-  // naive encoding to csv format
-  const content = [columns.map((col) => wrapCsvValue(col.label))]
-    .concat(
-      rows.value.map((row) =>
-        columns
-          .map((col) =>
-            wrapCsvValue(
-              typeof col.field === 'function'
-                ? col.field(row)
-                : row[col.field === void 0 ? col.name : col.field],
-              col.format,
-              row,
-            ),
-          )
-          .join(','),
-      ),
-    )
-    .join('\r\n')
+// function exportTable() {
+//   // naive encoding to csv format
+//   const content = [columns.map((col) => wrapCsvValue(col.label))]
+//     .concat(
+//       rows.value.map((row) =>
+//         columns
+//           .map((col) =>
+//             wrapCsvValue(
+//               typeof col.field === 'function'
+//                 ? col.field(row)
+//                 : row[col.field === void 0 ? col.name : col.field],
+//               col.format,
+//               row,
+//             ),
+//           )
+//           .join(','),
+//       ),
+//     )
+//     .join('\r\n')
 
-  const fileName = `locate-export-${new Date().toISOString()}.csv`
-  const status = exportFile(fileName, content, 'text/csv')
+//   const fileName = `locate-export-${new Date().toISOString()}.csv`
+//   const status = exportFile(fileName, content, 'text/csv')
 
-  if (status !== true) {
-    $q.notify({
-      message: 'Browser denied file download...',
-      color: 'negative',
-      icon: 'warning',
-    })
-  }
-}
+//   if (status !== true) {
+//     $q.notify({
+//       message: 'Browser denied file download...',
+//       color: 'negative',
+//       icon: 'warning',
+//     })
+//   }
+// }
 
 const props = defineProps({
   query: Object,
