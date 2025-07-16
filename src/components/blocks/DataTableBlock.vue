@@ -18,6 +18,7 @@ const tableColumns = computed(() =>
     name: 'col_' + idx,
     label,
     field: (row) => row[idx],
+    align: 'left',
     sortable: true,
   })),
 )
