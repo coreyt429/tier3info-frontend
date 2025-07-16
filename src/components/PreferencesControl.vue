@@ -1,7 +1,7 @@
 <template>
   <q-card>
-    <q-card-section class="bg-primary py-2">
-      <h6 class="text-warning text-caption">Preferences</h6>
+    <q-card-section class="bg-primary py-1">
+      <div class="text-warning text-h6 q-mb-xs1">Preferences</div>
     </q-card-section>
     <q-card-section>
       <q-form>
@@ -27,13 +27,13 @@
         <q-input
           filled
           v-model="preferences.defaultAction"
-          label="Default Action"
+          label="Favorite Action (old gui)"
           class="q-mb-md"
         />
         <q-select
           filled
           v-model="preferences.defaultRoute"
-          label="Default Route"
+          label="Favorite Route (new gui)"
           :options="routeOptions"
           class="q-mb-md"
         />
@@ -118,7 +118,7 @@ const routeOptions = computed(() => {
       if (link.children && link.children.length > 0) {
         return extractRoutes(link.children)
       }
-      if (link.link) {
+      if (link.link && (link.link.startsWith('/#') || link.link.includes('index.cgi'))) {
         return {
           label: link.title,
           value: link.link,
