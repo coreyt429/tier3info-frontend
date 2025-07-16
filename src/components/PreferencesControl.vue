@@ -1,7 +1,7 @@
 <template>
   <q-card>
-    <q-card-section class="bg-primary">
-      <h6 class="text-warning text-subtitle1">Preferences</h6>
+    <q-card-section class="bg-primary py-2">
+      <h6 class="text-warning text-caption">Preferences</h6>
     </q-card-section>
     <q-card-section>
       <q-form>
@@ -57,6 +57,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { usePreferencesStore } from 'src/stores/preferences'
+import dayjs from 'dayjs'
 const preferencesStore = usePreferencesStore()
 const preferences = preferencesStore.preferences
 
@@ -73,9 +74,16 @@ const systemTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
 
 const timeFormatExample = computed(() => {
   try {
-    // Create a date and format it according to TimeFormat
-    const now = new Date()
-    return now.toLocaleTimeString(undefined, { hour12: preferences.TimeFormat.includes('h') })
+    // Use dayjs to format current date/time with user's TimeFormat string
+    const now = dayjs()
+    if (!preferences.TimeFormat || preferences.TimeFormat.trim() === '') {
+      return ''
+    }
+    const formatted = now.format(preferences.TimeFormat)
+    if (formatted === 'Invalid Date') {
+      return ''
+    }
+    return formatted
   } catch {
     return ''
   }
