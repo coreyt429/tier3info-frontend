@@ -66,14 +66,14 @@
               </q-list>
             </q-menu>
           </q-btn>
-          <q-btn
+          <!-- <q-btn
             flat
             dense
             round
             icon="chevron_right"
             aria-label="Toggle Right Drawer"
             @click="toggleRightDrawer"
-          />
+          /> -->
         </div>
         <div class="col-2 text-right">v{{ appVersion }}</div>
       </q-toolbar>
@@ -287,9 +287,9 @@ const rightDrawerOpen = ref(false)
 function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value
 }
-function toggleRightDrawer() {
-  rightDrawerOpen.value = !rightDrawerOpen.value
-}
+// function toggleRightDrawer() {
+//   rightDrawerOpen.value = !rightDrawerOpen.value
+// }
 
 function openRightDrawer() {
   rightDrawerOpen.value = true
