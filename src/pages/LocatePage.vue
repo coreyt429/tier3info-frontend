@@ -57,13 +57,7 @@
                   </template>
                 </q-input>
                 <q-space />
-                <q-btn
-                  color="primary"
-                  icon-right="archive"
-                  label="csv"
-                  no-caps
-                  @click="exportTable"
-                />
+                <q-btn color="primary" icon="archive" label="" round no-caps @click="exportTable" />
               </template>
             </q-table>
           </div>
