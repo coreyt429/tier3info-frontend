@@ -21,10 +21,10 @@ export const usePreferencesStore = defineStore('preferences', () => {
       method: 'GET',
       path: '/preferences/',
     }
-    const data = await tier3info_restful_request(request)
-    if (data) {
-      console.log('Preferences loaded:', data)
-      Object.assign(preferences, data)
+    const response = await tier3info_restful_request(request)
+    if (response) {
+      console.log('Preferences loaded:', response.data)
+      Object.assign(preferences, response.data)
       localStorage.setItem('preferences', JSON.stringify(preferences))
     } else {
       // Load default preferences if the request fails
