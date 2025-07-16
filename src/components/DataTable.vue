@@ -34,13 +34,13 @@
       </template>
       <template v-if="props.filterable || props.exportable" v-slot:top-right>
         <template v-if="props.filterable">
-          <q-input borderless dense debounce="300" v-model="filter" placeholder="Filter">
+          <q-input dense outlined debounce="300" v-model="filter" placeholder="Filter">
             <template v-slot:append>
-              <q-icon name="search" />
+              <q-icon name="search" style="margin-left: 8px" />
             </template>
           </q-input>
         </template>
-        <q-space v-if="props.filterable && props.exportable" />
+        <div v-if="props.filterable && props.exportable" style="width: 16px" />
         <q-btn
           v-if="props.exportable"
           color="primary"
@@ -48,6 +48,8 @@
           label=""
           round
           no-caps
+          dense
+          flat
           @click="exportTable"
         />
       </template>
