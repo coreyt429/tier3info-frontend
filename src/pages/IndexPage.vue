@@ -8,4 +8,16 @@
 import { useTitleStore } from 'stores/titleStore'
 const titleStore = useTitleStore()
 titleStore.setMainTitle('Voice Engineering Information Center')
+import { usePreferencesStore } from 'src/stores/preferences'
+const preferencesStore = usePreferencesStore()
+const preferences = preferencesStore.preferences
+console.log('IndexPage preferences:', JSON.stringify(preferences, null, 2))
+console.log('IndexPage default route:', preferences.defaultRoute)
+if (preferences.defaultRoute && preferences.defaultRoute.value !== '/#/') {
+  setTimeout(() => {
+    window.location.href = preferences.defaultRoute.value
+  }, 100)
+} else {
+  console.warn('No default route set in preferences.')
+}
 </script>

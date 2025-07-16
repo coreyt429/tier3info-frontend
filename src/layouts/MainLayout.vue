@@ -1,5 +1,5 @@
 <template>
-  <q-layout view="lHh Lpr lFf" class="bg-grey-10 text-primary">
+  <q-layout view="lHh Lpr lFf" class="text-primary bg-darkness">
     <q-header elevated>
       <q-toolbar>
         <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
@@ -19,7 +19,7 @@
               self="top middle"
               transition-show="scale"
               transition-hide="scale"
-              class="bg-grey-10 text-white"
+              class="text-white"
               dark
               elevated
               rounded
@@ -51,7 +51,17 @@
             </q-menu>
           </q-btn>
         </div>
-        <div class="col-2 text-right">v{{ appVersion }}</div>
+        <div class="col-2 text-right row items-center justify-end q-gutter-sm">
+          <div>v{{ appVersion }}</div>
+          <q-btn
+            flat
+            dense
+            round
+            icon="settings"
+            aria-label="Settings"
+            @click="toggleRightDrawer"
+          />
+        </div>
       </q-toolbar>
     </q-header>
 
@@ -74,9 +84,12 @@
       </q-list>
     </q-drawer>
 
+    <q-drawer v-model="rightDrawerOpen" side="right" bordered class="bg-darkness text-primary">
+      <PreferencesControl :linksList="linksList" />
+    </q-drawer>
     <q-page-container>
       <q-slide-transition>
-        <div v-if="dashBoardOpen" class="q-pa-md bg-grey-2 bg-grey-10 text-primary">
+        <div v-if="dashBoardOpen" class="q-pa-md text-primary highlight-panel elevated glow">
           <q-card flat class="q-pa-smt q-mb-md">
             <q-card-section class="row items-center justify-between">
               <div class="text-h6">
@@ -116,6 +129,14 @@ import EssentialLink from 'components/EssentialLink.vue'
 import DynamicDisplay from 'components/DynamicDisplay.vue'
 import { useTitleStore } from 'src/stores/titleStore'
 import { useDashBoardStore } from 'src/stores/dashBoard'
+import PreferencesControl from 'components/PreferencesControl.vue'
+
+import { usePreferencesStore } from 'src/stores/preferences'
+const preferencesStore = usePreferencesStore()
+console.debug('Preferences Store:', preferencesStore)
+preferencesStore.loadPreferences()
+console.log('Preferences loaded:', preferencesStore.preferences)
+
 const dashBoardStore = useDashBoardStore()
 console.debug('Dashboard Store:', dashBoardStore)
 const titleStore = useTitleStore()
@@ -274,14 +295,15 @@ onMounted(async () => {
 })
 
 const leftDrawerOpen = ref(false)
+const rightDrawerOpen = ref(false)
 const dashBoardOpen = ref(false)
 
 function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value
 }
-// function toggleRightDrawer() {
-//   dashBoardOpen.value = !dashBoardOpen.value
-// }
+function toggleRightDrawer() {
+  rightDrawerOpen.value = !rightDrawerOpen.value
+}
 
 async function openDashBoard(metric) {
   console.log(`openDashBoard(${metric})`)
@@ -300,9 +322,9 @@ function myFilterFn() {
 </script>
 
 <style scoped>
-.auto-grow-drawer {
-  width: fit-content !important;
-  min-width: 300px;
-  max-width: 95vw;
+.highlight-panel {
+  backdrop-filter: blur(5px);
+  background: rgba(72, 92, 82, 0.85);
+  border-left: 3px solid var(--q-primary);
 }
 </style>
