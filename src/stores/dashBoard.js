@@ -54,7 +54,23 @@ export const useDashBoardStore = defineStore('dashboard', () => {
             contents: {
               type: 'bar',
               labels: ['January', 'February', 'March', 'April'],
-              data: [10, 20, 15, 25],
+              datasets: [
+                {
+                  data: [10, 20, 15, 25],
+                  label: 'Monthly Data',
+                  backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                  borderColor: 'rgba(75, 192, 192, 1)',
+                  borderWidth: 1,
+                },
+              ],
+              legend: 'test legend',
+              options: {
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                  },
+                },
+              },
             },
           },
         ],
@@ -63,6 +79,7 @@ export const useDashBoardStore = defineStore('dashboard', () => {
             type: 'datatable',
             contents: {
               labels: ['Field1', 'Field2', 'Field3', 'Field4', 'Field5', 'Field6'],
+
               data: [
                 ['Row1-Col1', 123, 'Row1-Col3', 456, 'Row1-Col5', 789],
                 ['Row2-Col1', 234, 'Row2-Col3', 567, 'Row2-Col5', 890],
@@ -76,7 +93,13 @@ export const useDashBoardStore = defineStore('dashboard', () => {
         'Tab 4': [
           {
             type: 'html',
-            contents: 'Tab 2 Content',
+            contents: `<pre>
+Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+</pre>`,
           },
         ],
       },

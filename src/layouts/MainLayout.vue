@@ -42,7 +42,7 @@
                     @click="
                       () => {
                         dashBoardStore.loadDetails(item)
-                        rightDrawerOpen.valueOf = true
+                        openRightDrawer()
                       }
                     "
                   >
@@ -102,7 +102,7 @@
       side="right"
       v-model="rightDrawerOpen"
       overlay
-      behavior="desktop"
+      behavior="mobile"
       elevated
       show-if-above
       bordered
@@ -282,13 +282,17 @@ onMounted(async () => {
 })
 
 const leftDrawerOpen = ref(false)
-const rightDrawerOpen = ref(true)
+const rightDrawerOpen = ref(false)
 
 function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value
 }
 function toggleRightDrawer() {
   rightDrawerOpen.value = !rightDrawerOpen.value
+}
+
+function openRightDrawer() {
+  rightDrawerOpen.value = true
 }
 
 const drawerWidth = ref('fit-content')
