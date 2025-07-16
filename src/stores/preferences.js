@@ -51,6 +51,7 @@ export const usePreferencesStore = defineStore('preferences', () => {
           path: '/preferences/',
           body: newVal,
         }
+        console.log('Saving preferences:', JSON.stringify(newVal))
         localStorage.setItem('preferences', JSON.stringify(newVal))
         await tier3info_restful_request(request)
       }, 2000)

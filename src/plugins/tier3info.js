@@ -44,7 +44,9 @@ export async function tier3info_restful_request(request) {
   if (request.data && !request.body) {
     request.body = request.data
   }
-  console.log(request.body)
+  console.log(`tier3info_request: ${request.method} ${request.path}`)
+  console.log(`tier3info_request: body: ${request.body}`)
+
   // Include body for POST or PUT requests
   if (request.method.toUpperCase() === 'POST' || request.method.toUpperCase() === 'PUT') {
     if (typeof request.body === 'object') {
