@@ -1,10 +1,12 @@
 <template>
-  <div class="row justify-content-center">
-    <div class="col-md-4 text-center border q-ma-md bg-grey-2">
-      <legend>{{ contents.legend }}</legend>
-      <canvas ref="canvasRef" :id="contents.id"></canvas>
+  <q-card-section v-if="contents">
+    <div class="row justify-content-center">
+      <div class="col-md-4 text-center border q-ma-md bg-grey-2">
+        <legend>{{ contents.legend }}</legend>
+        <canvas ref="canvasRef" :id="contents.id"></canvas>
+      </div>
     </div>
-  </div>
+  </q-card-section>
 </template>
 
 <script setup>
@@ -17,6 +19,7 @@ const props = defineProps({
     required: true,
   },
 })
+console.log('ChartBlock props:', props)
 
 const canvasRef = ref(null)
 let chartInstance = null

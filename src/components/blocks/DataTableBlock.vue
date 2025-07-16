@@ -1,5 +1,7 @@
 <template>
-  <q-table :rows="tableRows" :columns="tableColumns" dense flat bordered :title="title" />
+  <q-card-section v-if="contents">
+    <q-table :rows="tableRows" :columns="tableColumns" dense flat bordered :title="title" />
+  </q-card-section>
 </template>
 
 <script setup>

@@ -1,11 +1,13 @@
 <template>
   <div>
-    <component
-      v-for="(item, index) in data"
-      :key="index"
-      :is="componentMap[item.type] || 'div'"
-      v-bind="item"
-    />
+    <q-card>
+      <component
+        v-for="(item, index) in data"
+        :key="index"
+        :is="componentMap[item.type] || 'div'"
+        v-bind="item"
+      />
+    </q-card>
   </div>
 </template>
 
