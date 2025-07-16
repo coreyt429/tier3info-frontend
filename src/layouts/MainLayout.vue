@@ -7,16 +7,12 @@
         <q-toolbar-title class="col-6"> {{ titleStore.mainTitle }} </q-toolbar-title>
         <div class="col-3 row no-wrap q-gutter-md justify-end">
           <q-btn
-            v-for="(color, index) in ['positive', 'warning', 'negative']"
+            v-for="(color, index) in ['green', 'yellow', 'red']"
             :key="index"
-            :color="color"
+            :color="colorMap[color]"
             round
             dense
-            :label="
-              dashBoardStore.counts[
-                color === 'positive' ? 'green' : color === 'warning' ? 'yellow' : 'red'
-              ]
-            "
+            :label="dashBoardStore.counts[color]"
           >
             <q-menu
               anchor="bottom middle"
@@ -30,19 +26,13 @@
               :elevation="10"
             >
               <q-list>
-                <template
-                  v-for="(item, idx) in dashBoardStore.metrics[
-                    color === 'positive' ? 'green' : color === 'warning' ? 'yellow' : 'red'
-                  ]"
-                  :key="idx"
-                >
+                <template v-for="(item, idx) in dashBoardStore.metrics[color]" :key="idx">
                   <q-item
                     clickable
                     v-ripple
                     @click="
                       () => {
-                        dashBoardStore.loadDetails(item)
-                        openDashBoard()
+                        openDashBoard(item)
                       }
                     "
                   >
@@ -54,26 +44,12 @@
                     :color="color"
                     inset
                     spaced
-                    v-if="
-                      idx <
-                      dashBoardStore.metrics[
-                        color === 'positive' ? 'green' : color === 'warning' ? 'yellow' : 'red'
-                      ].length -
-                        1
-                    "
+                    v-if="idx < dashBoardStore.metrics[color].length - 1"
                   />
                 </template>
               </q-list>
             </q-menu>
           </q-btn>
-          <!-- <q-btn
-            flat
-            dense
-            round
-            icon="chevron_right"
-            aria-label="Toggle Right Drawer"
-            @click="toggleRightDrawer"
-          /> -->
         </div>
         <div class="col-2 text-right">v{{ appVersion }}</div>
       </q-toolbar>
@@ -101,15 +77,21 @@
     <q-page-container>
       <q-slide-transition>
         <div v-if="dashBoardOpen" class="q-pa-md bg-grey-2 bg-grey-10 text-primary">
-          <q-card flat class="q-pa-sm text-right q-mb-md">
-            <q-btn
-              flat
-              dense
-              round
-              icon="close"
-              aria-label="Close Details"
-              @click="dashBoardOpen = false"
-            ></q-btn>
+          <q-card flat class="q-pa-smt q-mb-md">
+            <q-card-section class="row items-center justify-between">
+              <div class="text-h6">
+                <q-icon name="flag" :color="colorMap[currentMetric.color]" class="q-mr-sm" />
+                {{ currentMetric.label }}
+              </div>
+              <q-btn
+                flat
+                dense
+                round
+                icon="close"
+                aria-label="Close Details"
+                @click="dashBoardOpen = false"
+              ></q-btn>
+            </q-card-section>
           </q-card>
           <DynamicDisplay :data="dashBoardStore.detailsJSON" />
         </div>
@@ -139,6 +121,18 @@ console.debug('Dashboard Store:', dashBoardStore)
 const titleStore = useTitleStore()
 titleStore.setMainTitle('Voice Engineering Information Center')
 import { onUnmounted } from 'vue'
+const colorMap = {
+  green: 'positive',
+  yellow: 'warning',
+  red: 'negative',
+}
+// const colorReverseMap = {
+//   positive: 'green',
+//   warning: 'yellow',
+//   negative: 'red',
+// }
+
+const currentMetric = ref({ label: 'Metric Details', color: 'red' })
 
 const refreshInterval = 60000 // 1 minute in milliseconds
 dashBoardStore.refreshDashboard()
@@ -289,7 +283,13 @@ function toggleLeftDrawer() {
 //   dashBoardOpen.value = !dashBoardOpen.value
 // }
 
-function openDashBoard() {
+async function openDashBoard(metric) {
+  console.log(`openDashBoard(${metric})`)
+  console.log(`openDashBoard(${JSON.stringify(metric)})`)
+  currentMetric.value = metric
+  console.log(`openDashBoard: currentMetric: ${JSON.stringify(currentMetric.value)}`, currentMetric)
+  await dashBoardStore.loadDetails(metric)
+  console.log('openDashBoard: dashBoardStore.detailsJSON:', dashBoardStore.detailsJSON)
   dashBoardOpen.value = true
 }
 
