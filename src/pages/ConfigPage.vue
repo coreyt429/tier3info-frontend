@@ -5,7 +5,12 @@
         <q-card-section class="row items-center">
           <q-select
             v-model="selectedOption"
-            :options="selectOptions"
+            :options="filteredOptions"
+            use-input
+            fill-input
+            hide-selected
+            input-debounce="300"
+            @filter="filterFn"
             rounded
             outlined
             :label="`Select ${selectLabel}`"
@@ -203,21 +208,36 @@ document.addEventListener('keydown', (event) => {
 const selectLabel = computed(() => route.meta.label || 'Config:')
 const response = await tier3info_restful_request({ path: endpoint.value, method: 'GET' })
 const selectOptions = ref([])
+const filteredOptions = ref([])
 const reloadOnChange = ref(true)
 if (!response || !response.data) {
   console.error('Failed to fetch options from server:')
   selectOptions.value = ['dummy_option1', 'dummy_option2'] // Fallback options if request fails
+  filteredOptions.value = selectOptions.value
   // Handle error or set fallback options
 } else {
   console.log('Response from server:', response)
   // Assuming response.data is an array of options
   selectOptions.value = response.data
+  filteredOptions.value = response.data
 }
 console.log('Select options:', selectOptions.value)
 const selectedOption = ref(null)
 console.log('Selected option:', selectedOption.value)
 // const editorContent = ref('test content')
 const editorLabel = ref(null)
+
+function filterFn(val, update) {
+  if (val === '') {
+    filteredOptions.value = selectOptions.value
+    update(() => {})
+    return
+  }
+  update(() => {
+    const needle = val.toLowerCase()
+    filteredOptions.value = selectOptions.value.filter((v) => v.toLowerCase().indexOf(needle) > -1)
+  })
+}
 
 async function download_certificate(option, format) {
   console.log('Downloading certificate for option:', option, 'Format:', format)
@@ -342,6 +362,7 @@ function add_editorContent_confirm() {
     selectedOption.value = add_id.value // Set the new ID as the selected option
     reloadOnChange.value = true // Re-enable reload on change
     selectOptions.value.push(add_id.value) // Add new ID to options
+    filteredOptions.value.push(add_id.value)
     emit_notification('positive', `New content with ID "${add_id.value}" created.`)
   } else {
     emit_notification('negative', 'No ID entered. Content creation canceled.')
