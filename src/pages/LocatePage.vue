@@ -103,7 +103,6 @@ titleStore.setMainTitle('Locate Tool')
 const searchQuery = ref('')
 const rows = ref([])
 const selectedItem = ref(null)
-// const filter = ref('')
 const columns = [
   { name: 'id', label: 'ID', field: 'id' },
   { name: 'type', label: 'Type', field: 'type' },
@@ -120,7 +119,6 @@ const columns = [
   { name: 'device_type', label: 'Device Type', field: 'device_type' },
   { name: 'mac_address', label: 'MAC Address', field: 'mac_address' },
 ]
-// const visibleColumns = ref(columns.filter((col) => col.name !== 'id').map((col) => col.name))
 const pagination = ref({ rowsPerPage: 0 })
 async function executeSearch() {
   console.log('Search Query:', searchQuery.value)
@@ -158,55 +156,6 @@ async function executeSearch() {
 function selectItem(row) {
   selectedItem.value = row
 }
-// function wrapCsvValue(val, formatFn, row) {
-//   let formatted = formatFn !== void 0 ? formatFn(val, row) : val
-
-//   formatted = formatted === void 0 || formatted === null ? '' : String(formatted)
-
-//   formatted = formatted.split('"').join('""')
-//   /**
-//    * Excel accepts \n and \r in strings, but some other CSV parsers do not
-//    * Uncomment the next two lines to escape new lines
-//    */
-//   // .split('\n').join('\\n')
-//   // .split('\r').join('\\r')
-
-//   return `"${formatted}"`
-// }
-
-// const $q = useQuasar()
-
-// function exportTable() {
-//   // naive encoding to csv format
-//   const content = [columns.map((col) => wrapCsvValue(col.label))]
-//     .concat(
-//       rows.value.map((row) =>
-//         columns
-//           .map((col) =>
-//             wrapCsvValue(
-//               typeof col.field === 'function'
-//                 ? col.field(row)
-//                 : row[col.field === void 0 ? col.name : col.field],
-//               col.format,
-//               row,
-//             ),
-//           )
-//           .join(','),
-//       ),
-//     )
-//     .join('\r\n')
-
-//   const fileName = `locate-export-${new Date().toISOString()}.csv`
-//   const status = exportFile(fileName, content, 'text/csv')
-
-//   if (status !== true) {
-//     $q.notify({
-//       message: 'Browser denied file download...',
-//       color: 'negative',
-//       icon: 'warning',
-//     })
-//   }
-// }
 
 const props = defineProps({
   query: Object,
@@ -231,30 +180,4 @@ watch(
   },
 )
 </script>
-<style lang="sass">
-.my-sticky-header-table
-  /* height or max-height is important */
-  height: 400px
-
-  .q-table__top,
-  .q-table__bottom,
-  thead tr:first-child th
-    /* bg color is important for th; just specify one */
-    background-color: white
-
-  thead tr th
-    position: sticky
-    z-index: 1
-  thead tr:first-child th
-    top: 0
-
-  /* this is when the loading indicator appears */
-  &.q-table--loading thead tr:last-child th
-    /* height of all previous header rows */
-    top: 48px
-
-  /* prevent scrolling behind sticky top row on focus */
-  tbody
-    /* height of all previous header rows */
-    scroll-margin-top: 48px
-</style>
+<style lang="sass"></style>

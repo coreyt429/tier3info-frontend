@@ -58,9 +58,10 @@ export async function tier3info_restful_request(request) {
   if (import.meta.env.VITE_TIER3INFO_API_BASE) {
     request.path = import.meta.env.VITE_TIER3INFO_API_BASE + request.path
   }
+  console.log('tier3info: Request path:', request.path)
 
-  console.log(request.path)
-  console.log(fetchOptions)
+  console.log('tier3info:', request.path)
+  console.log('tier3info:', fetchOptions)
   return axios({
     url: request.path,
     method: request.method,

@@ -1,6 +1,6 @@
 import { h } from 'vue'
 import { Suspense } from 'vue'
-import ConfigPage from 'pages/ConfigPage.vue'
+import ApiSelectEditPage from 'pages/ApiSelectEditPage.vue'
 
 const configPageMap = {
   '/config': {
@@ -106,6 +106,12 @@ configPageMap['/cfg'] = configPageMap['/config']
 
 const routes = [
   {
+    path: '/test',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [{ path: '', component: () => import('pages/testPage.vue') }],
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [{ path: '', component: () => import('pages/IndexPage.vue') }],
@@ -135,7 +141,7 @@ Object.keys(configPageMap).forEach((path) => {
         component: {
           render() {
             return h(Suspense, null, {
-              default: h(ConfigPage),
+              default: h(ApiSelectEditPage),
               fallback: h('div', 'Loading...'),
             })
           },

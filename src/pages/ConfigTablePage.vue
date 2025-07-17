@@ -148,7 +148,7 @@ const states = reactive({
 const route = useRoute()
 import { useTitleStore } from 'stores/titleStore'
 const titleStore = useTitleStore()
-titleStore.setMainTitle(route.meta.title || 'ConfigPage Title Not Set')
+titleStore.setMainTitle(route.meta.title || 'ConfigTablePage Title Not Set')
 const endpoint = computed(() => route.meta.endpoint || '/cfg')
 
 const button_definitions = {
