@@ -31,9 +31,10 @@ def write_cfg(cfg, filename):
 endpoints = {
     '/api/cfg': 'cfg.json',
     '/api/preferences': 'preferences.json',
-    '/api/menus': 'menus.json',
+    '/api/menu': 'menus.json',
+    '/api/bookmarks': 'bookmarks.json',
     '/api/dashboard': 'dashboard.json',
-    '/api/menu/user': 'menu.json',
+    # '/api/menu/user': 'menus.json',
     '/api/broadworks/certificates': 'broadworks_certificates.json',
     '/api/task_schedule': 'task_schedule.json',
 }
@@ -50,7 +51,9 @@ def list_configs():
 
 
 @app.route('/api/cfg/<cfg_id>', methods=['GET'])
-def get_config(cfg_id):
+def get_config(cfg_id=None):
+    if cfg_id is None:
+        cfg_id = 'default'
     logging.info("Received request for config ID: %s, path: %s", cfg_id, request.path)
     route = request.path.removesuffix(f"/{cfg_id}")
     logging.info("Fetching config for ID: %s from route: %s", cfg_id, route)
@@ -61,12 +64,16 @@ def get_config(cfg_id):
     return jsonify({'error': 'Not found'}), 404
 
 
-@app.route('/api/cfg/<cfg_id>', methods=['PUT'])
-def save_config(cfg_id):
+@app.route('/api/cfg/', methods=['PUT', 'POST'])
+@app.route('/api/cfg', methods=['PUT', 'POST'])
+@app.route('/api/cfg/<cfg_id>', methods=['PUT', 'POST'])
+def save_config(cfg_id=None):
+    if cfg_id is None:
+        cfg_id = 'default'
     data = request.get_json()
-    if not isinstance(data, dict):
+    if not (isinstance(data, dict) or isinstance(data, list)):
         return jsonify({'error': 'Invalid payload'}), 400
-    route = request.path.removesuffix(f"/{cfg_id}")
+    route = request.path.removesuffix(f"/{cfg_id}") if cfg_id != 'default' else request.path.removesuffix('/')
     logging.info("Fetching config for ID: %s from route: %s", cfg_id, route)
     filename = endpoints.get(route, CFG_FILE)
     cfg = read_cfg(filename)
@@ -90,6 +97,8 @@ for endpoint in endpoints.keys():
     app.add_url_rule(f'{endpoint}/', view_func=list_configs, methods=['GET'])
     app.add_url_rule(f'{endpoint}', view_func=list_configs, methods=['GET'])
     app.add_url_rule(f'{endpoint}/<cfg_id>', view_func=get_config, methods=['GET'])
+    app.add_url_rule(f'{endpoint}/', view_func=save_config, methods=['PUT'])
+    app.add_url_rule(f'{endpoint}', view_func=save_config, methods=['PUT'])
     app.add_url_rule(f'{endpoint}/<cfg_id>', view_func=save_config, methods=['PUT'])
     app.add_url_rule(f'{endpoint}/<cfg_id>', view_func=delete_config, methods=['DELETE'])
 
