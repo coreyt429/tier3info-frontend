@@ -2,47 +2,58 @@ from flask import Flask, request, jsonify
 import json
 import os
 from flask_cors import CORS
+import logging
+# Set up logging
+logging.basicConfig(level=logging.INFO) 
 
-app = Flask(__name__)
 CFG_FILE = 'cfg.json'
-
+app = Flask(__name__)
 
 CORS(app, resources={r"/*": {"origins": "http://localhost:9000"}}, supports_credentials=True)
 
-def read_cfg():
-    if not os.path.exists(CFG_FILE):
+def read_cfg(filename):
+    if not os.path.exists(filename):
         return {}
-    with open(CFG_FILE, 'r') as f:
+    with open(filename, 'r') as f:
         try:
             return json.load(f)
         except json.JSONDecodeError:
             return {}
 
-
-def write_cfg(cfg):
-    with open(CFG_FILE, 'w') as f:
+def write_cfg(cfg, filename):
+    logging.info(f"Writing config to {filename}")
+    with open(filename, 'w') as f:
         json.dump(cfg, f, indent=2)
+    
 
-endpoints = [
-    'cfg',
-    'preferences',
-    'menus',
-    'dashboard',
-    'menu',
-    'broadworks/certificates'
-]
+endpoints = {
+    '/api/cfg': 'cfg.json',
+    '/api/preferences': 'preferences.json',
+    '/api/menus': 'menus.json',
+    '/api/dashboard': 'dashboard.json',
+    '/api/menu/user': 'menu.json',
+    '/api/broadworks/certificates': 'broadworks_certificates.json',
+    '/api/task_schedule': 'task_schedule.json',
+}
 
 
 @app.route('/api/cfg/', methods=['GET'])
 @app.route('/api/cfg', methods=['GET'])
 def list_configs():
-    cfg = read_cfg()
+    route = request.path.removesuffix('/')
+    logging.info("Fetching config list from route: %s", route)
+    filename = endpoints.get(route, CFG_FILE)
+    cfg = read_cfg(filename)
     return jsonify(sorted(cfg.keys()))
 
 
 @app.route('/api/cfg/<cfg_id>', methods=['GET'])
 def get_config(cfg_id):
-    cfg = read_cfg()
+    logging.info("Received request for config ID: %s, path: %s", cfg_id, request.path)
+    route = request.path.removesuffix(f"/{cfg_id}")
+    logging.info("Fetching config for ID: %s from route: %s", cfg_id, route)
+    filename = endpoints.get(route, CFG_FILE)
+    cfg = read_cfg(filename)
     if cfg_id in cfg:
         return jsonify(cfg[cfg_id])
     return jsonify({'error': 'Not found'}), 404
@@ -53,26 +64,32 @@ def save_config(cfg_id):
     data = request.get_json()
     if not isinstance(data, dict):
         return jsonify({'error': 'Invalid payload'}), 400
-    cfg = read_cfg()
+    route = request.path.removesuffix(f"/{cfg_id}")
+    logging.info("Fetching config for ID: %s from route: %s", cfg_id, route)
+    filename = endpoints.get(route, CFG_FILE)
+    cfg = read_cfg(filename)
     cfg[cfg_id] = data
-    write_cfg(cfg)
+    write_cfg(cfg, filename)
     return jsonify({'status': 'saved', 'id': cfg_id})
 
 @app.route('/api/cfg/<cfg_id>', methods=['DELETE'])
 def delete_config(cfg_id):
-    cfg = read_cfg()
+    route = request.path.removesuffix(f"/{cfg_id}")
+    logging.info("Fetching config for ID: %s from route: %s", cfg_id, route)
+    filename = endpoints.get(route, CFG_FILE)
+    cfg = read_cfg(filename)
     if cfg_id in cfg:
         cfg.pop(cfg_id)
-        write_cfg(cfg)
+        write_cfg(cfg, filename)
         return jsonify({'status': 'deleted', 'id': cfg_id})
     return jsonify({'error': 'Not found'}), 404
 
-for endpoint in endpoints:
-    app.add_url_rule(f'/api/{endpoint}/', view_func=list_configs, methods=['GET'])
-    app.add_url_rule(f'/api/{endpoint}', view_func=list_configs, methods=['GET'])
-    app.add_url_rule(f'/api/{endpoint}/<cfg_id>', view_func=get_config, methods=['GET'])
-    app.add_url_rule(f'/api/{endpoint}/<cfg_id>', view_func=save_config, methods=['PUT'])
-    app.add_url_rule(f'/api/{endpoint}/<cfg_id>', view_func=save_config, methods=['DELETE'])
+for endpoint in endpoints.keys():
+    app.add_url_rule(f'{endpoint}/', view_func=list_configs, methods=['GET'])
+    app.add_url_rule(f'{endpoint}', view_func=list_configs, methods=['GET'])
+    app.add_url_rule(f'{endpoint}/<cfg_id>', view_func=get_config, methods=['GET'])
+    app.add_url_rule(f'{endpoint}/<cfg_id>', view_func=save_config, methods=['PUT'])
+    app.add_url_rule(f'{endpoint}/<cfg_id>', view_func=delete_config, methods=['DELETE'])
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=True)

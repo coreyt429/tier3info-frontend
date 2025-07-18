@@ -78,8 +78,9 @@ const filter = ref('')
 const visibleColumns = ref(props.columns.map((col) => col.name))
 const pagination = ref({ ...props.paginationConfig })
 
-function handleRowClick(row) {
-  console.log('DataTable row clicked:', row)
+function handleRowClick(evt, row, index) {
+  console.log('DataTable event:', evt)
+  console.log('DataTable row clicked:', row, 'at index:', index)
   console.log('DataTable onClick:', props.onClick)
   if (props.onClick) {
     props.onClick(row) // Call the onClick function with the clicked row

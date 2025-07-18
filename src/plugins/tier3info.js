@@ -44,6 +44,9 @@ export async function tier3info_restful_request(request) {
   if (request.data && !request.body) {
     request.body = request.data
   }
+  if (request.body) {
+    fetchOptions.headers['Content-Type'] = 'application/json'
+  }
   console.log(`tier3info_request: ${request.method} ${request.path}`)
   console.log(`tier3info_request: body: ${request.body}`)
 
