@@ -5,7 +5,8 @@
 
       <div class="text-h2" style="opacity: 0.4">Oops. You don't seem to be logged in...</div>
       <div class="text-h5" style="opacity: 0.4">
-        I don't have login handling code yet, so click below to login!
+        I don't have login handling code yet, so click below to login! Hey, the button might work
+        now, it should send you to {{ loginUrl }}.
       </div>
 
       <q-btn
