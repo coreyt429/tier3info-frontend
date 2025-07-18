@@ -34,18 +34,32 @@ def random_cron():
 #     response = requests.put(url, json=data)
 #     print(f"PUT {url} - Status: {response.status_code}")
 
-data = {
-    "alias": "test.com",
-    "certificate_id": "STAR.test.com_20260101",
-    "data": {
-        "subject": "*test.com",
-        "issuer": "Test CA",
-        "expiration_date": "2026-01-01",
-        "serial_number": "1234567890",
-        "san": ["test.com", "*.test.com"],
+# data = {
+#     "alias": "test.com",
+#     "certificate_id": "STAR.test.com_20260101",
+#     "data": {
+#         "subject": "*test.com",
+#         "issuer": "Test CA",
+#         "expiration_date": "2026-01-01",
+#         "serial_number": "1234567890",
+#         "san": ["test.com", "*.test.com"],
+#     }
+# }
+# endpoint =  'http://localhost:8080/api/broadworks/certificates'
+# url = f"{endpoint}/{data['certificate_id']}"
+# response = requests.put(url, json=data)
+# print(f"PUT {url} - Status: {response.status_code}")
+
+
+data = [
+    {
+        "link": '/#/certificates',
+        "title": "Broadworks Certificates",
+        "icon": "build",
+        "parent": None
     }
-}
-endpoint =  'http://localhost:8080/api/broadworks/certificates'
-url = f"{endpoint}/{data['certificate_id']}"
+]
+endpoint =  'http://localhost:8080/api/menu/user'
+url = f"{endpoint}"
 response = requests.put(url, json=data)
 print(f"PUT {url} - Status: {response.status_code}")
