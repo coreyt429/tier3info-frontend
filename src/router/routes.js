@@ -277,7 +277,7 @@ Object.keys(routePageMap).forEach((path) => {
               default: h(routePageMap[path].page),
               fallback: h('div', { class: 'q-pa-md' }, [
                 h('q-card', { flat: true, bordered: true }, [
-                  h('q-card-section', { class: 'text-h6' }, 'Loading...'),
+                  h('q-card-section', { class: 'text-h6' }, 'Loading Cool Stuff...'),
                   h('q-linear-progress', {
                     indeterminate: true,
                     color: 'primary',
