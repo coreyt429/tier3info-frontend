@@ -295,28 +295,28 @@ async function handleSave(data) {
   }
 }
 
-// async function handleDownload(option, format) {
-//   console.log('ApiTableEditPage: Downloading certificate for option:', option, 'Format:', format)
-//   if (option) {
-//     const request = {
-//       path: `${endpoint.value}/${option}/${format}`,
-//       method: 'GET',
-//     }
-//     const response = await tier3info_restful_request(request)
-//     console.log('ApiTableEditPage: Response from server:', response)
-//     if (response && response.status === 200) {
-//       emit_notification('positive', 'Certificate downloaded successfully!')
-//       const link = document.createElement('a')
-//       link.href = `data:application/octet-stream;base64,${response.data.base64}`
-//       link.download = response.data.file_name
-//       document.body.appendChild(link)
-//       link.click()
-//       document.body.removeChild(link)
-//     } else {
-//       emit_notification('negative', 'Failed to download certificate. Please try again.')
-//     }
-//   }
-// }
+async function handleDownload(option, format) {
+  console.log('ApiTableEditPage: Downloading certificate for option:', option, 'Format:', format)
+  if (option) {
+    const request = {
+      path: `${endpoint.value}/${option}/${format}`,
+      method: 'GET',
+    }
+    const response = await tier3info_restful_request(request)
+    console.log('ApiTableEditPage: Response from server:', response)
+    if (response && response.status === 200) {
+      emit_notification('positive', 'Certificate downloaded successfully!')
+      const link = document.createElement('a')
+      link.href = `data:application/octet-stream;base64,${response.data.base64}`
+      link.download = response.data.file_name
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    } else {
+      emit_notification('negative', 'Failed to download certificate. Please try again.')
+    }
+  }
+}
 
 function handleDelete() {
   console.log('ApiTableEditPage: Deleting content for option:', selectedOption.value)
