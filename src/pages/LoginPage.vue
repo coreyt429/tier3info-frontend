@@ -1,5 +1,5 @@
 <template>
-  <div class="fullscreen bg-primary text-warning text-center q-pa-md flex flex-center">
+  <q-page class="flex flex-start bg-primary text-warning text-center q-pa-md flex flex-center">
     <div>
       <div style="font-size: 30vh">403</div>
 
@@ -19,22 +19,31 @@
         no-caps
       />
     </div>
-  </div>
+  </q-page>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-const loginUrl = ref('https://tier3info.mtmsys.us/index.cgi')
+import { ref, onMounted } from 'vue'
 import { tier3info_restful_request } from 'src/plugins/tier3info'
 
-const response = await tier3info_restful_request({
-  method: 'GET',
-  endpoint: '/login',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-})
-console.log('LoginPage: Response from /login:', response)
-loginUrl.value = response.data.url || 'https://tier3info.mtmsys.us/index.cgi'
-console.log('LoginPage: Login URL set to:', loginUrl.value)
+const loginUrl = ref('https://tier3info.mtmsys.us/index.cgi')
+
+async function loadLoginUrl() {
+  try {
+    const response = await tier3info_restful_request({
+      method: 'GET',
+      endpoint: '/login',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    console.log('LoginPage: Response from /login:', response)
+    loginUrl.value = response.data.url || loginUrl.value
+    console.log('LoginPage: Login URL set to:', loginUrl.value)
+  } catch (err) {
+    console.error('LoginPage: Failed to fetch login URL:', err)
+  }
+}
+
+onMounted(loadLoginUrl)
 </script>
