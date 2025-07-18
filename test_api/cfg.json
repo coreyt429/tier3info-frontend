@@ -1,0 +1,15 @@
+{
+  "test1": {
+    "name": "Test Configuration 1",
+    "value": "Value 1"
+  },
+  "test2": {
+    "tst": 2
+  },
+  "test 3": {
+    "new_item": false
+  },
+  "test 4": {
+    "new_item": false
+  }
+}
