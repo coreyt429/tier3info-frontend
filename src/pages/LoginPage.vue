@@ -13,7 +13,7 @@
         color="warning"
         text-color="primary"
         unelevated
-        href="https://tier3info.mtmsys.us/index.cgi"
+        :href="loginUrl"
         label="Login"
         no-caps
       />
@@ -22,5 +22,18 @@
 </template>
 
 <script setup>
-//
+import { ref } from 'vue'
+const loginUrl = ref('https://tier3info.mtmsys.us/index.cgi')
+import { tier3info_restful_request } from 'src/plugins/tier3info'
+
+const response = await tier3info_restful_request({
+  method: 'GET',
+  endpoint: '/login',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+})
+console.log('LoginPage: Response from /login:', response)
+loginUrl.value = response.data.url || 'https://tier3info.mtmsys.us/index.cgi'
+console.log('LoginPage: Login URL set to:', loginUrl.value)
 </script>
