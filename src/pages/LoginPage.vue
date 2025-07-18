@@ -24,7 +24,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { tier3info_restful_request } from 'src/plugins/tier3info'
+import { tier3info_restful_request } from 'src/plugins/tier3info.js'
 
 const loginUrl = ref('https://tier3info.mtmsys.us/index.cgi')
 
