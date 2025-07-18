@@ -237,7 +237,11 @@ async function fetchRows() {
       const item = await fetchItem(id)
       console.log(`ApiTableEditPage: Fetched item for ID ${id}:`, item)
       const row = { id: id, ...item }
+      if (row.files) {
+        delete row.files // Temporary fix: Remove 'files' property if it exists
+      }
       console.log(`ApiTableEditPage: Row for ID ${id}:`, row)
+
       newRows.push(row)
     }
     console.log('ApiTableEditPage: New Rows fetched:', newRows)
