@@ -5,6 +5,8 @@ from flask_cors import CORS
 import logging
 # Set up logging
 logging.basicConfig(level=logging.INFO) 
+logging.warning('This is a warning message')
+logging.error('This is an error message')
 
 CFG_FILE = 'cfg.json'
 app = Flask(__name__)

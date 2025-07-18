@@ -7,5 +7,5 @@ docker rm -f flask-cfg-app 2>$null
 # Run the container
 docker run -d --rm --name flask-cfg-app `
   -p 8080:8080 `
-  -v "${PWD}\cfg.json:/app/cfg.json" `
+  -v "${PWD}\app.py:/app/app.py" `
   flask-cfg
