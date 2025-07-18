@@ -172,6 +172,7 @@ function selectItem(row) {
 }
 
 route.meta.fields.forEach((field) => {
+  console.log('ApiTableEditPage: Adding column for field:', field.name)
   columns.value.push({
     name: field.name,
     label: field.label || field.name,

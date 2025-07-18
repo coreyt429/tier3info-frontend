@@ -94,10 +94,12 @@ const props = defineProps({
   allowAdd: { type: Boolean, default: false }, // New prop to control add button visibility
 })
 console.log('DataTable props:', props)
-
 const filter = ref('')
+console.log('DataTable filter:', filter.value)
 const visibleColumns = ref(props.columns.map((col) => col.name))
+console.log('DataTable visibleColumns:', visibleColumns.value)
 const pagination = ref({ ...props.paginationConfig })
+console.log('DataTable pagination:', pagination.value)
 
 function handleRowClick(evt, row, index) {
   console.log('DataTable event:', evt)
