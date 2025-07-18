@@ -2,17 +2,20 @@
   <q-page class="flex flex-start">
     <div class="q-pa-md" style="width: 100%">
       <!-- Row 2: Search Results Table -->
-      <q-card v-if="rows.length > 0" class="q-mt-md">
+      <q-card class="q-mt-md">
         <DataTable
           :rows="rows"
           :columns="columns"
           :filterable="true"
           :exportable="true"
           :onClick="selectItem"
+          :allowAdd="allowAdd"
           exportPrefix="locate-export"
+          @add="handleAdd"
         />
       </q-card>
       <MyAceEditor
+        v-if="selectedOption"
         v-model="editorContent"
         :lang="states.lang"
         :theme="states.theme"
@@ -27,7 +30,7 @@
         @zip-cert="handleDownload(selectedOption, 'zip')"
         @pfx-cert="handleDownload(selectedOption, 'pfx')"
       />
-      <!-- Add and Deletze Dialogs -->
+      <!-- Add and Delete Dialogs -->
       <q-dialog v-model="add_dialog" persistent :backdrop-filter="backdropFilter">
         <q-card style="min-width: 350px">
           <q-card-section>
@@ -151,6 +154,8 @@ const buttons = computed(() => {
     .filter(Boolean)
 })
 
+const allowAdd = computed(() => buttons.value.some((button) => button.emit === 'add'))
+
 const columns = ref([
   {
     name: 'id',
@@ -171,7 +176,8 @@ route.meta.fields.forEach((field) => {
     name: field.name,
     label: field.label || field.name,
     align: 'left',
-    field: (row) => row[field.name],
+    // field: (row) => row[field.name],
+    field: (row) => field.name.split('.').reduce((acc, part) => acc?.[part], row),
     sortable: true,
   })
 })
@@ -188,6 +194,9 @@ async function fetchIds() {
     })
     console.log('ApiTableEditPage: Response from server:', response)
     if (response && response.status === 200) {
+      if (typeof response.data === 'object' && !Array.isArray(response.data)) {
+        return Object.keys(response.data)
+      }
       return response.data || []
     } else {
       console.error('ApiTableEditPage:Failed to fetch IDs:', response)
@@ -249,7 +258,7 @@ async function load_editorContent(option, newItem = false) {
   selectedOption.value = option
   if (newItem) {
     editorContent.value = null // Clear content for new item
-    return
+    // return
   }
   const response = await tier3info_restful_request({
     method: 'GET',
@@ -347,12 +356,20 @@ async function handleAddConfirm() {
     emit_notification('negative', 'This option already exists.')
     return
   }
+  let body = { new_item: true }
+  console.log('ApiTableEditPage: Adding new meta template:', route.meta.template)
+  if (route.meta.template) {
+    body = { ...route.meta.template }
+  }
+  console.log('ApiTableEditPage: Id for new item:', newOption)
+  console.log('ApiTableEditPage: Body for new item:', body)
   await tier3info_restful_request({
     method: 'PUT',
     path: `${endpoint.value}/${newOption}`,
-    body: { new_item: true },
+    body: body,
   })
-    .then(() => {
+    .then((response) => {
+      console.log('ApiTableEditPage: Response from server:', response)
       emit_notification('positive', 'New option added successfully!')
     })
     .catch((error) => {

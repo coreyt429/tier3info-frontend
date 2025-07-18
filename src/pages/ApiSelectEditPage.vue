@@ -194,8 +194,13 @@ if (!response || !response.data) {
   // Handle error or set fallback options
 } else {
   console.log('ApiSelectEditPage: Response from server:', response)
-  // Assuming response.data is an array of options
-  selectOptions.value = response.data
+  if (typeof response.data === 'object' && !Array.isArray(response.data)) {
+    // Assuming response.data is an object with keys as options
+    selectOptions.value = Object.keys(response.data)
+  } else {
+    // Assuming response.data is an array of options
+    selectOptions.value = response.data
+  }
 }
 console.log('ApiSelectEditPage: Select options:', selectOptions.value)
 const selectedOption = ref(null)

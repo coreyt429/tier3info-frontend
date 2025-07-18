@@ -50,8 +50,26 @@
           no-caps
           dense
           flat
+          :no-data-label="noDataLabel"
+          :no-results-label="noResultsLabel"
           @click="exportTable"
         />
+      </template>
+      <template v-slot:no-data="{ icon, message, filter }">
+        <div class="full-width row flex-center text-negative q-gutter-sm">
+          <q-icon size="2em" name="sentiment_dissatisfied" />
+          <span> {{ noDataLabel }}: {{ message }} </span>
+          <q-icon size="2em" :name="filter ? 'filter_b_and_w' : icon" />
+          <q-btn
+            v-if="allowAdd"
+            color="positive"
+            icon="add"
+            flat
+            round
+            dense
+            @click="$emit('add')"
+          />
+        </div>
       </template>
     </q-table>
   </q-card-section>
@@ -71,6 +89,9 @@ const props = defineProps({
   paginationConfig: { type: Object, default: () => ({ rowsPerPage: 0 }) },
   onClick: { type: Function, default: null }, // New prop for row click
   exportPrefix: { type: String, default: 'export' },
+  noDataLabel: { type: String, default: 'No data found' },
+  noResultsLabel: { type: String, default: 'No results found' },
+  allowAdd: { type: Boolean, default: false }, // New prop to control add button visibility
 })
 console.log('DataTable props:', props)
 
