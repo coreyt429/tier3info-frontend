@@ -278,7 +278,7 @@ Object.keys(routePageMap).forEach((path) => {
               fallback: h(
                 'div',
                 {
-                  class: 'text-h1 text-accent',
+                  class: 'text-h2 text-accent',
                   style: {
                     display: 'flex',
                     justifyContent: 'center',
