@@ -303,7 +303,6 @@ routes.push({
   path: '/login',
   component: () => import('layouts/LoginLayout.vue'),
   children: [{ path: '', component: () => import('pages/LoginPage.vue') }],
-  meta: { requiresAuth: true },
 })
 
 // Always leave this as last one,
