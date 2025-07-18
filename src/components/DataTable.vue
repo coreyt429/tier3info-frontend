@@ -93,7 +93,7 @@ const props = defineProps({
   noResultsLabel: { type: String, default: 'No results found' },
   allowAdd: { type: Boolean, default: false }, // New prop to control add button visibility
 })
-console.log('DataTable props:', props)
+console.log('DataTable props:', JSON.stringify(props))
 const filter = ref('')
 console.log('DataTable filter:', filter.value)
 const visibleColumns = ref(props.columns.map((col) => col.name))
