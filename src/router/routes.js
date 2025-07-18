@@ -54,7 +54,7 @@ const routePageMap = {
         { name: 'data.issuer', label: 'Issuer' },
         { name: 'data.expiration_date', label: 'Expiration Date' },
         { name: 'data.serial', label: 'Serial Number' },
-        // { name: 'data.san', label: 'SAN' },
+        { name: 'data.san', label: 'SAN' },
       ],
     },
   },

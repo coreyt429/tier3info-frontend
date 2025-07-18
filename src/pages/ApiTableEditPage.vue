@@ -237,9 +237,15 @@ async function fetchRows() {
       const item = await fetchItem(id)
       console.log(`ApiTableEditPage: Fetched item for ID ${id}:`, item)
       const row = { id: id, ...item }
+      // fix for certificates that have 'files' property
       if (row.files) {
         delete row.files // Temporary fix: Remove 'files' property if it exists
       }
+      // fix for certificates that have 'data.san' property
+      if (row.data && row.data.san) {
+        row.data.san = row.data.san.join(', ') // Convert array to string
+      }
+
       console.log(`ApiTableEditPage: Row for ID ${id}:`, row)
 
       newRows.push(row)
