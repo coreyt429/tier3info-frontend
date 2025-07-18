@@ -8,3 +8,7 @@ podman run -d --rm --name flask-cfg-app \
   -p 8080:8080 \
   -v "$PWD/app.py:/app/app.py:Z" \
   flask-cfg
+
+echo "flask-cfg should be running now"
+
+podman ps -a 

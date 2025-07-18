@@ -25,11 +25,27 @@ def random_cron():
     weekday = random.randint(0, 6)
     return f"{minute} {hour} {day} {month} {weekday}"
 
-for _ in range(10):
-    data = template.copy()
-    data["taskName"] = random_id()
-    data["taskParams"] = random_id(12)
-    data["taskSchedule"] = random_cron()
-    url = f"{endpoint}/{data['taskName']}"
-    response = requests.put(url, json=data)
-    print(f"PUT {url} - Status: {response.status_code}")
+# for _ in range(10):
+#     data = template.copy()
+#     data["taskName"] = random_id()
+#     data["taskParams"] = random_id(12)
+#     data["taskSchedule"] = random_cron()
+#     url = f"{endpoint}/{data['taskName']}"
+#     response = requests.put(url, json=data)
+#     print(f"PUT {url} - Status: {response.status_code}")
+
+data = {
+    "alias": "test.com",
+    "certificate_id": "STAR.test.com_20260101",
+    "data": {
+        "subject": "*test.com",
+        "issuer": "Test CA",
+        "expiration_date": "2026-01-01",
+        "serial_number": "1234567890",
+        "san": ["test.com", "*.test.com"],
+    }
+}
+endpoint =  'http://localhost:8080/api/broadworks/certificates'
+url = f"{endpoint}/{data['certificate_id']}"
+response = requests.put(url, json=data)
+print(f"PUT {url} - Status: {response.status_code}")

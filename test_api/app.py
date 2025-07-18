@@ -35,6 +35,7 @@ endpoints = {
     '/api/bookmarks': 'bookmarks.json',
     '/api/dashboard': 'dashboard.json',
     # '/api/menu/user': 'menus.json',
+    '/api/broadworks/cli_templates': 'broadworks_cli_templates.json',
     '/api/broadworks/certificates': 'broadworks_certificates.json',
     '/api/task_schedule': 'task_schedule.json',
 }
