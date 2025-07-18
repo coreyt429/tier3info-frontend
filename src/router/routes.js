@@ -53,7 +53,7 @@ const routePageMap = {
         { name: 'data.subject', label: 'Subject' },
         { name: 'data.issuer', label: 'Issuer' },
         { name: 'data.expiration_date', label: 'Expiration Date' },
-        { name: 'data.serial_number', label: 'Serial Number' },
+        { name: 'data.serial', label: 'Serial Number' },
         // { name: 'data.san', label: 'SAN' },
       ],
     },
