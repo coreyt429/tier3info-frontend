@@ -23,7 +23,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { tier3info_restful_request } from 'src/plugins/tier3info.js'
 
 const loginUrl = ref('https://tier3info.mtmsys.us/index.cgi')
@@ -44,6 +44,7 @@ async function loadLoginUrl() {
     console.error('LoginPage: Failed to fetch login URL:', err)
   }
 }
-
-onMounted(loadLoginUrl)
+console.log('LoginPage: Initial login URL:', loginUrl.value)
+loadLoginUrl()
+console.log('LoginPage: After loadLoginUrl, login URL:', loginUrl.value)
 </script>
