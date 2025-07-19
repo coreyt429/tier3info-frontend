@@ -32,7 +32,7 @@ async function loadLoginUrl() {
   try {
     const response = await tier3info_restful_request({
       method: 'GET',
-      endpoint: '/login',
+      path: '/login',
       headers: {
         'Content-Type': 'application/json',
       },

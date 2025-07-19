@@ -82,6 +82,11 @@ def save_config(cfg_id=None):
     write_cfg(cfg, filename)
     return jsonify({'status': 'saved', 'id': cfg_id})
 
+@app.route('/api/login', methods=['GET'])
+def get_login_url():
+    logging.info("Login endpoint called")
+    return jsonify({'url': 'https://todo.coreyt.com'})
+
 @app.route('/api/cfg/<cfg_id>', methods=['DELETE'])
 def delete_config(cfg_id):
     route = request.path.removesuffix(f"/{cfg_id}")

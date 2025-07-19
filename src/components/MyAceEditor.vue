@@ -32,13 +32,7 @@
         :placeholder="`Enter your ${states.lang} code here`"
         :lang="states.lang"
         :theme="states.theme"
-        :options="{
-          useWorker: true,
-          enableBasicAutocompletion: true,
-          enableSnippets: true,
-          enableLiveAutocompletion: true,
-          wrapBehavioursEnabled: false,
-        }"
+        :options="props.options"
       />
     </q-card-section>
     <q-separator />
@@ -113,19 +107,9 @@ const states = reactive({
   content: null,
 })
 
-const filteredOptions = ref(props.options || ['Test Option 1', 'Test Option 2'])
-
 const internalValue = ref(props.modelValue)
 
 const emit = defineEmits(['update:modelValue', 'save'])
-
-watch(
-  () => props.options,
-  (newOptions) => {
-    console.log('MyAceEditor: Options updated:', newOptions)
-    filteredOptions.value = newOptions
-  },
-)
 
 watch(
   () => props.modelValue,
