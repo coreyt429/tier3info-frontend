@@ -84,7 +84,7 @@ const props = defineProps({
       enableBasicAutocompletion: true,
       enableSnippets: true,
       enableLiveAutocompletion: true,
-      wrapBehavioursEnabled: false,
+      wrapBehavioursEnabled: true,
     }),
   },
   modelValue: {
@@ -107,6 +107,9 @@ const states = reactive({
   content: null,
 })
 
+console.log('MyAceEditor: Initial props:', props)
+console.log('MyAceEditor: Initial props.options:', props.options)
+
 const internalValue = ref(props.modelValue)
 
 const emit = defineEmits(['update:modelValue', 'save'])
@@ -117,11 +120,13 @@ watch(
     console.log('MyAceEditor: modelValue changed:', newVal)
     const currentParsed =
       states.lang === 'yaml'
-        ? yaml.dump(yaml.load(states.content || '') || {})
+        ? yaml.dump(yaml.load(states.content || '', { lineWidth: -1 }) || {})
         : JSON.stringify(JSON.parse(states.content || '{}'), null, 2)
 
     const incomingSerialized =
-      states.lang === 'yaml' ? yaml.dump(newVal) : JSON.stringify(newVal, null, 2)
+      states.lang === 'yaml'
+        ? yaml.dump(newVal, { lineWidth: -1 })
+        : JSON.stringify(newVal, null, 2)
 
     if (currentParsed !== incomingSerialized) {
       console.log('MyAceEditor: Updating content from modelValue')
@@ -179,7 +184,7 @@ watch(
     try {
       if (newLang === 'yaml' && oldLang === 'json') {
         const jsonObj = JSON.parse(states.content)
-        states.content = yaml.dump(jsonObj)
+        states.content = yaml.dump(jsonObj, { lineWidth: -1 }) // Disable line wrapping
       } else if (newLang === 'json' && oldLang === 'yaml') {
         const yamlObj = yaml.load(states.content)
         states.content = JSON.stringify(yamlObj, null, 2)
