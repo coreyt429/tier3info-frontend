@@ -84,8 +84,14 @@ const props = defineProps({
     default: () => [],
   },
   options: {
-    type: Array,
-    default: () => [],
+    type: Object,
+    default: () => ({
+      useWorker: true,
+      enableBasicAutocompletion: true,
+      enableSnippets: true,
+      enableLiveAutocompletion: true,
+      wrapBehavioursEnabled: false,
+    }),
   },
   modelValue: {
     type: [String, Number, Object, null],
