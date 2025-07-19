@@ -8,7 +8,7 @@
         I don't have login handling code yet, so click below to login! Hey, the button might work
         now, it should send you to {{ loginUrl }}.
       </div>
-
+      <div>{{ countDownTimer }}</div>
       <q-btn
         class="q-mt-xl"
         color="warning"
@@ -25,8 +25,20 @@
 <script setup>
 import { ref } from 'vue'
 import { tier3info_restful_request } from 'src/plugins/tier3info.js'
-
+const countDownTimer = ref(5)
 const loginUrl = ref('https://tier3info.mtmsys.us/index.cgi')
+
+function startCountDown() {
+  const interval = setInterval(() => {
+    if (countDownTimer.value > 0) {
+      countDownTimer.value--
+    } else {
+      clearInterval(interval)
+      // Redirect to login URL
+      window.location.href = loginUrl.value
+    }
+  }, 1000)
+}
 
 async function loadLoginUrl() {
   try {
@@ -43,6 +55,7 @@ async function loadLoginUrl() {
   } catch (err) {
     console.error('LoginPage: Failed to fetch login URL:', err)
   }
+  startCountDown()
 }
 console.log('LoginPage: Initial login URL:', loginUrl.value)
 loadLoginUrl()
