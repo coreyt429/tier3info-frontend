@@ -64,7 +64,7 @@
         </div>
       </q-toolbar>
     </q-header>
-
+    <!-- Left drawer for menu links -->
     <q-drawer v-model="leftDrawerOpen" show-if-above bordered class="bg-warning text-primary">
       <q-list>
         <!-- <q-item-label header> Menu </q-item-label> -->
@@ -83,32 +83,34 @@
         <EssentialLink v-for="link in linksListFiltered" :key="link.title" v-bind="link" />
       </q-list>
     </q-drawer>
-
+    <!-- Right Drawer for Preferences -->
     <q-drawer v-model="rightDrawerOpen" side="right" bordered class="bg-darkness text-primary">
       <PreferencesControl :linksList="linksList" />
     </q-drawer>
+    <!-- Dashboard -->
     <q-page-container>
-      <q-slide-transition>
-        <div v-if="dashBoardOpen" class="q-pa-md text-primary highlight-panel elevated glow">
-          <q-card flat class="q-pa-smt q-mb-md">
-            <q-card-section class="row items-center justify-between">
-              <div class="text-h6">
-                <q-icon name="flag" :color="colorMap[currentMetric.color]" class="q-mr-sm" />
-                {{ currentMetric.label }}
-              </div>
-              <q-btn
-                flat
-                dense
-                round
-                icon="close"
-                aria-label="Close Details"
-                @click="dashBoardOpen = false"
-              ></q-btn>
-            </q-card-section>
-          </q-card>
-          <DynamicDisplay :data="dashBoardStore.detailsJSON" />
-        </div>
-      </q-slide-transition>
+      <q-dialog v-model="dashBoardOpen" persistent>
+        <q-card class="q-pa-md text-primary elevated glow" style="width: 80vw; max-width: 80vw">
+          <q-card-section class="row items-center justify-between">
+            <div class="text-h6 q-pa-sm cols-11">
+              <q-icon name="flag" :color="colorMap[currentMetric.color]" class="q-mr-sm" />
+              Dashboard Details: {{ currentMetric.label }}
+            </div>
+            <q-btn
+              flat
+              dense
+              round
+              icon="close"
+              aria-label="Close Details"
+              @click="dashBoardOpen = false"
+            ></q-btn>
+          </q-card-section>
+          <q-separator />
+          <q-card-section>
+            <DynamicDisplay :data="dashBoardStore.detailsJSON" />
+          </q-card-section>
+        </q-card>
+      </q-dialog>
       <router-view />
     </q-page-container>
     <q-ajax-bar
@@ -324,7 +326,7 @@ function myFilterFn() {
 <style scoped>
 .highlight-panel {
   backdrop-filter: blur(5px);
-  background: rgba(72, 92, 82, 0.85);
+  /* background: rgba(73, 75, 74, 0.85); */
   border-left: 3px solid var(--q-primary);
 }
 </style>
