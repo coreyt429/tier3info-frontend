@@ -3,10 +3,22 @@ import axios from 'axios'
 var sessionId = null
 var tier3info_preferences = null
 
+function getTabId() {
+  let tabId = sessionStorage.getItem('tabId')
+  if (!tabId) {
+    tabId = crypto.randomUUID() // Generate a new UUID
+    sessionStorage.setItem('tabId', tabId) // Store it in session storage
+  }
+  return tabId
+}
+
 export async function heartbeat() {
+  const url = new URL(window.location.href)
   const data = {
-    timestamp: new Date().toISOString(),
-    url: window.location.href,
+    url: {
+      host: url.host,
+      path: url.pathname,
+    },
     referrer: document.referrer,
     viewport: {
       width: window.innerWidth,
@@ -17,10 +29,33 @@ export async function heartbeat() {
       height: screen.height,
       colorDepth: screen.colorDepth,
     },
+    tabId: getTabId(),
+    visible: document.visibilityState,
     userAgent: navigator.userAgent,
     language: navigator.language,
     platform: navigator.platform,
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    // Additional fields
+    // timestamp: Date.now(),
+    appVersion: navigator.appVersion,
+    platformDetails: navigator.userAgentData || null,
+    isMobile: window.matchMedia('(pointer: coarse)').matches,
+    navigationType: performance.getEntriesByType('navigation')[0]?.type || null,
+    pageLoadTime: performance.timing
+      ? performance.timing.loadEventEnd - performance.timing.navigationStart
+      : null,
+    connection: navigator.connection
+      ? {
+          effectiveType: navigator.connection.effectiveType,
+          downlink: navigator.connection.downlink,
+          rtt: navigator.connection.rtt,
+        }
+      : null,
+    cookieEnabled: navigator.cookieEnabled,
+    localStorageSupported: 'localStorage' in window && window.localStorage !== null,
+    serviceWorkerRegistered: 'serviceWorker' in navigator && !!navigator.serviceWorker.controller,
+    // https: window.location.protocol === 'https:',
+    secureContext: window.isSecureContext,
   }
 
   const request = {
