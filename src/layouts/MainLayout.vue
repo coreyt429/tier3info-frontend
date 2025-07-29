@@ -159,8 +159,10 @@ const currentMetric = ref({ label: 'Metric Details', color: 'red' })
 
 const refreshInterval = 60000 // 1 minute in milliseconds
 dashBoardStore.refreshDashboard()
-const intervalId = setInterval(() => {
+const intervalId = setInterval(async () => {
   dashBoardStore.refreshDashboard()
+  const response = await heartbeat()
+  console.log('Heartbeat response:', response)
 }, refreshInterval)
 
 onUnmounted(() => {
@@ -239,7 +241,7 @@ function onMenuSearchChange(val) {
 }
 
 import { onMounted } from 'vue'
-import { tier3info_restful_request } from 'src/plugins/tier3info.js'
+import { heartbeat, tier3info_restful_request } from 'src/plugins/tier3info.js'
 
 const linksList = ref([])
 const linksListFiltered = ref([])

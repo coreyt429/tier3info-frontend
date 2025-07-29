@@ -3,33 +3,33 @@ import axios from 'axios'
 var sessionId = null
 var tier3info_preferences = null
 
-function heartbeat() {
-    const data = {
-        timestamp: new Date().toISOString(),
-        url: window.location.href,
-        referrer: document.referrer,
-        viewport: {
-            width: window.innerWidth,
-            height: window.innerHeight
-        },
-        screen: {
-            width: screen.width,
-            height: screen.height,
-            colorDepth: screen.colorDepth
-        },
-        userAgent: navigator.userAgent,
-        language: navigator.language,
-        platform: navigator.platform,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-    };
+export async function heartbeat() {
+  const data = {
+    timestamp: new Date().toISOString(),
+    url: window.location.href,
+    referrer: document.referrer,
+    viewport: {
+      width: window.innerWidth,
+      height: window.innerHeight,
+    },
+    screen: {
+      width: screen.width,
+      height: screen.height,
+      colorDepth: screen.colorDepth,
+    },
+    userAgent: navigator.userAgent,
+    language: navigator.language,
+    platform: navigator.platform,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  }
 
-    const request = {
-        method: 'POST',
-        path: '/heartbeat',
-        body: data
-    };
+  const request = {
+    method: 'POST',
+    path: '/heartbeat',
+    body: data,
+  }
 
-   tier3info_restful_request(request)
+  return await tier3info_restful_request(request)
 }
 
 function get_session_id() {
