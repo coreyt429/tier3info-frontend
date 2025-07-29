@@ -28,13 +28,41 @@
 
 // src/css/quasar.variables.scss
 
+// pre 20250729
+// $primary: #1c4975;
+// $secondary: #26a69a;
+// $accent: #afd600;
+// $dark: #2e2a2a;
+// $dark-page: #383838;
+// $darkness: #37363d;
+// $positive: #1c9c3a;
+// $negative: #a31424;
+// $info: #32bdd9;
+// $warning: #d4a422;
+
+// 20250729
 $primary: #1c4975;
 $secondary: #26a69a;
 $accent: #afd600;
 $dark: #2e2a2a;
 $dark-page: #383838;
 $darkness: #37363d;
-$positive: #1c9c3a;
-$negative: #a31424;
-$info: #32bdd9;
+$positive: #2e751c;
+$negative: #751c2d;
+$info: #b5d5f5;
 $warning: #d4a422;
+
+// https://color.adobe.com/create/color-wheel
+// Complementary rooted with #1c4975
+// #1C4975
+// #BA9352
+// #FAAE2F
+// #567EA5
+// #7A6C54
+
+// Complementary split with #1c4975
+// #1C7569
+// #B5D5F5
+
+// Complementary to #1C7569
+// #75271C
