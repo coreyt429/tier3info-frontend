@@ -15,7 +15,7 @@ function getTabId() {
 export async function heartbeat() {
   const url = new URL(window.location.href)
   const data = {
-    url: {
+    uri: {
       host: url.host,
       path: url.pathname,
     },
