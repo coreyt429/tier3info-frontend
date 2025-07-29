@@ -1,6 +1,6 @@
 <template>
   <q-page class="flex flex-start">
-    <div class="q-pa-md" style="width: 100%; max-width: 800px">
+    <div class="q-pa-md" style="width: 100%">
       <!-- Row 1: Search Input and Button -->
       <q-card class="q-mt-md">
         <q-card-section class="row items-center">

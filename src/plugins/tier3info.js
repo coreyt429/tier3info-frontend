@@ -15,9 +15,15 @@ function getTabId() {
 export async function heartbeat() {
   const url = new URL(window.location.href)
   const data = {
+    url: window.location.href,
     uri: {
-      host: url.host,
+      host: url.host.split('.')[0], // Get the first part of the hostname
       path: url.pathname,
+      hash: url.hash,
+      search: url.search,
+      protocol: url.protocol,
+      port: url.port,
+      origin: url.origin,
     },
     referrer: document.referrer,
     viewport: {

@@ -159,6 +159,7 @@ const currentMetric = ref({ label: 'Metric Details', color: 'red' })
 
 const refreshInterval = 60000 // 1 minute in milliseconds
 dashBoardStore.refreshDashboard()
+heartbeat()
 const intervalId = setInterval(async () => {
   dashBoardStore.refreshDashboard()
   const response = await heartbeat()
