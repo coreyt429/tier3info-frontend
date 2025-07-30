@@ -234,9 +234,10 @@ async function fetchRows() {
   try {
     const includeData = true
     const rowData = await fetchIds(includeData)
+    console.log('ApiTableEditPage: Row data fetched:', rowData)
     const newRows = []
     for (const [id, item] of Object.entries(rowData)) {
-      console.log(`ApiTableEditPage: Processing item for ID: ${id}`)
+      console.log(`ApiTableEditPage: Processing item for ID: ${id}`, item)
       const row = { id: id, ...item }
       // fix for certificates that have 'files' property
       if (row.files) {
