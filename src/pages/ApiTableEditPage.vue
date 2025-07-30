@@ -198,6 +198,10 @@ async function fetchIds(includeData = false) {
     console.log('ApiTableEditPage: Response from server:', response)
     if (response && response.status === 200) {
       if (typeof response.data === 'object' && !Array.isArray(response.data)) {
+        if (includeData) {
+          console.log('ApiTableEditPage: Returning data with IDs:', Object.keys(response.data))
+          return response.data
+        }
         return Object.keys(response.data)
       }
       return response.data || []
