@@ -187,12 +187,13 @@ route.meta.fields.forEach((field) => {
 console.log('ApiTableEditPage: Columns defined:', JSON.stringify(columns.value, null, 2))
 const rows = ref([])
 
-async function fetchIds() {
+async function fetchIds(includeData = false) {
   console.log('ApiTableEditPage: Fetching IDs from endpoint:', endpoint.value)
   try {
+    const path = includeData ? `${endpoint.value}?include=data` : endpoint.value
     const response = await tier3info_restful_request({
       method: 'GET',
-      path: `${endpoint.value}`,
+      path: path,
     })
     console.log('ApiTableEditPage: Response from server:', response)
     if (response && response.status === 200) {
@@ -209,34 +210,33 @@ async function fetchIds() {
   return []
 }
 
-async function fetchItem(id) {
-  console.log(`ApiTableEditPage: Fetching item for ID: ${id} from endpoint: ${endpoint.value}`)
-  try {
-    const response = await tier3info_restful_request({
-      method: 'GET',
-      path: `${endpoint.value}/${id}`,
-    })
-    console.log(`ApiTableEditPage: Response for ID ${id}:`, response)
-    if (response && response.status === 200) {
-      return response.data || {}
-    } else {
-      console.error('ApiTableEditPage:Failed to fetch item:', response)
-    }
-  } catch (error) {
-    console.error('ApiTableEditPage:Error fetching item:', error)
-  }
-  return {}
-}
+// async function fetchItem(id) {
+//   console.log(`ApiTableEditPage: Fetching item for ID: ${id} from endpoint: ${endpoint.value}`)
+//   try {
+//     const response = await tier3info_restful_request({
+//       method: 'GET',
+//       path: `${endpoint.value}/${id}`,
+//     })
+//     console.log(`ApiTableEditPage: Response for ID ${id}:`, response)
+//     if (response && response.status === 200) {
+//       return response.data || {}
+//     } else {
+//       console.error('ApiTableEditPage:Failed to fetch item:', response)
+//     }
+//   } catch (error) {
+//     console.error('ApiTableEditPage:Error fetching item:', error)
+//   }
+//   return {}
+// }
 
 async function fetchRows() {
   console.log('ApiTableEditPage: Fetching rows for endpoint:', endpoint.value)
   try {
-    const ids = await fetchIds()
+    const includeData = true
+    const rowData = await fetchIds(includeData)
     const newRows = []
-    for (const id of ids) {
-      console.log(`ApiTableEditPage: Fetching item for ID: ${id}`)
-      const item = await fetchItem(id)
-      console.log(`ApiTableEditPage: Fetched item for ID ${id}:`, item)
+    for (const [id, item] of Object.entries(rowData)) {
+      console.log(`ApiTableEditPage: Processing item for ID: ${id}`)
       const row = { id: id, ...item }
       // fix for certificates that have 'files' property
       if (row.files) {
@@ -246,9 +246,7 @@ async function fetchRows() {
       if (row.data && row.data.san) {
         row.data.san = row.data.san.join(', ') // Convert array to string
       }
-
       console.log(`ApiTableEditPage: Row for ID ${id}:`, row)
-
       newRows.push(row)
     }
     console.log('ApiTableEditPage: New Rows fetched:', newRows)

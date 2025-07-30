@@ -111,7 +111,7 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
     try {
       const request = {
         method: 'GET',
-        path: '/dashboard/',
+        path: '/dashboard/?include=data',
       }
       const response = await tier3info_restful_request(request)
       console.log('Dashboard response:', response)
