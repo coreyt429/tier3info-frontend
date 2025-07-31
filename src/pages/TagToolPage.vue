@@ -342,8 +342,8 @@ async function applyTags() {
   console.log('Applying tags to selected rows:', selectedRows.value)
   for (const row of selectedRows.value) {
     const request = {
-      method: 'POST',
-      path: `/api/broadworks/access_device/${row.id}/tag`,
+      method: 'PUT',
+      path: `/api/broadworks/access_device/${row.id}/tags`,
       body: Object.fromEntries(
         tagData.value.split('\n').map((line) => {
           const [key, value] = line.split('=').map((part) => part.trim())
