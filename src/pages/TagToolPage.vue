@@ -303,7 +303,7 @@ async function rebuildConfigs() {
   for (const row of selectedRows.value) {
     const request = {
       method: 'POST',
-      path: `/api/tagtool/${row.id}/rebuild`,
+      path: `/api/broadworks/access_device/${row.id}/rebuild`,
     }
     const response = await tier3info_restful_request(request)
     console.log(`Rebuild response for ${row.id}:`, response)
@@ -323,7 +323,7 @@ async function rebootPhones() {
   for (const row of selectedRows.value) {
     const request = {
       method: 'POST',
-      path: `/api/tagtool/${row.id}/reboot`,
+      path: `/api/broadworks/access_device/${row.id}/reboot`,
     }
     const response = await tier3info_restful_request(request)
     console.log(`Reboot response for ${row.id}:`, response)

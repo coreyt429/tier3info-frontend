@@ -254,11 +254,11 @@ def delete_tagset(tagset_name):
             return jsonify({'status': 'deleted', 'tagset_name': tagset_name})
     return jsonify({'error': 'Tagset not found'}), 404
 
-@app.route('/api/tagtool/<device_id>/rebuild', methods=['POST'])
+@app.route('/api/broadworks/access_device/<device_id>/rebuild', methods=['POST'])
 def rebuild_device(device_id):
     return jsonify({'status': 'okay', 'message': f'{device_id} rebuilt'})
 
-@app.route('/api/tagtool/<device_id>/reboot', methods=['POST'])
+@app.route('/api/broadworks/access_device/<device_id>/reboot', methods=['POST'])
 def reboot_device(device_id):
     return jsonify({'status': 'okay', 'message': f'{device_id} rebooted'})
 
