@@ -357,7 +357,7 @@ async function applyTags() {
       outputHTML.value = ''
     }
     response.data.forEach((res) => {
-      if (res.status === 'okay') {
+      if (res.status === 'success') {
         outputHTML.value += `<p class="bg-positive text-white q-pa-sm q-mb-xs rounded-borders">Applied tags to ${res.id}: ${res.message}</p>`
       } else {
         outputHTML.value += `<p class="bg-negative text-white q-pa-sm q-mb-xs rounded-borders">Error applying tags to ${res.id}: ${res.error}</p>`
