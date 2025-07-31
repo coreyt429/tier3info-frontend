@@ -13,14 +13,14 @@
       :filter="props.filterable ? filter : ''"
       virtual-scroll
       v-model:pagination="pagination"
-      :visible-columns="visibleColumns"
+      :visible-columns="localVisibleColumns"
       @row-click="handleRowClick"
       :selection="props.selection"
       v-model:selected="selected"
     >
       <template v-if="props.filterable" v-slot:top-left>
         <q-select
-          v-model="visibleColumns"
+          v-model="localVisibleColumns"
           multiple
           outlined
           dense
@@ -78,7 +78,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { exportFile, useQuasar } from 'quasar'
 const $q = useQuasar()
 
@@ -95,12 +95,39 @@ const props = defineProps({
   noResultsLabel: { type: String, default: 'No results found' },
   allowAdd: { type: Boolean, default: false }, // New prop to control add button visibility
   selection: { type: String, default: 'none' }, // New prop for selection mode
+  visibleColumns: { type: Array, default: () => [] },
 })
 console.log('DataTable props:', JSON.stringify(props))
 const filter = ref('')
+const selected = ref([])
+
+const emit = defineEmits(['update:selected'])
+
+watch(selected, (newSelection) => {
+  emit('update:selected', newSelection)
+})
+
 console.log('DataTable filter:', filter.value)
-const visibleColumns = ref(props.columns.map((col) => col.name))
-console.log('DataTable visibleColumns:', visibleColumns.value)
+const localVisibleColumns = ref(
+  props.visibleColumns.length ? [...props.visibleColumns] : props.columns.map((col) => col.name),
+)
+console.log('DataTable visibleColumns:', props.visibleColumns)
+console.log('DataTable localVisibleColumns:', localVisibleColumns.value)
+watch(
+  () => props.visibleColumns,
+  (newVal) => {
+    localVisibleColumns.value = newVal.length ? [...newVal] : props.columns.map((col) => col.name)
+  },
+  { immediate: true },
+)
+
+// const visibleColumns = ref(
+//   props.visibleColumns.length ? [...props.visibleColumns] : props.columns.map((col) => col.name),
+// )
+
+// watch(props.visibleColumns, (newVal) => {
+//   emit('update:visibleColumns', newVal)
+// })
 const pagination = ref({ ...props.paginationConfig })
 console.log('DataTable pagination:', pagination.value)
 

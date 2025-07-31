@@ -31,13 +31,13 @@
         <DataTable
           :rows="rows"
           :columns="columns"
-          :visible-columns="visibleColumns"
+          :visibleColumns="visibleColumns"
           :filterable="true"
           :exportable="true"
           :pagination-config="pagination"
-          :onClick="selectItem"
           exportPrefix="tagtool-export"
           selection="multiple"
+          @update:selected="handleSelection"
         />
       </q-card>
       <!-- <q-card v-if="rows.length > 0" class="q-mt-md">
@@ -116,6 +116,7 @@ titleStore.setMainTitle('Tag Tool')
 const searchQuery = ref('')
 const rows = ref([])
 const selectedItem = ref(null)
+const selectedRows = ref([])
 const columns = [
   { name: 'id', label: 'ID', field: 'id' },
   { name: 'type_id', label: 'Id', field: 'type_id' },
@@ -130,6 +131,7 @@ const columns = [
 ]
 
 const visibleColumns = ref(columns.map((col) => col.name).filter((name) => name !== 'id'))
+console.log('Visible Columns:', visibleColumns.value)
 
 const tagData = ref('')
 const pagination = ref({ rowsPerPage: 0 })
@@ -156,6 +158,7 @@ async function executeSearch() {
     const type_id = record[key_field] || 'unknown'
     const customTags = record.custom_tags || []
     record.tags = customTags.map((tag) => `${tag.tag_name}=${tag.tag_value}`).join('\n')
+    console.log(`tags: ${record.tags}`)
     record.selected = false
     console.log(
       `Processing record with ID: ${id}, Type: ${recordType}, Key Field: ${key_field}, Type ID: ${type_id}`,
@@ -169,9 +172,9 @@ async function executeSearch() {
   console.log('Rows:', rows.value)
 }
 
-function selectItem(row) {
-  selectedItem.value = row
-}
+// function selectItem(row) {
+//   selectedItem.value = row
+// }
 
 const props = defineProps({
   query: Object,
@@ -195,5 +198,14 @@ watch(
     }
   },
 )
+
+function handleSelection(newSelectedRows) {
+  console.log('Selected rows:', newSelectedRows)
+  selectedRows.value = newSelectedRows
+  for (const row of selectedRows.value) {
+    console.log('Selected row:', row)
+  }
+  console.log(`${selectedRows.value.length} rows selected of ${rows.value.length}`)
+}
 </script>
 <style lang="sass"></style>
