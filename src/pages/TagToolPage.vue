@@ -338,6 +338,34 @@ async function rebootPhones() {
   }
 }
 
+async function applyTags() {
+  console.log('Applying tags to selected rows:', selectedRows.value)
+  for (const row of selectedRows.value) {
+    const request = {
+      method: 'POST',
+      path: `/api/broadworks/access_device/${row.id}/tag`,
+      body: Object.fromEntries(
+        tagData.value.split('\n').map((line) => {
+          const [key, value] = line.split('=').map((part) => part.trim())
+          return [key, value || '']
+        }),
+      ),
+    }
+    const response = await tier3info_restful_request(request)
+    console.log(`Tag response for ${row.id}:`, response)
+    if (outputHTML.value === null) {
+      outputHTML.value = ''
+    }
+    response.data.forEach((res) => {
+      if (res.status === 'okay') {
+        outputHTML.value += `<p class="bg-positive text-white q-pa-sm q-mb-xs rounded-borders">Applied tags to ${res.id}: ${res.message}</p>`
+      } else {
+        outputHTML.value += `<p class="bg-negative text-white q-pa-sm q-mb-xs rounded-borders">Error applying tags to ${res.id}: ${res.error}</p>`
+      }
+    })
+  }
+}
+
 function checkTags() {
   console.log(`checkTags called with tagData: ${tagData.value} rows: ${rows.value.length}`)
   const lines = tagData.value.split('\n').map((line) => {
