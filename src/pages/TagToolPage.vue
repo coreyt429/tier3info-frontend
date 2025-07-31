@@ -127,10 +127,7 @@
       <!-- Row 3: Detail Area -->
       <q-card v-if="outputHTML" class="q-mt-md">
         <q-card-section class="row items-center">
-          <div class="q-pa-md bg-grey-2">
-            <h6>Details</h6>
-            <p>{{ outputHTML }}</p>
-          </div>
+          <div class="q-pa-md bg-grey-2" v-html="outputHTML"></div>
         </q-card-section>
       </q-card>
     </div>
@@ -171,12 +168,11 @@ const selectedRows = ref([])
 const columns = [
   { name: 'matches', label: 'Matches', field: 'matches' },
   { name: 'id', label: 'ID', field: 'id' },
-  { name: 'type_id', label: 'Id', field: 'type_id' },
+  { name: 'device_id', label: 'Device ID', field: 'device_id' },
   { name: 'cluster', label: 'Cluster', field: 'cluster' },
   { name: 'enterprise_id', label: 'Enterprise Id', field: 'enterprise_id' },
   { name: 'group_id', label: 'Group Id', field: 'group_id' },
   { name: 'user_id', label: 'User Id', field: 'user_id' },
-  { name: 'device_id', label: 'Device ID', field: 'device_id' },
   { name: 'device_type', label: 'Device Type', field: 'device_type' },
   { name: 'mac_address', label: 'MAC Address', field: 'mac_address' },
   { name: 'tags', label: 'Custom Tags', field: 'tagsButton' },
@@ -302,6 +298,46 @@ function confirmSaveTagSet() {
   saveTagSet(tagsetName.value)
 }
 
+async function rebuildConfigs() {
+  console.log('Rebuilding configs for selected rows:', selectedRows.value)
+  for (const row of selectedRows.value) {
+    const request = {
+      method: 'POST',
+      path: `/api/tagtool/${row.id}/rebuild`,
+    }
+    const response = await tier3info_restful_request(request)
+    console.log(`Rebuild response for ${row.id}:`, response)
+    if (outputHTML.value === null) {
+      outputHTML.value = ''
+    }
+    if (response.data.status === 'okay') {
+      outputHTML.value += `<p class="bg-positive text-white q-pa-sm q-mb-xs rounded-borders">Rebuild configs for ${row.id}: ${response.data.message}</p>`
+    } else {
+      outputHTML.value += `<p class="bg-negative text-white q-pa-sm q-mb-xs rounded-borders">Error rebuilding configs for ${row.id}: ${response.data.error}</p>`
+    }
+  }
+}
+
+async function rebootPhones() {
+  console.log('Rebooting phones for selected rows:', selectedRows.value)
+  for (const row of selectedRows.value) {
+    const request = {
+      method: 'POST',
+      path: `/api/tagtool/${row.id}/reboot`,
+    }
+    const response = await tier3info_restful_request(request)
+    console.log(`Reboot response for ${row.id}:`, response)
+    if (outputHTML.value === null) {
+      outputHTML.value = ''
+    }
+    if (response.data.status === 'okay') {
+      outputHTML.value += `<p class="bg-positive text-white q-pa-sm q-mb-xs rounded-borders">Reboot phones for ${row.id}: ${response.data.message}</p>`
+    } else {
+      outputHTML.value += `<p class="bg-negative text-white q-pa-sm q-mb-xs rounded-borders">Error rebooting phones for ${row.id}: ${response.data.error}</p>`
+    }
+  }
+}
+
 function checkTags() {
   console.log(`checkTags called with tagData: ${tagData.value} rows: ${rows.value.length}`)
   const lines = tagData.value.split('\n').map((line) => {
@@ -377,4 +413,3 @@ function handleSelection(newSelectedRows) {
   console.log(`${selectedRows.value.length} rows selected of ${rows.value.length}`)
 }
 </script>
-<style lang="sass"></style>
