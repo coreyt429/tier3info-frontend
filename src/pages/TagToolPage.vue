@@ -175,7 +175,7 @@ const columns = [
   { name: 'user_id', label: 'User Id', field: 'user_id' },
   { name: 'device_type', label: 'Device Type', field: 'device_type' },
   { name: 'mac_address', label: 'MAC Address', field: 'mac_address' },
-  { name: 'tags', label: 'Custom Tags', field: 'tagsButton' },
+  { name: 'tagsButton', label: 'Custom Tags', field: 'tagsButton' },
 ]
 
 const isRebuildConfigsDisabled = ref(true)

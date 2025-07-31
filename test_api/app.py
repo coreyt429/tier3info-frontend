@@ -143,55 +143,35 @@ def get_user_menu():
 def heartbeat():
     return jsonify({'message': 'okay'})
 
+LOCATE_FILE = 'locate_sample_data.json'
+
 @app.route('/api/locate/', methods=['POST'])
 def locate():
-    response = [
-        {
-            "id": 1,
-            "type": "access_device",
-            "type_id": "12345",
-            "cluster": "Cluster A",
-            "enterprise_id": "Enterprise 1",
-            "group_id": "Group 1",
-            "user_id": "User 1",
-            "device_id": "Device 1",
-            "device_type": "Type A",
-            "mac_address": "00:11:22:33:44:55",
-            "custom_tags": [
-                {
-                    "tag_name": "%tag1%",
-                    "tag_value": "value1"
-                },
-                {
-                    "tag_name": "%tag2%",
-                    "tag_value": "value2"
-                }
-            ],
-        },
-        {
-            "id": 2,
-            "type": "access_device",
-            "type_id": "67890",
-            "cluster": "Cluster B",
-            "enterprise_id": "Enterprise 2",
-            "group_id": "Group 2",
-            "user_id": "User 2",
-            "device_id": "Device 2",
-            "device_type": "Type B",
-            "mac_address": "66:77:88:99:AA:BB",
-            "custom_tags": [
-                {
-                    "tag_name": "%tag3%",
-                    "tag_value": "value3"
-                },
-                {
-                    "tag_name": "%tag4%",
-                    "tag_value": "value4"
-                }
-            ],
-        },
-    ]
-    return jsonify(response)
+    if not os.path.exists(LOCATE_FILE):
+        return jsonify({'error': 'Sample data not found'}), 404
+
+    with open(LOCATE_FILE, 'r') as f:
+        try:
+            data = json.load(f)
+        except json.JSONDecodeError:
+            return jsonify({'error': 'Invalid sample data format'}), 500
+
+    hits = data.get('hits', {}).get('hits', [])
+    query = request.get_json()
+    query_string = query.get('query_string', '') if isinstance(query, dict) else ''
+
+    filtered_hits = []
+    for hit in hits:
+        source = hit.get('_source', {})
+        record = source.copy()
+        record['id'] = hit.get('_id', '')
+        if 'access_device' in query_string or 'device_id' in query_string:
+            if source.get('type') == 'access_device':
+                filtered_hits.append(record)
+        else:
+            filtered_hits.append(record)
+
+    return jsonify(filtered_hits)
 
 TAGSETS_FILE = 'tagsets.json'
 

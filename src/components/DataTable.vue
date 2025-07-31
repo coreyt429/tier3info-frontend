@@ -7,7 +7,7 @@
       flat
       bordered
       :title="props.title"
-      class="my-sticky-header-table"
+      style="height: 40vh"
       :grid="$q.screen.xs"
       row-key="id"
       :filter="props.filterable ? filter : ''"
@@ -73,7 +73,7 @@
           />
         </div>
       </template>
-      <template v-slot:body-cell-tags="props">
+      <template v-slot:body-cell-tagsButton="props">
         <q-td :props="props">
           <q-btn
             flat

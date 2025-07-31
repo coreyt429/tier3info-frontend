@@ -76,19 +76,35 @@
       </q-card> -->
 
       <!-- Row 3: Detail Area -->
-      <q-card v-if="selectedItem" class="q-mt-md">
-        <q-card-section class="row items-center">
-          <div class="q-pa-md bg-grey-2">
-            <h6>Details</h6>
-            <p>{{ selectedItem }}</p>
-          </div>
-        </q-card-section>
-      </q-card>
+      <div class="row q-mt-md">
+        <div class="col-6 q-pr-sm">
+          <q-card v-if="selectedItem">
+            <q-card-section>
+              <h6>Details</h6>
+              <div class="q-pa-md bg-grey-2">
+                <BroadworksUserBasic v-if="selectedItem.type === 'user'" :user="selectedItem" />
+                <pre v-else>{{ selectedItem }}</pre>
+              </div>
+            </q-card-section>
+          </q-card>
+        </div>
+        <div class="col-6 q-pl-sm">
+          <q-card v-if="selectedItem">
+            <q-card-section>
+              <h6>Additional Information</h6>
+              <div class="q-pa-md bg-grey-2">
+                <pre>{{ selectedItem }}</pre>
+              </div>
+            </q-card-section>
+          </q-card>
+        </div>
+      </div>
     </div>
   </q-page>
 </template>
 
 <script setup>
+import BroadworksUserBasic from 'src/components/BroadworksUserBasic.vue'
 import { ref, onMounted } from 'vue'
 // import { exportFile, useQuasar } from 'quasar'
 import { tier3info_restful_request } from 'src/plugins/tier3info.js'
