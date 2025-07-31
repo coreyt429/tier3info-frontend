@@ -83,10 +83,11 @@ function get_session_id() {
       sessionId = cookie[1]
     }
   }
-  console.log(sessionId)
   if (import.meta.env.VITE_TIER3INFO_API_KEY) {
     sessionId = import.meta.env.VITE_TIER3INFO_API_KEY
+    console.log('Using VITE_TIER3INFO_API_KEY from environment variables', sessionId)
   }
+  console.log('sessionId: ', sessionId)
   return sessionId
 }
 export async function tier3info_restful_request(request) {
