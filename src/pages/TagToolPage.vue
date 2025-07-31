@@ -357,10 +357,13 @@ async function applyTags() {
       outputHTML.value = ''
     }
     response.data.forEach((res) => {
+      console.log(`Response for ${res.id}:`, res)
       if (res.status === 'success') {
         outputHTML.value += `<p class="bg-positive text-white q-pa-sm q-mb-xs rounded-borders">Applied tags to ${res.id}: ${res.message}</p>`
+      } else if (res.status === 'info') {
+        outputHTML.value += `<p class="bg-info text-black q-pa-sm q-mb-xs rounded-borders">Info for ${res.id}: ${res.message}</p>`
       } else {
-        outputHTML.value += `<p class="bg-negative text-white q-pa-sm q-mb-xs rounded-borders">Error applying tags to ${res.id}: ${res.error}</p>`
+        outputHTML.value += `<p class="bg-negative text-white q-pa-sm q-mb-xs rounded-borders">Error applying tags to ${res.id}: ${res.message}</p>`
       }
     })
   }
