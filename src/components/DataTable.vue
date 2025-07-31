@@ -73,6 +73,19 @@
           />
         </div>
       </template>
+      <template v-slot:body-cell-tags="props">
+        <q-td :props="props">
+          <q-btn
+            flat
+            dense
+            round
+            size="sm"
+            icon="content_copy"
+            :title="props.row.tagsButton.tooltip"
+            @click="props.row.tagsButton.copyToClipboard"
+          />
+        </q-td>
+      </template>
     </q-table>
   </q-card-section>
 </template>
@@ -162,15 +175,17 @@ function exportTable() {
     .concat(
       props.rows.map((row) =>
         props.columns
-          .map((col) =>
-            wrapCsvValue(
+          .map((col) => {
+            const fieldValue =
               typeof col.field === 'function'
                 ? col.field(row)
-                : row[col.field === void 0 ? col.name : col.field],
-              col.format,
-              row,
-            ),
-          )
+                : row[col.field === void 0 ? col.name : col.field]
+
+            // Check if the field name is 'tagsButton' and extract the tooltip property
+            return col.field === 'tagsButton' && fieldValue && typeof fieldValue === 'object'
+              ? wrapCsvValue(fieldValue.tooltip, col.format, row)
+              : wrapCsvValue(fieldValue, col.format, row)
+          })
           .join(','),
       ),
     )

@@ -24,76 +24,72 @@
             />
             <q-btn label="Search" icon="search" color="primary" class="" @click="executeSearch" />
           </q-card-section>
+          <q-card-section class="row items-center">
+            <q-btn
+              label="Rebuild Configs"
+              icon="build"
+              color="primary"
+              class="q-mr-sm"
+              :disable="isRebuildConfigsDisabled"
+              @click="rebuildConfigs"
+            />
+            <q-btn
+              label="Reboot Phones"
+              icon="power_settings_new"
+              color="red"
+              class="q-mr-sm"
+              :disable="isRebootPhonesDisabled"
+              @click="rebootPhones"
+            />
+            <q-btn
+              label="Load TagSet"
+              icon="cloud_download"
+              color="teal"
+              class="q-mr-sm"
+              :disable="isLoadTagSetDisabled"
+              @click="loadTagSet"
+            />
+            <q-btn
+              label="Save TagSet"
+              icon="save"
+              color="green"
+              class="q-mr-sm"
+              :disable="isSaveTagSetDisabled"
+              @click="saveTagSet"
+            />
+            <q-btn
+              label="Apply Tags"
+              icon="label"
+              color="purple"
+              class="q-mr-sm"
+              :disable="isApplyTagsDisabled"
+              @click="applyTags"
+            />
+          </q-card-section>
         </q-card>
       </div>
       <!-- Row 2: Search Results Table -->
       <q-card v-if="rows.length > 0" class="q-mt-md">
-        <DataTable
-          :rows="rows"
-          :columns="columns"
-          :visibleColumns="visibleColumns"
-          :filterable="true"
-          :exportable="true"
-          :pagination-config="pagination"
-          exportPrefix="tagtool-export"
-          selection="multiple"
-          @update:selected="handleSelection"
-        />
-      </q-card>
-      <!-- <q-card v-if="rows.length > 0" class="q-mt-md">
         <q-card-section class="row items-center">
-          <div class="q-mb-md" style="max-height: 500px; overflow-y: auto">
-            <q-table
-              class="my-sticky-header-table"
-              flat
-              bordered
-              :grid="$q.screen.xs"
-              :rows="rows"
-              :columns="columns"
-              dense
-              row-key="id"
-              :filter="filter"
-              virtual-scroll
-              v-model:pagination="pagination"
-              :visible-columns="visibleColumns"
-              @row-click="selectItem"
-            >
-              <template v-slot:top-left>
-                <q-select
-                  v-model="visibleColumns"
-                  multiple
-                  outlined
-                  dense
-                  options-dense
-                  :display-value="$q.lang.table.columns"
-                  emit-value
-                  map-options
-                  :options="columns"
-                  option-value="name"
-                  options-cover
-                  style="min-width: 150px"
-                />
-              </template>
-              <template v-slot:top-right>
-                <q-input borderless dense debounce="300" v-model="filter" placeholder="Filter">
-                  <template v-slot:append>
-                    <q-icon name="search" />
-                  </template>
-                </q-input>
-                <q-space />
-                <q-btn color="primary" icon="archive" label="" round no-caps @click="exportTable" />
-              </template>
-            </q-table>
-          </div>
+          <DataTable
+            :rows="rows"
+            :columns="columns"
+            :visibleColumns="visibleColumns"
+            :filterable="true"
+            :exportable="true"
+            :pagination-config="pagination"
+            exportPrefix="tagtool-export"
+            selection="multiple"
+            @update:selected="handleSelection"
+          />
         </q-card-section>
-      </q-card> -->
-
+      </q-card>
       <!-- Row 3: Detail Area -->
-      <q-card v-if="selectedItem" class="q-mt-md">
+      <q-card v-if="outputHTML" class="q-mt-md">
         <q-card-section class="row items-center">
           <div class="q-pa-md bg-grey-2">
             <h6>Details</h6>
-            <p>{{ selectedItem }}</p>
+            <p>{{ outputHTML }}</p>
           </div>
         </q-card-section>
       </q-card>
@@ -115,9 +111,10 @@ titleStore.setMainTitle('Tag Tool')
 
 const searchQuery = ref('')
 const rows = ref([])
-const selectedItem = ref(null)
+const outputHTML = ref(null)
 const selectedRows = ref([])
 const columns = [
+  { name: 'matches', label: 'Matches', field: 'matches' },
   { name: 'id', label: 'ID', field: 'id' },
   { name: 'type_id', label: 'Id', field: 'type_id' },
   { name: 'cluster', label: 'Cluster', field: 'cluster' },
@@ -127,8 +124,14 @@ const columns = [
   { name: 'device_id', label: 'Device ID', field: 'device_id' },
   { name: 'device_type', label: 'Device Type', field: 'device_type' },
   { name: 'mac_address', label: 'MAC Address', field: 'mac_address' },
-  { name: 'tags', label: 'Custom Tags', field: 'tags' },
+  { name: 'tags', label: 'Custom Tags', field: 'tagsButton' },
 ]
+
+const isRebuildConfigsDisabled = ref(true)
+const isRebootPhonesDisabled = ref(true)
+const isLoadTagSetDisabled = ref(false)
+const isSaveTagSetDisabled = ref(true)
+const isApplyTagsDisabled = ref(true)
 
 const visibleColumns = ref(columns.map((col) => col.name).filter((name) => name !== 'id'))
 console.log('Visible Columns:', visibleColumns.value)
@@ -158,8 +161,21 @@ async function executeSearch() {
     const type_id = record[key_field] || 'unknown'
     const customTags = record.custom_tags || []
     record.tags = customTags.map((tag) => `${tag.tag_name}=${tag.tag_value}`).join('\n')
+    record.tagsButton = {
+      tooltip: record.tags,
+      copyToClipboard: () => {
+        navigator.clipboard
+          .writeText(record.tags)
+          .then(() => {
+            console.log('Tags copied to clipboard:', record.tags)
+          })
+          .catch((err) => {
+            console.error('Failed to copy tags to clipboard:', err)
+          })
+      },
+    }
     console.log(`tags: ${record.tags}`)
-    record.selected = false
+    record.matches = 'not_set'
     console.log(
       `Processing record with ID: ${id}, Type: ${recordType}, Key Field: ${key_field}, Type ID: ${type_id}`,
     )
@@ -171,10 +187,6 @@ async function executeSearch() {
   })
   console.log('Rows:', rows.value)
 }
-
-// function selectItem(row) {
-//   selectedItem.value = row
-// }
 
 const props = defineProps({
   query: Object,
@@ -199,8 +211,74 @@ watch(
   },
 )
 
+function checkTags() {
+  console.log(`checkTags called with tagData: ${tagData.value} rows: ${rows.value.length}`)
+  const lines = tagData.value.split('\n').map((line) => {
+    line = line.trim()
+
+    // Add leading '%' if missing
+    if (!line.startsWith('%')) {
+      line = `%${line}`
+    }
+
+    // Ensure '=' exists after the second '%'
+    const secondPercentIndex = line.indexOf('%', 1)
+    if (secondPercentIndex !== -1) {
+      const beforeSecondPercent = line.substring(0, secondPercentIndex + 1)
+      const afterSecondPercent = line.substring(secondPercentIndex + 1).trim()
+
+      if (!afterSecondPercent.includes('=')) {
+        line = `${beforeSecondPercent}=`
+      } else {
+        const [key, value] = afterSecondPercent.split('=').map((part) => part.trim())
+        line = `${beforeSecondPercent}${key}=${value || ''}`
+      }
+    }
+    // Add '%' before the first '=' if missing
+    const firstEqualIndex = line.indexOf('=')
+    if (firstEqualIndex !== -1 && line.charAt(firstEqualIndex - 1) !== '%') {
+      line = line.substring(0, firstEqualIndex).trim() + '%' + line.substring(firstEqualIndex)
+    }
+    return line
+  })
+  tagData.value = lines.join('\n')
+  for (const row of rows.value) {
+    let hasTag = 0
+    let alreadySet = 0
+
+    const tagLines = tagData.value.split('\n').map((line) => line.trim())
+    const rowTags = row.tags.split('\n').map((tag) => tag.trim())
+    for (const tagLine of tagLines) {
+      const [tagKey, tagValue] = tagLine.split('=').map((part) => part.trim())
+      for (const rowTag of rowTags) {
+        const [rowTagKey, rowTagValue] = rowTag.split('=').map((part) => part.trim())
+        if (rowTagKey === tagKey) {
+          hasTag++
+          if (rowTagValue === tagValue) {
+            alreadySet++
+          }
+        }
+      }
+    }
+    console.log(`hasTag: ${hasTag}, alreadySet: ${alreadySet}`)
+    row.matches = `${hasTag}/${alreadySet}`
+  }
+  isSaveTagSetDisabled.value = tagData.value.trim() === ''
+}
+
+watch(
+  () => tagData.value,
+  (newTagData) => {
+    console.log('Tag Data changed:', newTagData)
+    checkTags()
+  },
+)
+
 function handleSelection(newSelectedRows) {
   console.log('Selected rows:', newSelectedRows)
+  isRebuildConfigsDisabled.value = newSelectedRows.length === 0
+  isRebootPhonesDisabled.value = newSelectedRows.length === 0
+  isApplyTagsDisabled.value = newSelectedRows.length === 0 || tagData.value.trim() === ''
   selectedRows.value = newSelectedRows
   for (const row of selectedRows.value) {
     console.log('Selected row:', row)
