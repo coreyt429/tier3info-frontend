@@ -339,7 +339,7 @@ async function rebootPhones() {
 }
 
 async function applyTags() {
-  console.log('Applying tags to selected rows:', selectedRows.value)
+  console.log('applyTags: Applying tags to selected rows:', selectedRows.value)
   for (const row of selectedRows.value) {
     const request = {
       method: 'PUT',
@@ -352,17 +352,20 @@ async function applyTags() {
       ),
     }
     const response = await tier3info_restful_request(request)
-    console.log(`Tag response for ${row.id}:`, response)
+    console.log(`applyTags: Tag response for ${row.id}:`, response)
     if (outputHTML.value === null) {
       outputHTML.value = ''
     }
     response.data.forEach((res) => {
-      console.log(`Response for ${res.id}:`, res)
+      console.log(`applyTags: Response for ${res.id}:`, res)
       if (res.status === 'success') {
+        console.log(`applyTags: Applied tags to ${res.id}:`, res.status, res.message)
         outputHTML.value += `<p class="bg-positive text-white q-pa-sm q-mb-xs rounded-borders">Applied tags to ${res.id}: ${res.message}</p>`
       } else if (res.status === 'info') {
+        console.log(`applyTags: Applied tags to ${res.id}:`, res.status, res.message)
         outputHTML.value += `<p class="bg-info text-black q-pa-sm q-mb-xs rounded-borders">Info for ${res.id}: ${res.message}</p>`
       } else {
+        console.log(`applyTags: Applied tags to ${res.id}:`, res.status, res.message)
         outputHTML.value += `<p class="bg-negative text-white q-pa-sm q-mb-xs rounded-borders">Error applying tags to ${res.id}: ${res.message}</p>`
       }
     })
