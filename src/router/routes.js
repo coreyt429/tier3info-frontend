@@ -262,6 +262,18 @@ const routes = [
       },
     ],
   },
+  {
+    path: '/tagtool',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        component: () => import('pages/TagToolPage.vue'),
+        props: (route) => ({ query: route.query }),
+        meta: { requiresAuth: true },
+      },
+    ],
+  },
 ]
 
 Object.keys(routePageMap).forEach((path) => {

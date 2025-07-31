@@ -108,5 +108,90 @@ for endpoint in endpoints.keys():
     app.add_url_rule(f'{endpoint}/<cfg_id>', view_func=save_config, methods=['PUT'])
     app.add_url_rule(f'{endpoint}/<cfg_id>', view_func=delete_config, methods=['DELETE'])
 
+@app.route('/api/menu/user', methods=['GET'])
+def get_user_menu():
+    menu = [
+        {
+            "title": "Home",
+            "link": "/",
+            "icon": "home",
+            "caption": "Go to homepage",
+        },
+        {
+            "title": "Tools",
+            "icon": "build",
+            "caption": "Useful tools",
+            "children": [
+                {
+                    "title": "Locate",
+                    "icon": "search",
+                    "link": "/#/locate",
+                    "caption": "Find Stuff",
+                },
+                {
+                    "title": "Configuration",
+                    "link": "/#/config",
+                    "icon": "settings",
+                    "caption": "Set stuff up",
+                },
+            ],
+        },
+    ]
+    return jsonify(menu)
+
+@app.route('/api/heartbeat', methods=['POST','PUT'])
+def heartbeat():
+    return jsonify({'message': 'okay'})
+
+@app.route('/api/locate/', methods=['POST'])
+def locate():
+    response = [
+        {
+            "id": 1,
+            "type": "access_device",
+            "type_id": "12345",
+            "cluster": "Cluster A",
+            "enterprise_id": "Enterprise 1",
+            "group_id": "Group 1",
+            "user_id": "User 1",
+            "device_id": "Device 1",
+            "device_type": "Type A",
+            "mac_address": "00:11:22:33:44:55",
+            "custom_tags": [
+                {
+                    "tag_name": "%tag1%",
+                    "tag_value": "value1"
+                },
+                {
+                    "tag_name": "%tag2%",
+                    "tag_value": "value2"
+                }
+            ],
+        },
+        {
+            "id": 2,
+            "type": "access_device",
+            "type_id": "67890",
+            "cluster": "Cluster B",
+            "enterprise_id": "Enterprise 2",
+            "group_id": "Group 2",
+            "user_id": "User 2",
+            "device_id": "Device 2",
+            "device_type": "Type B",
+            "mac_address": "66:77:88:99:AA:BB",
+            "custom_tags": [
+                {
+                    "tag_name": "%tag3%",
+                    "tag_value": "value3"
+                },
+                {
+                    "tag_name": "%tag4%",
+                    "tag_value": "value4"
+                }
+            ],
+        },
+    ]
+    return jsonify(response)
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=True)

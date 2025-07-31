@@ -15,6 +15,8 @@
       v-model:pagination="pagination"
       :visible-columns="visibleColumns"
       @row-click="handleRowClick"
+      :selection="props.selection"
+      v-model:selected="selected"
     >
       <template v-if="props.filterable" v-slot:top-left>
         <q-select
@@ -92,6 +94,7 @@ const props = defineProps({
   noDataLabel: { type: String, default: 'No data found' },
   noResultsLabel: { type: String, default: 'No results found' },
   allowAdd: { type: Boolean, default: false }, // New prop to control add button visibility
+  selection: { type: String, default: 'none' }, // New prop for selection mode
 })
 console.log('DataTable props:', JSON.stringify(props))
 const filter = ref('')
