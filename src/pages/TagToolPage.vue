@@ -41,21 +41,39 @@
               :disable="isRebootPhonesDisabled"
               @click="rebootPhones"
             />
-            <q-btn
+            <q-btn-dropdown
               label="Load TagSet"
               icon="cloud_download"
               color="teal"
               class="q-mr-sm"
               :disable="isLoadTagSetDisabled"
-              @click="loadTagSet"
-            />
+              split
+              menu-anchor="bottom start"
+              menu-self="top start"
+              menu-cover
+              menu-class="bg-teal text-white"
+              auto-close
+            >
+              <q-list>
+                <q-item
+                  v-for="tag in tagSets"
+                  :key="tag"
+                  clickable
+                  v-close-popup
+                  active-class="text-white bg-teal"
+                  @click="loadTagSet(tag)"
+                >
+                  <q-item-section class="q-pa-sm q-mx-sm">{{ tag }}</q-item-section>
+                </q-item>
+              </q-list>
+            </q-btn-dropdown>
             <q-btn
               label="Save TagSet"
               icon="save"
               color="green"
               class="q-mr-sm"
               :disable="isSaveTagSetDisabled"
-              @click="saveTagSet"
+              @click="showSaveDialog = true"
             />
             <q-btn
               label="Apply Tags"
@@ -68,20 +86,42 @@
           </q-card-section>
         </q-card>
       </div>
+      <q-dialog v-model="showSaveDialog" persistent>
+        <q-card>
+          <q-card-section>
+            <div class="text-h6">Enter TagSet Name</div>
+          </q-card-section>
+          <q-card-section>
+            <q-input v-model="tagsetName" label="TagSet Name" autofocus />
+          </q-card-section>
+          <q-card-actions align="right">
+            <q-btn flat label="Cancel" v-close-popup />
+            <q-btn
+              flat
+              label="Save"
+              color="green"
+              @click="confirmSaveTagSet"
+              :disable="!tagsetName"
+            />
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
       <!-- Row 2: Search Results Table -->
       <q-card v-if="rows.length > 0" class="q-mt-md">
         <q-card-section class="row items-center">
-          <DataTable
-            :rows="rows"
-            :columns="columns"
-            :visibleColumns="visibleColumns"
-            :filterable="true"
-            :exportable="true"
-            :pagination-config="pagination"
-            exportPrefix="tagtool-export"
-            selection="multiple"
-            @update:selected="handleSelection"
-          />
+          <div class="col-12">
+            <DataTable
+              :rows="rows"
+              :columns="columns"
+              :visibleColumns="visibleColumns"
+              :filterable="true"
+              :exportable="true"
+              :pagination-config="pagination"
+              exportPrefix="tagtool-export"
+              selection="multiple"
+              @update:selected="handleSelection"
+            />
+          </div>
         </q-card-section>
       </q-card>
       <!-- Row 3: Detail Area -->
@@ -108,6 +148,21 @@ import DataTable from 'src/components/DataTable.vue'
 import { useTitleStore } from 'stores/titleStore'
 const titleStore = useTitleStore()
 titleStore.setMainTitle('Tag Tool')
+
+const tagSets = ref(['tagset_1', 'tagset_2', 'tagset_3'])
+
+async function loadTagSet(name) {
+  console.log('Load TagSet:', name)
+  tagsetName.value = name
+  // pull tagset from tier3info_restful_request
+  const request = {
+    method: 'GET',
+    path: `/api/tagtool/tagset/${name}`,
+  }
+  const response = await tier3info_restful_request(request)
+  console.log('Response:', response)
+  tagData.value = response.data.tags.join('\n') || ''
+}
 
 const searchQuery = ref('')
 const rows = ref([])
@@ -195,6 +250,7 @@ const props = defineProps({
 import { watch } from 'vue'
 
 onMounted(() => {
+  loadTagSetNames()
   if (props.query?.query) {
     searchQuery.value = props.query.query
     executeSearch()
@@ -210,6 +266,41 @@ watch(
     }
   },
 )
+
+const showSaveDialog = ref(false)
+const tagsetName = ref('')
+
+async function saveTagSet(name) {
+  console.log('Saving TagSet:', tagData.value)
+  const request = {
+    method: 'PUT',
+    path: `/api/tagtool/tagset/${name}`,
+    body: {
+      tags: tagData.value.split('\n').map((line) => line.trim()),
+    },
+  }
+  const response = await tier3info_restful_request(request)
+  console.log('Response:', response)
+  if (!tagSets.value.includes(name)) {
+    tagSets.value.push(name)
+  }
+}
+
+async function loadTagSetNames() {
+  console.log('Loading TagSet Names')
+  const request = {
+    method: 'GET',
+    path: `/api/tagtool/tagset`,
+  }
+  const response = await tier3info_restful_request(request)
+  console.log('Response:', response)
+  tagSets.value = response.data || []
+}
+
+function confirmSaveTagSet() {
+  showSaveDialog.value = false
+  saveTagSet(tagsetName.value)
+}
 
 function checkTags() {
   console.log(`checkTags called with tagData: ${tagData.value} rows: ${rows.value.length}`)

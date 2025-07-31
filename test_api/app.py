@@ -193,5 +193,67 @@ def locate():
     ]
     return jsonify(response)
 
+TAGSETS_FILE = 'tagsets.json'
+
+def read_tagsets():
+    if not os.path.exists(TAGSETS_FILE):
+        with open(TAGSETS_FILE, 'w') as f:
+            json.dump([], f)
+    with open(TAGSETS_FILE, 'r') as f:
+        try:
+            return json.load(f)
+        except json.JSONDecodeError:
+            return []
+
+def write_tagsets(tagsets):
+    with open(TAGSETS_FILE, 'w') as f:
+        json.dump(tagsets, f, indent=2)
+
+@app.route('/api/tagtool/tagset', methods=['GET'])
+def list_tagsets():
+    tagsets = read_tagsets()
+    tagset_names = [tagset['tagset_name'] for tagset in tagsets]
+    return jsonify(tagset_names)
+
+@app.route('/api/tagtool/tagset/<tagset_name>', methods=['GET'])
+def get_tagset(tagset_name):
+    tagsets = read_tagsets()
+    for tagset in tagsets:
+        if tagset['tagset_name'] == tagset_name:
+            return jsonify(tagset)
+    return jsonify({'error': 'Tagset not found'}), 404
+
+@app.route('/api/tagtool/tagset/<tagset_name>', methods=['PUT'])
+def save_tagset(tagset_name):
+    data = request.get_json()
+    if not isinstance(data, dict) or 'tags' not in data or not isinstance(data['tags'], list):
+        return jsonify({'error': 'Invalid payload'}), 400
+
+    tagsets = read_tagsets()
+    for tagset in tagsets:
+        if tagset['tagset_name'] == tagset_name:
+            tagset['tags'] = data['tags']
+            write_tagsets(tagsets)
+            return jsonify({'status': 'updated', 'tagset_name': tagset_name})
+
+    new_tagset = {
+        'tagset_name': tagset_name,
+        'tags': data['tags']
+    }
+    tagsets.append(new_tagset)
+    write_tagsets(tagsets)
+    return jsonify({'status': 'created', 'tagset_name': tagset_name})
+
+@app.route('/api/tagtool/tagset/<tagset_name>', methods=['DELETE'])
+def delete_tagset(tagset_name):
+    tagsets = read_tagsets()
+    for tagset in tagsets:
+        if tagset['tagset_name'] == tagset_name:
+            tagsets.remove(tagset)
+            write_tagsets(tagsets)
+            return jsonify({'status': 'deleted', 'tagset_name': tagset_name})
+    return jsonify({'error': 'Tagset not found'}), 404
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=True)

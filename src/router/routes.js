@@ -39,6 +39,16 @@ const routePageMap = {
       template: { structure: 'freeform' },
     },
   },
+  '/tagtool/tagsets': {
+    page: ApiSelectEditPage,
+    meta: {
+      title: 'Tag Tool Tag Sets',
+      label: 'Tag Set',
+      endpoint: '/tagtool/tagset',
+      buttons: ['Save', 'Reset', 'Add', 'Delete'],
+      template: { structure: 'freeform' },
+    },
+  },
   '/certificates': {
     page: ApiTableEditPage,
     meta: {
