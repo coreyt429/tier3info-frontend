@@ -7,7 +7,7 @@
         <q-toolbar-title class="col-7"> {{ titleStore.mainTitle }} </q-toolbar-title>
         <div class="col-3 row no-wrap q-gutter-md justify-end">
           <q-btn
-            v-for="(color, index) in ['green', 'yellow', 'red']"
+            v-for="(color, index) in dashBoardStore.colors"
             :key="index"
             :color="colorMap[color]"
             round
@@ -57,8 +57,8 @@
             flat
             dense
             round
-            icon="settings"
-            aria-label="Settings"
+            :icon="rightDrawerOpen ? 'arrow_right' : 'arrow_left'"
+            aria-label="Side Panel"
             @click="toggleRightDrawer"
           />
         </div>
@@ -88,6 +88,8 @@
       <PreferencesControl :linksList="linksList" />
       <q-separator />
       <ScratchPad />
+      <q-separator />
+      <DocumentationSideBar />
     </q-drawer>
     <!-- Dashboard -->
     <q-page-container>
@@ -133,9 +135,10 @@ import EssentialLink from 'components/EssentialLink.vue'
 import DynamicDisplay from 'components/DynamicDisplay.vue'
 import { useTitleStore } from 'src/stores/titleStore'
 import { useDashBoardStore } from 'src/stores/dashBoard'
+import { useDocStore } from 'src/stores/docStore'
 import PreferencesControl from 'components/PreferencesControl.vue'
 import ScratchPad from 'components/ScratchPad.vue'
-
+import DocumentationSideBar from 'components/DocumentationSideBar.vue'
 import { usePreferencesStore } from 'src/stores/preferences'
 const preferencesStore = usePreferencesStore()
 console.debug('Preferences Store:', preferencesStore)
@@ -147,21 +150,21 @@ console.debug('Dashboard Store:', dashBoardStore)
 const titleStore = useTitleStore()
 titleStore.setMainTitle('Voice Engineering Information Center')
 import { onUnmounted } from 'vue'
+
+useDocStore().setDocUrl('docs/start.html')
+
 const colorMap = {
-  green: 'positive',
-  yellow: 'warning',
-  red: 'negative',
+  green: 'dashboard-green',
+  yellow: 'dashboard-yellow',
+  red: 'dashboard-red',
+  blue: 'dashboard-blue',
 }
-// const colorReverseMap = {
-//   positive: 'green',
-//   warning: 'yellow',
-//   negative: 'red',
-// }
 
 const currentMetric = ref({ label: 'Metric Details', color: 'red' })
 
 const refreshInterval = 60000 // 1 minute in milliseconds
 dashBoardStore.refreshDashboard()
+
 heartbeat()
 const intervalId = setInterval(async () => {
   dashBoardStore.refreshDashboard()
@@ -308,10 +311,26 @@ const dashBoardOpen = ref(false)
 
 function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value
+  localStorage.setItem('leftDrawerOpen', JSON.stringify(leftDrawerOpen.value))
 }
 function toggleRightDrawer() {
   rightDrawerOpen.value = !rightDrawerOpen.value
+  localStorage.setItem('rightDrawerOpen', JSON.stringify(rightDrawerOpen.value))
 }
+
+onMounted(() => {
+  const savedLeftDrawerState = localStorage.getItem('leftDrawerOpen')
+  if (savedLeftDrawerState !== null) {
+    leftDrawerOpen.value = JSON.parse(savedLeftDrawerState)
+  }
+
+  const savedRightDrawerState = localStorage.getItem('rightDrawerOpen')
+  if (savedRightDrawerState !== null) {
+    rightDrawerOpen.value = JSON.parse(savedRightDrawerState)
+  }
+  console.log('Left Drawer Open:', leftDrawerOpen.value)
+  console.log('Right Drawer Open:', rightDrawerOpen.value)
+})
 
 async function openDashBoard(metric) {
   console.log(`openDashBoard(${metric})`)

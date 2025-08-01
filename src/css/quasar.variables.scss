@@ -52,6 +52,11 @@ $negative: #751c2d;
 $info: #b5d5f5;
 $warning: #d4a422;
 
+$dashboard-green: $positive;
+$dashboard-yellow: $warning;
+$dashboard-red: rgb(183, 41, 41);
+$dashboard-blue: #334fec;
+
 // https://color.adobe.com/create/color-wheel
 // Complementary rooted with #1c4975
 // #1C4975
@@ -66,3 +71,16 @@ $warning: #d4a422;
 
 // Complementary to #1C7569
 // #75271C
+
+.bg-dashboard-green {
+  background-color: $dashboard-green !important;
+}
+.bg-dashboard-yellow {
+  background-color: $dashboard-yellow !important;
+}
+.bg-dashboard-red {
+  background-color: $dashboard-red !important;
+}
+.bg-dashboard-blue {
+  background-color: $dashboard-blue !important;
+}

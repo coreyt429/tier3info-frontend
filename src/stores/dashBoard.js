@@ -8,8 +8,10 @@ export const useDashBoardStore = defineStore('dashboard', () => {
   const metricDetails = ref({})
   const detailsHtml = ref('')
   const detailsJSON = ref([])
-  const counts = reactive({ green: 0, yellow: 0, red: 0 })
-  const metrics = reactive({ green: 0, yellow: 0, red: 0 })
+  const counts = reactive({ green: 0, yellow: 0, red: 0, blue: 0 })
+  const metrics = reactive({ green: 0, yellow: 0, red: 0, blue: 0 })
+  const colors = ref(['green', 'yellow', 'red', 'blue'])
+  // FIXME: sample_data should be moved to test_api
   const sample_data = [
     {
       type: 'divider',
@@ -130,12 +132,18 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
     counts.green = 0
     counts.yellow = 0
     counts.red = 0
+    counts.blue = 0
     metrics.green = []
     metrics.yellow = []
     metrics.red = []
+    metrics.blue = []
     console.log('Dashboard before check:', dashboard.value)
+
     if (!dashboard.value || Object.keys(dashboard.value).length === 0) {
+      // FIXME: this should be handled by test_api
       console.warn('Dashboard is empty, populating with dummy data')
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString()
+      const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString()
       dashboard.value = {
         item1: {
           color: 'green',
@@ -144,15 +152,81 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
           target: 1,
           percent: 100,
           text: 'Okay',
+          expire: 15,
+          timestamp: fiveMinutesAgo,
         },
-        item2: { color: 'yellow', label: 'Item 2', count: 2, target: 5, percent: 40 },
-        item3: { color: 'red', label: 'Item 3', count: 2.34565, target: 3, percent: 78 },
-        item4: { color: 'green', label: 'Item 4', count: 3, target: 3, percent: 100 },
-        item5: { color: 'yellow', label: 'Item 5', count: 1, target: 4, percent: 25 },
-        item6: { color: 'red', label: 'Item 6', count: 0, target: 2, percent: 0 },
-        item7: { color: 'green', label: 'Item 7', count: 5, target: 5, percent: 100 },
-        item8: { color: 'yellow', label: 'Item 8', count: 2.5, target: 5, percent: 50 },
-        item9: { color: 'red', label: 'Item 9', count: 1.5, target: 3, percent: 50 },
+        item2: {
+          color: 'yellow',
+          label: 'Item 2',
+          count: 2,
+          target: 5,
+          percent: 40,
+          expire: 15,
+          timestamp: fiveMinutesAgo,
+        },
+        item3: {
+          color: 'red',
+          label: 'Item 3',
+          count: 2.34565,
+          target: 3,
+          percent: 78,
+          expire: 15,
+          timestamp: fiveMinutesAgo,
+        },
+        item4: {
+          color: 'green',
+          label: 'Item 4',
+          count: 3,
+          target: 3,
+          percent: 100,
+          expire: 15,
+          timestamp: fiveMinutesAgo,
+        },
+        item5: {
+          color: 'yellow',
+          label: 'Item 5',
+          count: 1,
+          target: 4,
+          percent: 25,
+          expire: 15,
+          timestamp: fiveMinutesAgo,
+        },
+        item6: {
+          color: 'red',
+          label: 'Item 6',
+          count: 0,
+          target: 2,
+          percent: 0,
+          expire: 15,
+          timestamp: fiveMinutesAgo,
+        },
+        item7: {
+          color: 'green',
+          label: 'Item 7',
+          count: 5,
+          target: 5,
+          percent: 100,
+          expire: 15,
+          timestamp: thirtyMinutesAgo,
+        },
+        item8: {
+          color: 'yellow',
+          label: 'Item 8',
+          count: 2.5,
+          target: 5,
+          percent: 50,
+          expire: 15,
+          timestamp: thirtyMinutesAgo,
+        },
+        item9: {
+          color: 'red',
+          label: 'Item 9',
+          count: 1.5,
+          target: 3,
+          percent: 50,
+          expire: 15,
+          timestamp: thirtyMinutesAgo,
+        },
       }
     }
     console.log('Dashboard after check:', dashboard.value)
@@ -164,7 +238,19 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
       } else {
         item.textContent = `${item.label}: (${Number.isInteger(item.count) ? item.count : item.count.toFixed(2)}/${item.target}) ${item.percent}%`
       }
-      if (counts[item.color] !== undefined) {
+      const itemTimestamp = new Date(item.timestamp).getTime()
+      const currentTime = Date.now()
+      const expireTime = item.expire * 60 * 1000
+
+      if (currentTime - itemTimestamp > expireTime) {
+        console.log(`Metric: ${item.label} has expired, removing from dashboard: ${item.timestamp}`)
+        counts.blue += 1
+        metrics.blue = metrics.blue || []
+        metrics.blue.push(item)
+      } else if (counts[item.color] !== undefined) {
+        console.log(
+          `Metric: ${item.label} within ${item.expire}, storing in dashboard: ${item.timestamp}`,
+        )
         counts[item.color] += 1
         metrics[item.color] = metrics[item.color] || []
         metrics[item.color].push(item)
@@ -174,6 +260,13 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
     metrics.green.sort((a, b) => a.label.localeCompare(b.label))
     metrics.yellow.sort((a, b) => a.label.localeCompare(b.label))
     metrics.red.sort((a, b) => a.label.localeCompare(b.label))
+    metrics.blue.sort((a, b) => a.label.localeCompare(b.label))
+    colors.value.splice(
+      0,
+      colors.value.length,
+      ...Object.keys(counts).filter((color) => counts[color] > 0),
+    )
+    console.log('Colors after sorting:', colors.value)
   }
 
   async function loadDetails(metric) {
@@ -213,6 +306,7 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
     detailsJSON,
     counts,
     metrics,
+    colors,
     fetchDashboard,
     refreshDashboard,
     loadDetails,
