@@ -27,11 +27,11 @@ const showScratchPad = ref(
     ? true
     : JSON.parse(localStorage.getItem('showScratchPad')),
 )
-if (localStorage.getItem('tierInfoScratchPad')) {
-  tier3InfoScratchPad.value = localStorage.getItem('tierInfoScratchPad')
+if (localStorage.getItem('TierInfoScratchPad')) {
+  tier3InfoScratchPad.value = localStorage.getItem('TierInfoScratchPad')
 }
 
 watch(tier3InfoScratchPad, (newValue) => {
-  localStorage.setItem('tierInfoScratchPad', newValue)
+  localStorage.setItem('TierInfoScratchPad', newValue)
 })
 </script>
