@@ -4,7 +4,7 @@
       <q-toolbar>
         <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
 
-        <q-toolbar-title class="col-6"> {{ titleStore.mainTitle }} </q-toolbar-title>
+        <q-toolbar-title class="col-7"> {{ titleStore.mainTitle }} </q-toolbar-title>
         <div class="col-3 row no-wrap q-gutter-md justify-end">
           <q-btn
             v-for="(color, index) in ['green', 'yellow', 'red']"
@@ -86,6 +86,8 @@
     <!-- Right Drawer for Preferences -->
     <q-drawer v-model="rightDrawerOpen" side="right" bordered class="bg-darkness text-primary">
       <PreferencesControl :linksList="linksList" />
+      <q-separator />
+      <ScratchPad />
     </q-drawer>
     <!-- Dashboard -->
     <q-page-container>
@@ -132,6 +134,7 @@ import DynamicDisplay from 'components/DynamicDisplay.vue'
 import { useTitleStore } from 'src/stores/titleStore'
 import { useDashBoardStore } from 'src/stores/dashBoard'
 import PreferencesControl from 'components/PreferencesControl.vue'
+import ScratchPad from 'components/ScratchPad.vue'
 
 import { usePreferencesStore } from 'src/stores/preferences'
 const preferencesStore = usePreferencesStore()

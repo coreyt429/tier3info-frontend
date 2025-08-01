@@ -1,9 +1,7 @@
 <template>
+  <ToggleBanner title="Preferences" storageKey="showPreferences" v-model="showPreferences" />
   <q-card>
-    <q-card-section class="bg-primary py-1">
-      <div class="text-warning text-h6 q-mb-xs1">Preferences</div>
-    </q-card-section>
-    <q-card-section>
+    <q-card-section v-if="showPreferences">
       <q-form>
         <q-input
           filled
@@ -67,8 +65,14 @@
 import { computed, ref, watch } from 'vue'
 import { usePreferencesStore } from 'src/stores/preferences'
 import dayjs from 'dayjs'
+import ToggleBanner from './ToggleBanner.vue'
 const preferencesStore = usePreferencesStore()
 const preferences = preferencesStore.preferences
+const showPreferences = ref(
+  localStorage.getItem('showPreferences') === null
+    ? true
+    : JSON.parse(localStorage.getItem('showPreferences')),
+)
 
 const props = defineProps({
   linksList: {
