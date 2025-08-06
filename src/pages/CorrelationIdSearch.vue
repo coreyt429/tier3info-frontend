@@ -58,7 +58,7 @@ export default {
     }
   },
   methods: {
-    executeSearch() {
+    async executeSearch() {
       console.log(
         'CorrelationIdSearch.vue: executeSearch called with correlationId:',
         this.correlationId,
@@ -70,12 +70,13 @@ export default {
         },
         method: 'POST',
       }
-      const response = tier3info_restful_request(request)
+      const response = await tier3info_restful_request(request)
       console.log('CorrelationIdSearch.vue: executeSearch response:', response)
-      this.jobId = response.job_id
-      // setTimeout(() => {
-      //   this.checkJobStatus()
-      // }, 500)
+
+      this.jobId = response.data.job_id
+      setTimeout(() => {
+        this.checkJobStatus()
+      }, 500)
     },
     checkJobStatus() {
       console.log('CorrelationIdSearch.vue: checkJobStatus called with jobId:', this.jobId)
@@ -85,14 +86,14 @@ export default {
       }
       const response = tier3info_restful_request(request)
       console.log('CorrelationIdSearch.vue: checkJobStatus response:', response)
-      if (response.status === 'completed') {
+      if (response.data.status === 'completed') {
         // Handle completed job status
-        console.log('CorrelationIdSearch.vue: Job completed', response)
+        console.log('CorrelationIdSearch.vue: Job completed', response.data)
       } else {
-        console.log('CorrelationIdSearch.vue: Job not completed', response)
-        setTimeout(() => {
-          this.checkJobStatus()
-        }, 500)
+        console.log('CorrelationIdSearch.vue: Job not completed', response.data)
+        // setTimeout(() => {
+        //   this.checkJobStatus()
+        // }, 500)
       }
     },
     validateUUID(value) {
