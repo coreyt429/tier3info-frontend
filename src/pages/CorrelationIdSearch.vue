@@ -48,15 +48,18 @@
         </q-banner>
       </q-card-section>
     </q-card>
-    <q-card v-if="searchResults" class="q-pa-md">
-      <q-card-section class="row">
-        <div>
-          <pre>
-            {{ searchResults }}
-          </pre>
-        </div>
-      </q-card-section>
-    </q-card>
+    <div class="q-mt-md">
+      <q-card v-if="searchResults" class="q-pa-md">
+        <q-card-section class="row">
+          <div>
+            <pre>
+          {{ searchResults }}
+        </pre
+            >
+          </div>
+        </q-card-section>
+      </q-card>
+    </div>
   </q-page>
 </template>
 
@@ -92,7 +95,7 @@ export default {
       const request = {
         path: '/logtool/correlation_id',
         body: {
-          correlationId: this.correlationId.split('\n').filter(Boolean),
+          correlation_id: this.correlationId.split('\n').filter(Boolean),
         },
         method: 'POST',
       }
