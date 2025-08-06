@@ -71,8 +71,8 @@ export default {
         method: 'POST',
       }
       const response = tier3info_restful_request(request)
-      this.jobId = response.data.job_id
       console.log('CorrelationIdSearch.vue: executeSearch response:', response)
+      this.jobId = response.job_id
       setTimeout(() => {
         this.checkJobStatus()
       }, 500)
@@ -85,11 +85,11 @@ export default {
       }
       const response = tier3info_restful_request(request)
       console.log('CorrelationIdSearch.vue: checkJobStatus response:', response)
-      if (response.data.status === 'completed') {
+      if (response.status === 'completed') {
         // Handle completed job status
-        console.log('CorrelationIdSearch.vue: Job completed', response.data)
+        console.log('CorrelationIdSearch.vue: Job completed', response)
       } else {
-        console.log('CorrelationIdSearch.vue: Job not completed', response.data)
+        console.log('CorrelationIdSearch.vue: Job not completed', response)
         setTimeout(() => {
           this.checkJobStatus()
         }, 500)
