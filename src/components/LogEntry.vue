@@ -3,8 +3,8 @@
     <!-- Custom clickable header that also shows the message preview -->
     <template #header>
       <q-item-section>
-        <div class="log-header-text">{{ headerText }}</div>
-        <pre v-if="message" class="log-pre q-mt-xs">{{ message }}</pre>
+        <div class="log-header-text q-mt-sm">{{ headerText }}</div>
+        <pre v-if="message" class="log-pre q-mt-sm">{{ message }}</pre>
       </q-item-section>
       <!-- <q-item-section side>
         <q-icon name="expand_more" />
@@ -279,13 +279,13 @@ export default {
 
 <style scoped>
 .mono {
-  background: #dc3545;
-  color: #f5f5f5;
+  color: #fc06dc;
+  background: #f5f5f5;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
 }
 .log-header-text {
-  background: #dc3545;
-  color: #f5f5f5;
+  color: #dc3545;
+  background: #f5f5f5;
   font-weight: 500;
   font-size: 13px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
@@ -295,7 +295,7 @@ export default {
 }
 .log-pre,
 .json-pre {
-  background: var(--q-dark-page);
+  background: #f5f5f5;
   color: var(--q-primary);
   padding: 8px 10px;
   margin: 0;
