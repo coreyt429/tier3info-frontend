@@ -73,9 +73,9 @@ export default {
       const response = tier3info_restful_request(request)
       console.log('CorrelationIdSearch.vue: executeSearch response:', response)
       this.jobId = response.job_id
-      setTimeout(() => {
-        this.checkJobStatus()
-      }, 500)
+      // setTimeout(() => {
+      //   this.checkJobStatus()
+      // }, 500)
     },
     checkJobStatus() {
       console.log('CorrelationIdSearch.vue: checkJobStatus called with jobId:', this.jobId)
