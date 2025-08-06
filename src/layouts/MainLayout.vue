@@ -149,7 +149,7 @@ const dashBoardStore = useDashBoardStore()
 console.debug('Dashboard Store:', dashBoardStore)
 const titleStore = useTitleStore()
 titleStore.setMainTitle('Voice Engineering Information Center')
-import { onUnmounted } from 'vue'
+import { onUnmounted, watch } from 'vue'
 
 useDocStore().setDocUrl('docs/start.html')
 
@@ -346,6 +346,15 @@ function myFilterFn() {
   console.log('Ajax bar filter function called')
   return true
 }
+
+// Watch for changes to the mainTitle and update document.title accordingly
+watch(
+  () => titleStore.mainTitle,
+  (newTitle) => {
+    document.title = `Tier3Info: ${newTitle}`
+  },
+  { immediate: true },
+)
 </script>
 
 <style scoped>
