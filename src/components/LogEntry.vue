@@ -79,24 +79,24 @@
       <q-card-section class="row items-center justify-between">
         <div class="text-subtitle2">Raw</div>
         <div class="q-gutter-sm">
-          <q-btn
+          <!-- <q-btn
             dense
             flat
             @click="copyJSON(entry._source)"
             label="Copy _source JSON"
             icon="content_copy"
-          />
-          <q-btn dense flat @click="copyJSON(entry)" label="Copy hit JSON" icon="content_copy" />
+          /> -->
+          <q-btn dense flat @click="copyJSON(entry)" label="Copy JSON" icon="content_copy" />
         </div>
       </q-card-section>
 
       <q-card-section>
-        <q-expansion-item dense label="_source" icon="data_object">
+        <!-- <q-expansion-item dense label="_source" icon="data_object">
           <pre class="json-pre">{{ prettyJSON(src) }}</pre>
-        </q-expansion-item>
-        <q-expansion-item dense label="hit" icon="data_object">
-          <pre class="json-pre">{{ prettyJSON(entry) }}</pre>
-        </q-expansion-item>
+        </q-expansion-item> -->
+        <!-- <q-expansion-item dense label="hit" icon="data_object"> -->
+        <pre class="json-pre">{{ prettyJSON(entry) }}</pre>
+        <!-- </q-expansion-item> -->
       </q-card-section>
     </q-card>
   </q-expansion-item>
