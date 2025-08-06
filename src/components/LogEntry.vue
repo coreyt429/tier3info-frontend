@@ -1,5 +1,5 @@
 <template>
-  <q-expansion-item dense dense-toggle switch-toggle-side expand-separator icon="article">
+  <q-expansion-item dense hide-expand-icon="article">
     <!-- Custom clickable header that also shows the message preview -->
     <template #header>
       <q-item-section>
