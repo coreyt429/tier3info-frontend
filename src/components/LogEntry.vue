@@ -294,6 +294,7 @@ export default {
   /* white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis; */
+  overflow-x: auto;
 }
 .log-pre,
 .json-pre {
@@ -305,10 +306,10 @@ export default {
   word-break: break-word;
   border-radius: 4px;
   font-size: 13px;
-  overflow-x: scroll;
+  overflow-x: auto;
 }
 .json-pre {
   white-space: pre; /* keep JSON aligned */
-  overflow-x: scroll;
+  overflow-x: auto;
 }
 </style>
