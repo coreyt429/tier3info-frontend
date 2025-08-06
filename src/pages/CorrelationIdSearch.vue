@@ -184,7 +184,9 @@ export default {
         : 'One or more lines are not valid UUIDs (format xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx).'
     },
     checkValidation() {
-      this.error = !this.validateUUID(this.correlationId)
+      const isValid = this.validateUUID(this.correlationId)
+      this.error = !isValid
+      return isValid
     },
     extractVarData(content) {
       const lines = content.split('\n')
@@ -284,7 +286,9 @@ export default {
     handleCorrelationIds(correlationIds) {
       const list = Array.from(correlationIds)
       this.correlationId = list.join('\n') // one per line
-      this.checkValidation()
+      if (this.checkValidation()) {
+        this.executeSearch()
+      }
     },
   },
   watch: {
