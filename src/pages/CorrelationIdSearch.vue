@@ -71,7 +71,10 @@ export default {
     const route = useRoute()
     if (route.query.correlationId) {
       this.correlationId = route.query.correlationId
-      this.checkValidation()
+      if (this.checkValidation()) {
+        console.log('CorrelationIdSearch.vue: Correlation IDs valid, executing search')
+        this.executeSearch()
+      }
     }
   },
   data() {
@@ -288,10 +291,7 @@ export default {
       const list = Array.from(correlationIds)
       this.correlationId = list.join('\n') // one per line
       console.log('CorrelationIdSearch.vue: Updated correlationId input:', this.correlationId)
-      if (this.checkValidation()) {
-        console.log('CorrelationIdSearch.vue: Correlation IDs valid, executing search')
-        this.executeSearch()
-      }
+      this.checkValidation()
     },
   },
   watch: {
