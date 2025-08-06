@@ -38,7 +38,7 @@
         </div>
       </q-card-section>
       <q-card-section v-if="statusMessage">
-        <q-banner dense rounded class="bg-info text-white">
+        <q-banner dense rounded class="bg-info text-primary">
           {{ statusMessage }}
         </q-banner>
       </q-card-section>
