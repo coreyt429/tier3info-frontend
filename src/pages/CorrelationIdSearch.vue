@@ -45,10 +45,12 @@
 import { ref } from 'vue'
 import { useTitleStore } from 'stores/titleStore'
 import { tier3info_restful_request } from 'src/plugins/tier3info'
-const titleStore = useTitleStore()
-titleStore.setMainTitle('Correlation Id Log Search')
 const searchDisabled = ref(false)
 export default {
+  created() {
+    const titleStore = useTitleStore()
+    titleStore.setMainTitle('Correlation Id Log Search')
+  },
   data() {
     return {
       correlationId: '',
@@ -77,9 +79,10 @@ export default {
       }
       console.log('CorrelationIdSearch.vue: executeSearch response:', response)
       this.jobId = response.data.job_id
-      // setTimeout(() => {
-      //   this.checkJobStatus()
-      // }, 500)
+      console.log('CorrelationIdSearch.vue: Job ID:', this.jobId)
+      setTimeout(() => {
+        this.checkJobStatus()
+      }, 500)
     },
     async checkJobStatus() {
       console.log('CorrelationIdSearch.vue: checkJobStatus called with jobId:', this.jobId)
