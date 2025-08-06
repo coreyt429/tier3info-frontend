@@ -97,10 +97,6 @@
             <q-markup-table dense flat>
               <tbody>
                 <tr v-for="(value, key) in flattened" :key="key">
-                  <td class="text-weight-medium">{{ key }}</td>
-                  <td>
-                    <pre>{{ formatValue(value) }}</pre>
-                  </td>
                   <td class="text-right">
                     <q-btn
                       dense
@@ -116,6 +112,10 @@
                       icon="remove"
                       @click="$emit('filter-must-not', { key, value })"
                     />
+                  </td>
+                  <td class="text-weight-medium">{{ key }}</td>
+                  <td>
+                    <pre>{{ formatValue(value) }}</pre>
                   </td>
                 </tr>
               </tbody>
