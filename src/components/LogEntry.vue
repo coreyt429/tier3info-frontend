@@ -22,10 +22,10 @@
       <!-- Meta / chips -->
       <q-card-section class="row items-center q-gutter-sm">
         <q-chip v-if="entry._index" dense square>{{ entry._index }}</q-chip>
-        <q-chip v-if="entry._id" dense square color="grey-8" text-color="white"
-          >_id: {{ entry._id }}</q-chip
-        >
-        <q-chip v-if="entry._score !== undefined" dense square>_score: {{ entry._score }}</q-chip>
+        <q-chip v-if="entry._id" dense square color="grey-7" text-color="white">{{
+          entry._id
+        }}</q-chip>
+        <!-- <q-chip v-if="entry._score !== undefined" dense square>_score: {{ entry._score }}</q-chip> -->
       </q-card-section>
 
       <!-- Key fields (if present) -->
