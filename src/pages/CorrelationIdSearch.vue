@@ -51,6 +51,14 @@
     <div class="q-mt-md">
       <q-card v-if="searchResults" class="q-pa-md">
         <q-card-section class="row">
+          <div class="col-12">
+            <h6>
+              Search Results for: {{ correlationId }},
+              {{ searchResults.response.hits.total }} records
+            </h6>
+          </div>
+        </q-card-section>
+        <q-card-section class="row">
           <div>
             <pre>
           {{ searchResults }}
