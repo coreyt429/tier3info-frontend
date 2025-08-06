@@ -9,7 +9,6 @@
 
 <span v-if="message">        {{ message }}</span>
 
-
         </pre>
       </q-item-section>
     </template>
