@@ -6,9 +6,9 @@
         <div class="log-header-text">{{ headerText }}</div>
         <pre v-if="message" class="log-pre q-mt-xs">{{ message }}</pre>
       </q-item-section>
-      <q-item-section side>
+      <!-- <q-item-section side>
         <q-icon name="expand_more" />
-      </q-item-section>
+      </q-item-section> -->
     </template>
 
     <!-- Expanded details (hidden by default) -->
@@ -284,6 +284,8 @@ export default {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
 }
 .log-header-text {
+  background: #dc3545;
+  color: #f5f5f5;
   font-weight: 500;
   font-size: 13px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
@@ -293,8 +295,8 @@ export default {
 }
 .log-pre,
 .json-pre {
-  background: #dddddd;
-  color: #007bff;
+  background: var(--q-dark-page);
+  color: var(--q-primary);
   padding: 8px 10px;
   margin: 0;
   white-space: pre;
