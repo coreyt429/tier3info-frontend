@@ -71,20 +71,28 @@ export default {
         method: 'POST',
       }
       const response = await tier3info_restful_request(request)
+      if (!response || !response.data) {
+        console.error('CorrelationIdSearch.vue: Invalid response data:', response)
+        return
+      }
       console.log('CorrelationIdSearch.vue: executeSearch response:', response)
-
       this.jobId = response.data.job_id
-      setTimeout(() => {
-        this.checkJobStatus()
-      }, 500)
+      // setTimeout(() => {
+      //   this.checkJobStatus()
+      // }, 500)
     },
-    checkJobStatus() {
+    async checkJobStatus() {
       console.log('CorrelationIdSearch.vue: checkJobStatus called with jobId:', this.jobId)
       const request = {
         path: `/jobs/${this.jobId}`,
         method: 'GET',
       }
-      const response = tier3info_restful_request(request)
+      const response = await tier3info_restful_request(request)
+      console.log('CorrelationIdSearch.vue: checkJobStatus response:', response)
+      if (!response || !response.data) {
+        console.error('CorrelationIdSearch.vue: Invalid response data:', response)
+        return
+      }
       console.log('CorrelationIdSearch.vue: checkJobStatus response:', response)
       if (response.data.status === 'completed') {
         // Handle completed job status
