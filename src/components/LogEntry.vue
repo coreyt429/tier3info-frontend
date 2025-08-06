@@ -1,5 +1,5 @@
 <template>
-  <q-expansion-item dense hide-expand-icon="article">
+  <q-expansion-item dense hide-expand-icon>
     <!-- Custom clickable header that also shows the message preview -->
     <template #header>
       <q-item-section>
@@ -305,10 +305,10 @@ export default {
   word-break: break-word;
   border-radius: 4px;
   font-size: 13px;
-  overflow-x: auto;
+  overflow-x: scroll;
 }
 .json-pre {
   white-space: pre; /* keep JSON aligned */
-  overflow-x: auto;
+  overflow-x: scroll;
 }
 </style>
