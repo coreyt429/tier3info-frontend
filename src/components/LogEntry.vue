@@ -12,9 +12,6 @@
 
         </pre>
       </q-item-section>
-      <!-- <q-item-section side>
-        <q-icon name="expand_more" />
-      </q-item-section> -->
     </template>
 
     <!-- Expanded details (hidden by default) -->
@@ -25,7 +22,6 @@
         <q-chip v-if="entry._id" dense square color="grey-7" text-color="white">{{
           entry._id
         }}</q-chip>
-        <!-- <q-chip v-if="entry._score !== undefined" dense square>_score: {{ entry._score }}</q-chip> -->
       </q-card-section>
 
       <!-- Key fields (if present) -->
@@ -86,17 +82,48 @@
             label="Copy JSON"
             icon="content_copy"
           />
-          <!-- <q-btn dense flat @click="copyJSON(entry)" label="Copy JSON" icon="content_copy" /> -->
         </div>
       </q-card-section>
 
       <q-card-section>
-        <!-- <q-expansion-item dense label="_source" icon="data_object"> -->
-        <pre class="json-pre">{{ prettyJSON(src) }}</pre>
-        <!-- </q-expansion-item> -->
-        <!-- <q-expansion-item dense label="hit" icon="data_object"> -->
-        <!-- <pre class="json-pre">{{ prettyJSON(entry) }}</pre> -->
-        <!-- </q-expansion-item> -->
+        <q-tabs v-model="tab" dense>
+          <q-tab name="fields" label="Fields" />
+          <q-tab name="json" label="JSON" />
+        </q-tabs>
+
+        <q-separator />
+
+        <q-tab-panels v-model="tab" animated>
+          <q-tab-panel name="fields">
+            <q-markup-table dense flat>
+              <tbody>
+                <tr v-for="(value, key) in flattened" :key="key">
+                  <td class="text-weight-medium">{{ key }}</td>
+                  <td>{{ formatValue(value) }}</td>
+                  <td class="text-right">
+                    <q-btn
+                      dense
+                      flat
+                      size="sm"
+                      icon="add"
+                      @click="$emit('filter-must', { key, value })"
+                    />
+                    <q-btn
+                      dense
+                      flat
+                      size="sm"
+                      icon="remove"
+                      @click="$emit('filter-must-not', { key, value })"
+                    />
+                  </td>
+                </tr>
+              </tbody>
+            </q-markup-table>
+          </q-tab-panel>
+          <q-tab-panel name="json">
+            <pre class="json-pre">{{ prettyJSON(src) }}</pre>
+          </q-tab-panel>
+        </q-tab-panels>
       </q-card-section>
     </q-card>
   </q-expansion-item>
@@ -107,6 +134,11 @@ export default {
   name: 'LogEntry',
   props: {
     entry: { type: Object, required: true },
+  },
+  data() {
+    return {
+      tab: 'fields',
+    }
   },
   computed: {
     src() {
@@ -212,6 +244,21 @@ export default {
     highlightKeys() {
       return this.entry && this.entry.highlight ? Object.keys(this.entry.highlight) : []
     },
+    flattened() {
+      const result = {}
+      const recurse = (obj, prefix = '') => {
+        for (const [k, v] of Object.entries(obj || {})) {
+          const key = prefix ? `${prefix}.${k}` : k
+          if (v && typeof v === 'object' && !Array.isArray(v)) {
+            recurse(v, key)
+          } else {
+            result[key] = v
+          }
+        }
+      }
+      recurse(this.src)
+      return result
+    },
   },
   methods: {
     // Safe deep get
@@ -278,6 +325,11 @@ export default {
       } catch {
         this.$q.notify({ type: 'warning', message: 'Copy failed' })
       }
+    },
+    formatValue(val) {
+      if (Array.isArray(val)) return val.join(', ')
+      if (typeof val === 'object') return JSON.stringify(val)
+      return val
     },
   },
 }
