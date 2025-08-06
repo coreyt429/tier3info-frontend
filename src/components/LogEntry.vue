@@ -72,7 +72,7 @@
 
       <!-- Raw JSON toggles -->
       <q-card-section class="row items-center justify-between">
-        <div class="text-subtitle2">Raw</div>
+        <div class="text-subtitle2">Fields</div>
         <div class="q-gutter-sm">
           <q-btn
             dense

@@ -59,6 +59,7 @@
 <script>
 import { useTitleStore } from 'stores/titleStore'
 import { tier3info_restful_request } from 'src/plugins/tier3info'
+import { useRoute } from 'vue-router'
 // Removed unused import for LogViewer
 import LogViewer from 'components/LogViewer.vue'
 export default {
@@ -66,6 +67,12 @@ export default {
   created() {
     const titleStore = useTitleStore()
     titleStore.setMainTitle('Correlation Id Log Search')
+
+    const route = useRoute()
+    if (route.query.correlationId) {
+      this.correlationId = route.query.correlationId
+      this.checkValidation()
+    }
   },
   data() {
     return {
