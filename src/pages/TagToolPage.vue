@@ -146,6 +146,9 @@ import { useTitleStore } from 'stores/titleStore'
 const titleStore = useTitleStore()
 titleStore.setMainTitle('Tag Tool')
 
+import { useDocStore } from 'src/stores/docStore'
+useDocStore().setDocUrl('docs/tagtool.html')
+
 const tagSets = ref(['tagset_1', 'tagset_2', 'tagset_3'])
 
 async function loadTagSet(name) {

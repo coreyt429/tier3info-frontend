@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/x-icon" href="/docs/favicon.ico" />
+    <title>Voice Engineering Information Center</title>
+    <link rel="stylesheet" href="/docs/styles.css" />
+  </head>
+  <body">
+    <header>
+      <h1>Broadworks DMS Tag Tool</h1>
+    </header>
+    <main>
+      <section>
+        <h2>Getting Started</h2>
+        <p>
+          Welcome to the Broadworks DMS Tag Tool. This tools can be used to set custom tags on multiple device profiles at the same time.
+        </p>
+        <h3>Tagtool features</h3>
+        <h4>Tag Input:</h4>
+        <ul>
+          <li>Text area for entering tags to apply to devices.</li>
+          <li>Tags are added one per line</li>
+          <li>Tag format: %TAG_NAME%=value</li>
+          <li>To delete a tag, set its value to delete</li>
+          <li>Tag input will automatically format some things to prevent errors</li>
+          <li>As you add tags, checkTags will run in the background to update the match status for device profiles</li>
+        </ul>
+        <h4>Search Input:</h4>
+        <ul>
+          <li>A text field for searching devices by various criteria.</li>
+          <li>Supports kibana style searching: <code>field:value</code></li>
+          <li>Remember to quote values with separators like: <code>group_id:"30000000001-01"</code></li>
+        </ul>
+        <h4>Action Buttons:</h4>
+        <ul>
+          <li>Rebuild Configs files for the device profiles</li>
+          <li>Reboot Phones</li>
+          <li>
+            Load/Save Tag Sets
+            <ul>
+              <li>Load predefined tag sets from a data store.</li>
+              <li>Save current tag sets to a data store for reuse.</li>
+              <li>Tagsets can be managed <a href="/#/tagtool/tagsets">here</a></li>
+            </ul>
+          </li>
+          <li>Apply Tags:
+            <ul>
+              <li>Apply the specified tags to the selected device profiles.</li>
+              <li>Note, this does not automatically rebuild configs or reboot phones</li>
+            </ul>
+          </li>
+        </ul>
+        <h4>Results Table:</h4>
+        <ul>
+          <li>A table displaying the search results.</li>
+          <li>Options for selecting and managing devices.</li>
+          <li>Column display can be configured to show/hide specific fields.</li>
+          <li>Filter is a simple string filter, it will match any field in the row</li>
+          <li>Download will save a CSV of the data in the table. Note, this includes rows and fields that are hidden</li>
+        </ul>
+      </section>
+    </main>
+    <footer>
+      <p>&copy; 2025 Momentum</p>
+    </footer>
+  </body>
+</html>
