@@ -279,10 +279,13 @@ export default {
 
 <style scoped>
 .mono {
+  background: #dc3545;
+  color: #f5f5f5;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
 }
 .log-header-text {
   font-weight: 500;
+  font-size: 13px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
   white-space: nowrap;
   overflow: hidden;
@@ -290,14 +293,15 @@ export default {
 }
 .log-pre,
 .json-pre {
-  background: #1e1e1e;
-  color: #f5f5f5;
+  background: #dddddd;
+  color: #007bff;
   padding: 8px 10px;
   margin: 0;
-  white-space: pre-wrap; /* wrap long lines in messages */
+  white-space: pre;
   word-break: break-word;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: 13px;
+  overflow-x: auto;
 }
 .json-pre {
   white-space: pre; /* keep JSON aligned */
