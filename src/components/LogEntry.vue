@@ -1,10 +1,13 @@
 <template>
-  <q-expansion-item dense switch-toggle-side expand-separator icon="article">
+  <q-expansion-item dense dense-toggle switch-toggle-side expand-separator icon="article">
     <!-- Custom clickable header that also shows the message preview -->
     <template #header>
       <q-item-section>
-        <div class="log-header-text q-mt-sm">{{ headerText }}</div>
-        <pre v-if="message" class="log-pre q-mt-sm">{{ message }}</pre>
+        <pre class="log-pre q-mt-sm">
+          <span class="log-header-text">{{ headerText }}</span>
+
+          <span v-if="message">{{ message }}</span>
+        </pre>
       </q-item-section>
       <!-- <q-item-section side>
         <q-icon name="expand_more" />
@@ -285,13 +288,12 @@ export default {
 }
 .log-header-text {
   color: #dc3545;
-  background: #f5f5f5;
   font-weight: 500;
   font-size: 13px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
-  white-space: nowrap;
+  /* white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
+  text-overflow: ellipsis; */
 }
 .log-pre,
 .json-pre {
