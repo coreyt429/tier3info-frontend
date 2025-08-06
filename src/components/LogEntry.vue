@@ -94,10 +94,15 @@
 
         <q-tab-panels v-model="tab" animated>
           <q-tab-panel name="fields">
-            <q-markup-table dense flat>
+            <q-markup-table dense flat class="q-pa-none full-width">
+              <colgroup>
+                <col style="width: 1%" />
+                <col style="width: auto" />
+                <col style="width: 100%" />
+              </colgroup>
               <tbody>
                 <tr v-for="(value, key) in flattened" :key="key">
-                  <td class="text-right">
+                  <td class="text-left">
                     <q-btn
                       dense
                       flat
@@ -114,8 +119,8 @@
                     />
                   </td>
                   <td class="text-weight-medium">{{ key }}</td>
-                  <td>
-                    <pre>{{ formatValue(value) }}</pre>
+                  <td class="text-left">
+                    <pre class="q-ma-none">{{ formatValue(value) }}</pre>
                   </td>
                 </tr>
               </tbody>
