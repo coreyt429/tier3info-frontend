@@ -98,7 +98,9 @@
               <tbody>
                 <tr v-for="(value, key) in flattened" :key="key">
                   <td class="text-weight-medium">{{ key }}</td>
-                  <td>{{ formatValue(value) }}</td>
+                  <td>
+                    <pre>{{ formatValue(value) }}</pre>
+                  </td>
                   <td class="text-right">
                     <q-btn
                       dense
