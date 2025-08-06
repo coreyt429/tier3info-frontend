@@ -95,7 +95,7 @@ export default {
         const header = parts.join(' | ')
         const msg = src.message || src.msg || src.log || (typeof src === 'string' ? src : '')
 
-        return `${header}\n\n${msg || ''}\n`
+        return `${header}\n\n        ${msg || ''}\n\n`
       })
 
       const blob = new Blob([lines.join('\n')], { type: 'text/plain' })

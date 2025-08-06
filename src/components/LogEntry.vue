@@ -6,7 +6,10 @@
         <pre class="log-pre q-my-sm">
 <span class="log-header-text">{{ headerText }}</span>
 
-<span v-if="message">{{ message }}</span>
+
+<span v-if="message">        {{ message }}</span>
+
+
         </pre>
       </q-item-section>
       <!-- <q-item-section side>
