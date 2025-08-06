@@ -129,7 +129,12 @@ export default {
       if (response.data.status === 'completed') {
         // Handle completed job status
         console.log('CorrelationIdSearch.vue: Job completed', response.data)
-        this.searchResults = response.data || 'No results found.'
+        try {
+          this.searchResults = JSON.parse(response.data._data) || 'No results found.'
+        } catch (error) {
+          console.error('Error parsing JSON:', error)
+          this.searchResults = 'Failed to parse search results.'
+        }
         this.statusMessage = null
       } else {
         this.waitCounter += 1
