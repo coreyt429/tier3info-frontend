@@ -50,22 +50,7 @@
     </q-card>
     <div class="q-mt-md">
       <q-card v-if="searchResults" class="q-pa-md">
-        <q-card-section class="row">
-          <div class="col-12">
-            <h6>
-              Search Results for: {{ correlationId }},
-              {{ searchResults.response.hits.total }} records
-            </h6>
-          </div>
-        </q-card-section>
-        <q-card-section class="row">
-          <div>
-            <pre>
-          {{ searchResults }}
-        </pre
-            >
-          </div>
-        </q-card-section>
+        <LogViewer :logData="searchResults" />
       </q-card>
     </div>
   </q-page>
@@ -74,7 +59,10 @@
 <script>
 import { useTitleStore } from 'stores/titleStore'
 import { tier3info_restful_request } from 'src/plugins/tier3info'
+// Removed unused import for LogViewer
+import LogViewer from 'components/LogViewer.vue'
 export default {
+  components: { LogViewer },
   created() {
     const titleStore = useTitleStore()
     titleStore.setMainTitle('Correlation Id Log Search')
@@ -141,10 +129,12 @@ export default {
         // Handle completed job status
         console.log('CorrelationIdSearch.vue: Job completed', response.data)
         try {
-          this.searchResults = JSON.parse(response.data._data) || 'No results found.'
+          const tmpData = JSON.parse(response.data._data) || 'No results found.'
+          this.searchResults = tmpData.response || { hits: { total: 0, hits: [] } }
         } catch (error) {
           console.error('Error parsing JSON:', error)
-          this.searchResults = 'Failed to parse search results.'
+          this.errorMessage = 'Error parsing search results. Please try again later.'
+          this.searchResults = null
         }
         this.statusMessage = null
       } else {
