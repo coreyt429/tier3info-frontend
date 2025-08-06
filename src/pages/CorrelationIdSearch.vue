@@ -37,15 +37,32 @@
           />
         </div>
       </q-card-section>
+      <q-card-section v-if="statusMessage">
+        <q-banner dense rounded class="bg-info text-white">
+          {{ statusMessage }}
+        </q-banner>
+      </q-card-section>
+      <q-card-section v-if="errorMessage">
+        <q-banner dense rounded class="bg-negative text-white">
+          {{ errorMessage }}
+        </q-banner>
+      </q-card-section>
+    </q-card>
+    <q-card v-if="searchResults" class="q-pa-md">
+      <q-card-section class="row">
+        <div>
+          <pre>
+            {{ searchResults }}
+          </pre>
+        </div>
+      </q-card-section>
     </q-card>
   </q-page>
 </template>
 
 <script>
-import { ref } from 'vue'
 import { useTitleStore } from 'stores/titleStore'
 import { tier3info_restful_request } from 'src/plugins/tier3info'
-const searchDisabled = ref(false)
 export default {
   created() {
     const titleStore = useTitleStore()
@@ -57,10 +74,17 @@ export default {
       error: false,
       traceFile: null,
       jobId: null,
+      statusMessage: null,
+      waitCounter: 0,
+      searchDisabled: true,
+      searchResults: null,
+      errorMessage: null,
     }
   },
   methods: {
     async executeSearch() {
+      this.errorMessage = null
+      this.statusMessage = `Searching for ${this.correlationId}... Please wait.`
       console.log(
         'CorrelationIdSearch.vue: executeSearch called with correlationId:',
         this.correlationId,
@@ -74,6 +98,8 @@ export default {
       }
       const response = await tier3info_restful_request(request)
       if (!response || !response.data) {
+        this.errorMessage = 'Invalid response from server. Please try again later.'
+        this.statusMessage = null
         console.error('CorrelationIdSearch.vue: Invalid response data:', response)
         return
       }
@@ -81,6 +107,7 @@ export default {
       this.jobId = response.data.job_id
       console.log('CorrelationIdSearch.vue: Job ID:', this.jobId)
       setTimeout(() => {
+        this.waitCounter = 0
         this.checkJobStatus()
       }, 500)
     },
@@ -93,6 +120,8 @@ export default {
       const response = await tier3info_restful_request(request)
       console.log('CorrelationIdSearch.vue: checkJobStatus response:', response)
       if (!response || !response.data) {
+        this.statusMessage = null
+        this.errorMessage = 'Invalid response from server. Please try again later.'
         console.error('CorrelationIdSearch.vue: Invalid response data:', response)
         return
       }
@@ -100,11 +129,24 @@ export default {
       if (response.data.status === 'completed') {
         // Handle completed job status
         console.log('CorrelationIdSearch.vue: Job completed', response.data)
+        this.searchResults = response.data || 'No results found.'
+        this.statusMessage = null
       } else {
-        console.log('CorrelationIdSearch.vue: Job not completed', response.data)
-        // setTimeout(() => {
-        //   this.checkJobStatus()
-        // }, 500)
+        this.waitCounter += 1
+        if (this.waitCounter > 60) {
+          this.statusMessage = 'Job is taking too long. Please try again later.'
+          console.error('CorrelationIdSearch.vue: Job is taking too long.')
+          setTimeout(() => {
+            this.statusMessage = null
+          }, 5000)
+          return
+        } else {
+          this.statusMessage = `Waiting on search data... (${this.waitCounter / 2} seconds)`
+          console.log('CorrelationIdSearch.vue: Job is still processing...')
+          setTimeout(() => {
+            this.checkJobStatus()
+          }, 5000)
+        }
       }
     },
     validateUUID(value) {
@@ -117,12 +159,12 @@ export default {
 
       if (items.length === 0) {
         // No input yet – let Quasar treat it as neutral and rely on button disable
-        searchDisabled.value = true
+        this.searchDisabled = true
         return true
       }
 
       const allValid = items.every((s) => uuidRegex.test(s))
-      searchDisabled.value = !allValid
+      this.searchDisabled = !allValid
 
       return allValid
         ? true
