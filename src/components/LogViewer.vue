@@ -39,6 +39,33 @@ export default {
     },
   },
   methods: {
+    formatTimestampToET(ts) {
+      try {
+        const d = new Date(ts)
+        const parts = new Intl.DateTimeFormat('en-US', {
+          timeZone: 'America/New_York',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false,
+          fractionalSecondDigits: 3,
+        }).formatToParts(d)
+        const map = Object.fromEntries(parts.map((p) => [p.type, p.value]))
+        const yyyy = map.year
+        const mm = map.month
+        const dd = map.day
+        const hh = map.hour
+        const min = map.minute
+        const ss = map.second
+        const ms = map.fractionalSecond || '000'
+        return `${yyyy}.${mm}.${dd} ${hh}:${min}:${ss}.${ms} EDT`
+      } catch {
+        return String(ts) + ' EDT'
+      }
+    },
     saveAsJson() {
       const blob = new Blob([JSON.stringify(this.logData, null, 2)], { type: 'application/json' })
       this.downloadBlob(blob, 'json')
@@ -61,7 +88,7 @@ export default {
         const parts = []
 
         const ts = get(src, ['@timestamp']) || get(src, ['timestamp']) || get(src, ['time'])
-        if (ts) parts.push(ts)
+        if (ts) parts.push(this.formatTimestampToET(ts))
 
         const lvl = formatLevel(get(src, ['log', 'level']))
         if (lvl) parts.push(lvl)
