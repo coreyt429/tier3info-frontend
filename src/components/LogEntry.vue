@@ -287,23 +287,22 @@ export default {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
 }
 .log-header-text {
-  color: #dc3545;
+  color: #ca1326;
   font-weight: 500;
   font-size: 13px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
   /* white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis; */
-  overflow-x: auto;
 }
 .log-pre,
 .json-pre {
-  background: #f5f5f5;
+  background: #dfdddd;
   color: var(--q-primary);
   padding: 8px 10px;
   margin: 0;
-  white-space: pre;
-  word-break: break-word;
+  white-space: pre-wrap;
+  /* word-break: break-word; */
   border-radius: 4px;
   font-size: 13px;
   overflow-x: auto;
