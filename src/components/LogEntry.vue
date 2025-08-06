@@ -3,10 +3,10 @@
     <!-- Custom clickable header that also shows the message preview -->
     <template #header>
       <q-item-section>
-        <pre class="log-pre q-mt-sm">
-          <span class="log-header-text">{{ headerText }}</span>
+        <pre class="log-pre q-my-sm">
+<span class="log-header-text">{{ headerText }}</span>
 
-          <span v-if="message">{{ message }}</span>
+<span v-if="message">{{ message }}</span>
         </pre>
       </q-item-section>
       <!-- <q-item-section side>
