@@ -141,6 +141,10 @@ export default {
         try {
           const tmpData = JSON.parse(response.data._data) || 'No results found.'
           this.searchResults = tmpData.response || { hits: { total: 0, hits: [] } }
+          await tier3info_restful_request({
+            path: `/jobs/${this.jobId}`,
+            method: 'DELETE',
+          })
         } catch (error) {
           console.error('Error parsing JSON:', error)
           this.errorMessage = 'Error parsing search results. Please try again later.'
