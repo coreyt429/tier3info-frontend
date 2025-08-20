@@ -7,6 +7,7 @@
           <q-card-section class="row items-start">
             <q-input
               v-model="tagData"
+              @paste="handlePaste"
               label="Tags"
               outlined
               dense
@@ -437,6 +438,14 @@ watch(
     checkTags()
   },
 )
+
+function handlePaste(event) {
+  console.log('Paste event:', event)
+  // Handle paste event
+  const pastedData = event.clipboardData.getData('text/plain')
+  console.log('Pasted data:', pastedData)
+  tagData.value = pastedData
+}
 
 function handleSelection(newSelectedRows) {
   console.log('Selected rows:', newSelectedRows)
