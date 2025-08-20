@@ -266,6 +266,7 @@ export default {
       return result
     },
   },
+  emits: ['filter-must', 'filter-must-not'],
   methods: {
     // Safe deep get
     get(obj, path) {

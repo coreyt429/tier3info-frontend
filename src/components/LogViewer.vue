@@ -17,7 +17,13 @@
       </q-card-section>
       <q-card-section>
         <div v-if="logData.hits && logData.hits.hits">
-          <LogEntry v-for="(entry, index) in logData.hits.hits" :key="index" :entry="entry" />
+          <LogEntry
+            v-for="(entry, index) in logData.hits.hits"
+            :key="index"
+            :entry="entry"
+            @filter-must="$emit('filter-must', $event)"
+            @filter-must-not="$emit('filter-must-not', $event)"
+          />
         </div>
         <div v-else>
           <p>No log entries found.</p>
@@ -38,6 +44,7 @@ export default {
       required: true,
     },
   },
+  emits: ['filter-must', 'filter-must-not'],
   methods: {
     formatTimestampToET(ts) {
       try {

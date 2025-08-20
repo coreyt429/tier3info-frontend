@@ -50,7 +50,7 @@
     </q-card>
     <div class="q-mt-md">
       <q-card v-if="searchResults" class="q-pa-md">
-        <LogViewer :logData="searchResults" />
+        <LogViewer :logData="searchResults" @filter-must="onMust" @filter-must-not="onMustNot" />
       </q-card>
     </div>
   </q-page>
@@ -168,6 +168,14 @@ export default {
           }, 5000)
         }
       }
+    },
+    onMust(event) {
+      console.log('CorrelationIdSearch.vue: onMust called with event:', event)
+      // Handle the filter-must event
+    },
+    onMustNot(event) {
+      console.log('CorrelationIdSearch.vue: onMustNot called with event:', event)
+      // Handle the filter-must-not event
     },
     validateUUID(value) {
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
