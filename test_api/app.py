@@ -242,5 +242,75 @@ def rebuild_device(device_id):
 def reboot_device(device_id):
     return jsonify({'status': 'okay', 'message': f'{device_id} rebooted'})
 
+@app.route('/api/logtool/query', methods=['POST'])
+def logtool_query():
+    data = request.get_json()
+    if not data or 'queryString' not in data:
+        return jsonify({'error': 'Invalid request'}), 400
+
+    query_string = data['queryString']
+    filters = data.get('filters', [])
+
+    # Simulated Elasticsearch ECS log entries
+    simulated_hits = [
+        {
+            "_index": "logs-2024.06.01",
+            "_type": "_doc",
+            "_id": "1",
+            "_score": 1.0,
+            "_source": {
+                "@timestamp": "2024-06-01T12:34:56.789Z",
+                "log.level": "info",
+                "message": "User logged in",
+                "ecs.version": "8.0.0",
+                "host.name": "server01",
+                "event.dataset": "auth",
+                "user.name": "alice"
+            }
+        },
+        {
+            "_index": "logs-2024.06.01",
+            "_type": "_doc",
+            "_id": "2",
+            "_score": 1.0,
+            "_source": {
+                "@timestamp": "2024-06-01T12:35:10.123Z",
+                "log.level": "error",
+                "message": "Failed to connect to database",
+                "ecs.version": "8.0.0",
+                "host.name": "server02",
+                "event.dataset": "db",
+                "error.message": "timeout"
+            }
+        },
+        {
+            "_index": "logs-2024.06.01",
+            "_type": "_doc",
+            "_id": "3",
+            "_score": 1.0,
+            "_source": {
+                "@timestamp": "2024-06-01T12:36:00.456Z",
+                "log.level": "warning",
+                "message": "Disk space low",
+                "ecs.version": "8.0.0",
+                "host.name": "server03",
+                "event.dataset": "system",
+                "system.disk.free": 2048
+            }
+        }
+    ]
+
+    response = {
+        "took": 5,
+        "timed_out": False,
+        "hits": {
+            "total": {"value": len(simulated_hits), "relation": "eq"},
+            "max_score": 1.0,
+            "hits": simulated_hits
+        }
+    }
+    return jsonify(response)
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=True)

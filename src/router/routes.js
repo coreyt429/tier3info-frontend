@@ -273,6 +273,18 @@ const routes = [
     ],
   },
   {
+    path: '/logtool',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        component: () => import('pages/LogSearch.vue'),
+        props: (route) => ({ query: route.query }),
+        meta: { requiresAuth: true },
+      },
+    ],
+  },
+  {
     path: '/logtool/correlationId',
     component: () => import('layouts/MainLayout.vue'),
     children: [
