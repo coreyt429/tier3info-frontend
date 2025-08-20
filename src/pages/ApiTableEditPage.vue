@@ -141,6 +141,12 @@ const button_definitions = {
     color: 'warning',
     emit: 'pfx-cert',
   },
+  Oracle: {
+    label: 'Oracle',
+    icon: 'dns',
+    color: 'deep-orange',
+    emit: 'oracle-cert',
+  },
 }
 const buttons = computed(() => {
   const metaButtons = route.meta.buttons || []

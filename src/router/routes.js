@@ -55,7 +55,7 @@ const routePageMap = {
       title: 'Certificate Management',
       label: 'Certificate',
       endpoint: '/broadworks/certificates',
-      buttons: ['Zip', 'Pfx'],
+      buttons: ['Zip', 'Pfx', 'Oracle'],
       fields: [
         { name: 'data.subject', label: 'Subject' },
         { name: 'data.expiration_date', label: 'Expiration Date' },
