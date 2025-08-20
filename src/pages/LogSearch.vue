@@ -114,7 +114,7 @@ export default {
       const request = {
         path: '/logtool/query',
         body: {
-          queryString: this.queryString,
+          query_string: this.queryString,
           filters: this.queryFilters,
         },
         method: 'POST',
