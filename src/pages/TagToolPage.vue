@@ -432,6 +432,9 @@ function checkTags() {
   isRebuildConfigsDisabled.value = selectedRows.value.length === 0
   isRebootPhonesDisabled.value = selectedRows.value.length === 0
   isApplyTagsDisabled.value = selectedRows.value.length === 0 || tagData.value.trim() === ''
+  console.log(`checkTags: ${JSON.stringify(selectedRows.value)}`)
+  console.log(`checkTags: ${JSON.stringify(tagData.value)}`)
+  console.log(`checkTags: ${JSON.stringify(isApplyTagsDisabled.value)}`)
 }
 
 watch(
