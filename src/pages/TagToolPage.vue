@@ -429,6 +429,9 @@ function checkTags() {
     row.matches = `${hasTag}/${alreadySet}`
   }
   isSaveTagSetDisabled.value = tagData.value.trim() === ''
+  isRebuildConfigsDisabled.value = selectedRows.value.length === 0
+  isRebootPhonesDisabled.value = selectedRows.value.length === 0
+  isApplyTagsDisabled.value = selectedRows.value.length === 0 || tagData.value.trim() === ''
 }
 
 watch(
