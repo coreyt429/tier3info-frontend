@@ -29,6 +29,7 @@
         @add="handleAdd"
         @zip-cert="handleDownload(selectedOption, 'zip')"
         @pfx-cert="handleDownload(selectedOption, 'pfx')"
+        @oracle-cert="handleDownload(selectedOption, 'oracle_sbc')"
       />
       <!-- Add and Delete Dialogs -->
       <q-dialog v-model="add_dialog" persistent :backdrop-filter="backdropFilter">
