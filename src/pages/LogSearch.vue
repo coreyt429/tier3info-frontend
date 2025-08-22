@@ -320,15 +320,15 @@ export default {
         try {
           const tmpData = JSON.parse(response.data._data) || 'No results found.'
           console.log('LogSearch.vue: Job completed - search results:', tmpData.length)
-          if (
-            tmpData &&
-            tmpData.response &&
-            tmpData.response.hits &&
-            Array.isArray(tmpData.response.hits.hits) &&
-            tmpData.response.hits.hits.length > 1000
-          ) {
-            tmpData.response.hits.hits = tmpData.response.hits.hits.slice(0, 1000)
-          }
+          // if (
+          //   tmpData &&
+          //   tmpData.response &&
+          //   tmpData.response.hits &&
+          //   Array.isArray(tmpData.response.hits.hits) &&
+          //   tmpData.response.hits.hits.length > 1000
+          // ) {
+          //   tmpData.response.hits.hits = tmpData.response.hits.hits.slice(0, 1000)
+          // }
           this.searchResults = tmpData.response || { hits: { total: 0, hits: [] } }
           // Initialize virtual window to the first slice
           const initialEnd = Math.min(this.totalCount, this.sliceSize * 2)
