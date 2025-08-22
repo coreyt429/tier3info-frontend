@@ -23,6 +23,7 @@
             :item-size="avgItemPx"
             :virtual-scroll-slice-size="sliceSize"
             @virtual-scroll="onVirtualScroll"
+            :style="{ height: viewPortHeight + 'px' }"
           >
             <template v-slot="{ item, index }">
               <LogEntry
@@ -75,6 +76,7 @@ export default {
     searchId: { type: String, required: false, default: null },
     busy: { type: Boolean, required: false, default: false },
     error: { type: String, required: false, default: null },
+    viewPortHeight: { type: Number, required: false, default: 600 },
   },
   computed: {
     legacyHits() {
