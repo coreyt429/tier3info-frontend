@@ -2,7 +2,7 @@
   <div class="log-viewer">
     <q-card flat bordered>
       <q-card-section class="row items-center justify-between">
-        <div class="text-h6">Log Viewer: {{ displayCount }} entries found</div>
+        <div class="text-h6">Log Viewer: {{ logData.hits.hits.length }} entries found</div>
         <div class="q-gutter-sm">
           <q-btn
             dense
@@ -16,30 +16,9 @@
         </div>
       </q-card-section>
       <q-card-section>
-        <!-- Virtualized path when parent provides windowed items -->
-        <div v-if="hasWindowedItems">
-          <q-virtual-scroll
-            :items="windowedItems"
-            :item-size="avgItemPx"
-            :virtual-scroll-slice-size="sliceSize"
-            @virtual-scroll="onVirtualScroll"
-          >
-            <template v-slot="{ item, index }">
-              <LogEntry
-                :entry="item"
-                :key="index"
-                @filter-must="$emit('filter-must', $event)"
-                @filter-must-not="$emit('filter-must-not', $event)"
-              />
-            </template>
-          </q-virtual-scroll>
-          <div v-if="busy" class="q-mt-md text-grey">Loading more…</div>
-        </div>
-
-        <!-- Fallback path renders all (original behavior) -->
-        <div v-else-if="legacyHits && legacyHits.length">
+        <div v-if="logData.hits && logData.hits.hits">
           <LogEntry
-            v-for="(entry, index) in legacyHits"
+            v-for="(entry, index) in logData.hits.hits"
             :key="index"
             :entry="entry"
             @filter-must="$emit('filter-must', $event)"
@@ -60,48 +39,12 @@ export default {
   components: { LogEntry },
   name: 'LogViewer',
   props: {
-    // Legacy full-result prop (kept for compatibility)
     logData: {
       type: Object,
-      required: false,
-      default: () => ({ hits: { hits: [] } }),
-    },
-    // Windowed/virtualization props
-    totalCount: { type: Number, required: false, default: null },
-    windowStartIndex: { type: Number, required: false, default: 0 },
-    items: { type: Array, required: false, default: null },
-    avgItemPx: { type: Number, required: false, default: 72 },
-    sliceSize: { type: Number, required: false, default: 60 },
-    searchId: { type: String, required: false, default: null },
-    busy: { type: Boolean, required: false, default: false },
-    error: { type: String, required: false, default: null },
-  },
-  computed: {
-    legacyHits() {
-      return this.logData && this.logData.hits && this.logData.hits.hits
-        ? this.logData.hits.hits
-        : []
-    },
-    hasWindowedItems() {
-      return Array.isArray(this.items) && this.items.length > 0
-    },
-    windowedItems() {
-      return this.hasWindowedItems ? this.items : []
-    },
-    displayCount() {
-      if (this.totalCount != null) return this.totalCount
-      return this.legacyHits.length
+      required: true,
     },
   },
-  emits: [
-    'filter-must',
-    'filter-must-not',
-    'request-range',
-    'rendered-range-changed',
-    'filter-change',
-    'find-request',
-    'jump-to-index',
-  ],
+  emits: ['filter-must', 'filter-must-not'],
   methods: {
     formatTimestampToET(ts) {
       try {
@@ -131,14 +74,11 @@ export default {
       }
     },
     saveAsJson() {
-      const payload = this.hasWindowedItems
-        ? { windowStartIndex: this.windowStartIndex, items: this.items }
-        : this.logData
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+      const blob = new Blob([JSON.stringify(this.logData, null, 2)], { type: 'application/json' })
       this.downloadBlob(blob, 'json')
     },
     saveAsText() {
-      const entries = this.hasWindowedItems ? this.items : this.logData.hits?.hits || []
+      const entries = this.logData.hits?.hits || []
       const lines = entries.map((entry) => {
         const src = entry._source || entry.fields || {}
 
@@ -208,42 +148,6 @@ export default {
       link.download = filename
       link.click()
       URL.revokeObjectURL(link.href)
-    },
-    onVirtualScroll(info) {
-      // info: { from, to, direction }
-      const absStart = this.windowStartIndex + info.from
-      const absEnd = this.windowStartIndex + info.to
-      this.$emit('rendered-range-changed', { start: absStart, end: absEnd })
-      this.maybeRequestMore(info)
-    },
-    maybeRequestMore(info) {
-      if (!this.hasWindowedItems) return
-      const buffer = Math.floor(this.sliceSize * 0.5)
-      const nearStart = info.from <= buffer
-      const nearEnd = info.to >= this.items.length - buffer
-
-      if (nearStart && this.windowStartIndex > 0) {
-        const wantStart = Math.max(0, this.windowStartIndex - this.sliceSize)
-        const wantEnd = this.windowStartIndex + buffer
-        this.$emit('request-range', {
-          start: wantStart,
-          end: wantEnd,
-          reason: 'scroll',
-          searchId: this.searchId || undefined,
-        })
-      } else if (nearEnd && this.totalCount != null) {
-        const globalEnd = this.windowStartIndex + this.items.length
-        if (globalEnd < this.totalCount) {
-          const wantStart = this.windowStartIndex + this.items.length - buffer
-          const wantEnd = Math.min(this.totalCount, wantStart + this.sliceSize)
-          this.$emit('request-range', {
-            start: wantStart,
-            end: wantEnd,
-            reason: 'scroll',
-            searchId: this.searchId || undefined,
-          })
-        }
-      }
     },
   },
 }

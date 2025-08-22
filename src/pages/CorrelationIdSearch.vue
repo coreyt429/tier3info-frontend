@@ -61,7 +61,7 @@ import { useTitleStore } from 'stores/titleStore'
 import { tier3info_restful_request } from 'src/plugins/tier3info'
 import { useRoute } from 'vue-router'
 // Removed unused import for LogViewer
-import LogViewer from 'components/LogViewer.vue'
+import LogViewer from 'components/LogViewer_v1.vue'
 export default {
   components: { LogViewer },
   created() {
