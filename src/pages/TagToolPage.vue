@@ -137,6 +137,12 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+// Helper to split only on first '=' and preserve subsequent '=' in value
+function splitFirstEqual(str) {
+  const idx = str.indexOf('=')
+  if (idx === -1) return [str.trim(), '']
+  return [str.slice(0, idx).trim(), str.slice(idx + 1).trim()]
+}
 // import { exportFile, useQuasar } from 'quasar'
 import { tier3info_restful_request } from 'src/plugins/tier3info.js'
 import { locate_cache_key_fields } from 'src/plugins/locate.js'
@@ -349,10 +355,14 @@ async function applyTags() {
       method: 'PUT',
       path: `/api/broadworks/access_device/${row.id}/tags`,
       body: Object.fromEntries(
-        tagData.value.split('\n').map((line) => {
-          const [key, value] = line.split('=').map((part) => part.trim())
-          return [key, value || '']
-        }),
+        tagData.value
+          .split('\n')
+          .map((line) => line.trim())
+          .filter((line) => line.length > 0)
+          .map((line) => {
+            const [key, value] = splitFirstEqual(line)
+            return [key, value]
+          }),
       ),
     }
     const response = await tier3info_restful_request(request)
@@ -391,32 +401,47 @@ function checkTags() {
     if (secondPercentIndex !== -1) {
       const beforeSecondPercent = line.substring(0, secondPercentIndex + 1)
       const afterSecondPercent = line.substring(secondPercentIndex + 1).trim()
-
-      if (!afterSecondPercent.includes('=')) {
+      // Updated block: preserve any characters typed after the accidental extra '=' (e.g., '==f' -> '=f') and then normalize
+      console.log(`checkTags line: ${line}`)
+      console.log(`checkTags afterSecondPercent: ${afterSecondPercent}`)
+      console.log(`checkTags beforeSecondPercent: ${beforeSecondPercent}`)
+      if (afterSecondPercent.startsWith('==')) {
+        // Collapse only one '=' and keep the remainder (e.g., '==f' -> '=f')
+        const collapsed = afterSecondPercent.replace(/^==/, '=')
+        if (!collapsed.includes('=')) {
+          line = `${beforeSecondPercent}=`
+        } else {
+          const [key, value] = splitFirstEqual(collapsed)
+          line = `${beforeSecondPercent}${key}=${value}`
+        }
+      } else if (!afterSecondPercent.includes('=')) {
         line = `${beforeSecondPercent}=`
       } else {
-        const [key, value] = afterSecondPercent.split('=').map((part) => part.trim())
-        line = `${beforeSecondPercent}${key}=${value || ''}`
+        const [key, value] = splitFirstEqual(afterSecondPercent)
+        line = `${beforeSecondPercent}${key}=${value}`
       }
+      console.log(`checkTags new line: ${line}`)
     }
     // Add '%' before the first '=' if missing
     const firstEqualIndex = line.indexOf('=')
     if (firstEqualIndex !== -1 && line.charAt(firstEqualIndex - 1) !== '%') {
       line = line.substring(0, firstEqualIndex).trim() + '%' + line.substring(firstEqualIndex)
     }
+    console.log(`checkTags final line: ${line}`)
     return line
   })
-  tagData.value = lines.join('\n')
+  console.log(`checkTags lines: ${lines}`)
+  let newTagData = lines.join('\n')
   for (const row of rows.value) {
     let hasTag = 0
     let alreadySet = 0
 
-    const tagLines = tagData.value.split('\n').map((line) => line.trim())
+    const tagLines = newTagData.split('\n').map((line) => line.trim())
     const rowTags = row.tags.split('\n').map((tag) => tag.trim())
     for (const tagLine of tagLines) {
-      const [tagKey, tagValue] = tagLine.split('=').map((part) => part.trim())
+      const [tagKey, tagValue] = splitFirstEqual(tagLine)
       for (const rowTag of rowTags) {
-        const [rowTagKey, rowTagValue] = rowTag.split('=').map((part) => part.trim())
+        const [rowTagKey, rowTagValue] = splitFirstEqual(rowTag)
         if (rowTagKey === tagKey) {
           hasTag++
           if (rowTagValue === tagValue) {
@@ -428,32 +453,52 @@ function checkTags() {
     console.log(`hasTag: ${hasTag}, alreadySet: ${alreadySet}`)
     row.matches = `${hasTag}/${alreadySet}`
   }
-  isSaveTagSetDisabled.value = tagData.value.trim() === ''
+  isSaveTagSetDisabled.value = newTagData.trim() === ''
   isRebuildConfigsDisabled.value = selectedRows.value.length === 0
   isRebootPhonesDisabled.value = selectedRows.value.length === 0
-  isApplyTagsDisabled.value = selectedRows.value.length === 0 || tagData.value.trim() === ''
+  isApplyTagsDisabled.value = selectedRows.value.length === 0 || newTagData.trim() === ''
   console.log(`checkTags: selected ${JSON.stringify(selectedRows.value.length)}`)
   console.log(`checkTags: selected ${JSON.stringify(selectedRows.value.length === 0)}`)
-  console.log(`checkTags: tags ${JSON.stringify(tagData.value)}`)
-  console.log(`checkTags: tags ${JSON.stringify(tagData.value.trim() === '')}`)
+  console.log(`checkTags: tags ${JSON.stringify(newTagData)}`)
+  console.log(`checkTags: tags ${JSON.stringify(newTagData.trim() === '')}`)
 
   console.log(`checkTags: ${JSON.stringify(isApplyTagsDisabled.value)}`)
+  // Only update the model if normalization actually changed the text to avoid watcher loops
+  if (tagData.value !== newTagData) {
+    tagData.value = newTagData
+  }
 }
 
+let tagCheckTimer = null
 watch(
   () => tagData.value,
   (newTagData) => {
     console.log('Tag Data changed:', newTagData)
-    checkTags()
+    if (tagCheckTimer) clearTimeout(tagCheckTimer)
+    tagCheckTimer = setTimeout(() => {
+      checkTags()
+    }, 80)
   },
 )
 
+// function handlePaste(event) {
+//   console.log('Paste event:', event)
+//   // Handle paste event
+//   const pastedData = event.clipboardData.getData('text/plain')
+//   console.log('Pasted data:', pastedData)
+//   tagData.value = pastedData
+// }
+// test=fred=bob
 function handlePaste(event) {
   console.log('Paste event:', event)
-  // Handle paste event
   const pastedData = event.clipboardData.getData('text/plain')
   console.log('Pasted data:', pastedData)
-  tagData.value = pastedData
+
+  // Stop the input from inserting the text a second time
+  event.preventDefault()
+
+  // Replace current content with the pasted data
+  tagData.value = pastedData.replace(/\r/g, '').trim()
 }
 
 function handleSelection(newSelectedRows) {
