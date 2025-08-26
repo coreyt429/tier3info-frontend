@@ -362,6 +362,10 @@ async function applyTags() {
           .map((line) => {
             const [key, value] = splitFirstEqual(line)
             return [key, value]
+          })
+          .filter(([key]) => {
+            const cleanedKey = key.replace(/%/g, '').trim()
+            return cleanedKey.length > 0
           }),
       ),
     }
