@@ -447,5 +447,6 @@ export default {
 }
 .log-toggle-top {
   align-items: flex-start !important;
+  justify-content: flex-start !important;
 }
 </style>
