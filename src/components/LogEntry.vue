@@ -424,7 +424,7 @@ export default {
   vertical-align: top;
 }
 .log-item-section {
-  max-height: 80%;
+  max-height: 600px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
