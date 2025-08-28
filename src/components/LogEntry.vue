@@ -386,21 +386,24 @@ export default {
 .log-pre,
 .json-pre {
   /* background: #dfdddd; */
+  background-color: white;
+  background: white;
   color: var(--q-primary);
   padding: 8px 10px;
   margin: 0;
   white-space: pre-wrap;
   /* word-break: break-word; */
-  border-radius: 4px;
   font-size: 13px;
   overflow-x: auto;
 }
 .json-pre {
   white-space: pre; /* keep JSON aligned */
+  border-radius: 4px;
   overflow-x: auto;
 }
 .log-pre {
   display: flex;
+  border-radius: 0px;
   flex-direction: column;
   align-items: flex-start;
   flex: 1 1 auto;
