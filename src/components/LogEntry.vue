@@ -187,9 +187,9 @@ export default {
 
       if (msg === 'CDR' && this.src.cdr) {
         try {
-          return JSON.stringify(this.src.cdr, null, 2)
+          return 'Call Detail Record:\n' + JSON.stringify(this.src.cdr, null, 2)
         } catch {
-          return String(this.src.cdr)
+          return 'Call Detail Record:\n' + String(this.src.cdr)
         }
       }
 
