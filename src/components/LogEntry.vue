@@ -200,6 +200,9 @@ export default {
     headerText() {
       const parts = []
 
+      const hostname = this.get(this.src, ['host', 'hostname'])
+      if (hostname) parts.push(hostname.split('.')[0])
+
       // @timestamp in YYYY.MM.DD HH:MM:SS.sss EDT
       const ts = this.tsHeader
       if (ts) parts.push(ts)
