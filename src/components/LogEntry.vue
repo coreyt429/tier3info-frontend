@@ -403,6 +403,7 @@ export default {
 }
 .log-pre {
   display: flex;
+  border: 0px;
   border-radius: 0px;
   flex-direction: column;
   align-items: flex-start;
