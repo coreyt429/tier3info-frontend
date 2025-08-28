@@ -68,15 +68,16 @@ export default {
       default: () => ({ hits: { hits: [] } }),
     },
     // Windowed/virtualization props
+    // Defaults assume LogEntry heights: 400px collapsed, ~800px expanded
     totalCount: { type: Number, required: false, default: null },
     windowStartIndex: { type: Number, required: false, default: 0 },
     items: { type: Array, required: false, default: null },
-    avgItemPx: { type: Number, required: false, default: 72 },
-    sliceSize: { type: Number, required: false, default: 60 },
+    avgItemPx: { type: Number, required: false, default: 400 },
+    sliceSize: { type: Number, required: false, default: 80 },
     searchId: { type: String, required: false, default: null },
     busy: { type: Boolean, required: false, default: false },
     error: { type: String, required: false, default: null },
-    viewPortHeight: { type: Number, required: false, default: 600 },
+    viewPortHeight: { type: Number, required: false, default: 800 },
   },
   computed: {
     legacyHits() {
