@@ -8,7 +8,7 @@
 <span class="log-header-text">{{ headerText }}</span>
 
 
-<span v-if="message">        {{ message }}</span>
+<span v-if="message" class="message-scroll">        {{ message }}</span>
 
         </pre>
       </q-item-section>
@@ -406,5 +406,11 @@ export default {
   display: flex;
   align-items: center;
   justify-content: flex-end;
+}
+.message-scroll {
+  display: inline-block;
+  max-height: 800px;
+  overflow-y: auto;
+  vertical-align: top;
 }
 </style>
