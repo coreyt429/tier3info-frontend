@@ -28,7 +28,7 @@
     </template>
 
     <!-- Expanded details (hidden by default) -->
-    <q-card flat bordered class="q-mt-sm">
+    <q-card flat bordered class="q-mt-sm expand-scroll">
       <div class="row no-wrap">
         <div class="col">
           <!-- Meta / chips -->
@@ -448,5 +448,10 @@ export default {
 .log-toggle-top {
   align-items: flex-start !important;
   justify-content: flex-start !important;
+}
+
+.expand-scroll {
+  max-height: 400px;
+  overflow-y: auto;
 }
 </style>
