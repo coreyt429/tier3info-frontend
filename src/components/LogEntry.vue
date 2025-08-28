@@ -14,7 +14,7 @@
       </q-item-section>
 
       <!-- Right side: explicit toggle button -->
-      <q-item-section side="right" avatar>
+      <q-item-section side="right" avatar class="log-toggle-top">
         <q-btn
           dense
           flat
@@ -444,5 +444,8 @@ export default {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+}
+.log-toggle-top {
+  align-items: flex-start !important;
 }
 </style>
