@@ -14,7 +14,7 @@
       </q-item-section>
 
       <!-- Right side: explicit toggle button -->
-      <q-item-section side="right" class="row items-center no-wrap">
+      <q-item-section side="right" avatar>
         <q-btn
           dense
           flat
