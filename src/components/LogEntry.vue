@@ -399,6 +399,13 @@ export default {
   white-space: pre; /* keep JSON aligned */
   overflow-x: auto;
 }
+.log-pre {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-height: 80%;
+  overflow: hidden; /* prevent the <pre> from growing beyond the capped height */
+}
 .log-toggle {
   /* Keep the right toggle/filler narrow and fixed width */
   flex: 0 0 28px;
@@ -408,8 +415,10 @@ export default {
   justify-content: flex-end;
 }
 .message-scroll {
-  display: inline-block;
-  max-height: 80%;
+  display: block;
+  flex: 1 1 auto;
+  min-height: 0; /* allows child to shrink within flex container */
+  max-height: 100%;
   width: 100%;
   overflow-y: auto;
   vertical-align: top;
