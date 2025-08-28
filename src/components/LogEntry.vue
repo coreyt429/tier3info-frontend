@@ -179,12 +179,21 @@ export default {
 
     // ---- Displayed message (multiline) ----
     message() {
-      return (
+      const msg =
         this.src.message ||
         this.src.msg ||
         this.src.log ||
         (typeof this.src === 'string' ? this.src : null)
-      )
+
+      if (msg === 'CDR' && this.src.cdr) {
+        try {
+          return JSON.stringify(this.src.cdr, null, 2)
+        } catch {
+          return String(this.src.cdr)
+        }
+      }
+
+      return msg
     },
 
     // ---- Header fields ----
