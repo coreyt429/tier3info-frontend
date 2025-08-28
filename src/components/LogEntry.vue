@@ -3,7 +3,7 @@
     <!-- Custom clickable header that also shows the message preview -->
     <template #header>
       <!-- Left side: message preview (does NOT toggle) -->
-      <q-item-section @click.stop>
+      <q-item-section @click.stop class="log-item-section">
         <pre class="log-pre q-my-sm">
 <span class="log-header-text">{{ headerText }}</span>
 
@@ -403,8 +403,8 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  max-height: 80%;
-  overflow: hidden; /* prevent the <pre> from growing beyond the capped height */
+  flex: 1 1 auto;
+  min-height: 0;
 }
 .log-toggle {
   /* Keep the right toggle/filler narrow and fixed width */
@@ -422,5 +422,11 @@ export default {
   width: 100%;
   overflow-y: auto;
   vertical-align: top;
+}
+.log-item-section {
+  max-height: 80%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 </style>
