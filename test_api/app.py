@@ -245,10 +245,10 @@ def reboot_device(device_id):
 @app.route('/api/logtool/query', methods=['POST'])
 def logtool_query():
     data = request.get_json()
-    if not data or 'queryString' not in data:
+    if not data or 'query_string' not in data:
         return jsonify({'error': 'Invalid request'}), 400
 
-    query_string = data['queryString']
+    query_string = data['query_string']
     filters = data.get('filters', [])
 
     # Simulated Elasticsearch ECS log entries
