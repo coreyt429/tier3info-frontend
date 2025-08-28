@@ -385,7 +385,7 @@ export default {
 }
 .log-pre,
 .json-pre {
-  background: #dfdddd;
+  /* background: #dfdddd; */
   color: var(--q-primary);
   padding: 8px 10px;
   margin: 0;
