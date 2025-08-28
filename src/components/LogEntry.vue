@@ -28,6 +28,10 @@
 
     <!-- Expanded details (hidden by default) -->
     <q-card flat bordered class="q-mt-sm">
+      <!-- Filler section to align with expand icon -->
+      <q-item-section side="right" avatar style="visibility: hidden">
+        <q-btn dense flat round icon="chevron_right" />
+      </q-item-section>
       <!-- Meta / chips -->
       <q-card-section class="row items-center q-gutter-sm">
         <q-chip v-if="entry._index" dense square>{{ entry._index }}</q-chip>
