@@ -440,7 +440,7 @@ export default {
   vertical-align: top;
 }
 .log-item-section {
-  max-height: 600px;
+  max-height: 400px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
