@@ -1,8 +1,9 @@
 <template>
-  <q-expansion-item dense hide-expand-icon>
+  <q-expansion-item dense hide-expand-icon v-model="expanded">
     <!-- Custom clickable header that also shows the message preview -->
     <template #header>
-      <q-item-section>
+      <!-- Left side: message preview (does NOT toggle) -->
+      <q-item-section @click.stop>
         <pre class="log-pre q-my-sm">
 <span class="log-header-text">{{ headerText }}</span>
 
@@ -10,6 +11,18 @@
 <span v-if="message">        {{ message }}</span>
 
         </pre>
+      </q-item-section>
+
+      <!-- Right side: explicit toggle button -->
+      <q-item-section side="right" class="row items-center no-wrap">
+        <q-btn
+          dense
+          flat
+          round
+          :icon="expanded ? 'expand_more' : 'chevron_right'"
+          aria-label="Toggle details"
+          @click.stop="expanded = !expanded"
+        />
       </q-item-section>
     </template>
 
@@ -144,6 +157,7 @@ export default {
   data() {
     return {
       tab: 'fields',
+      expanded: false,
     }
   },
   computed: {
