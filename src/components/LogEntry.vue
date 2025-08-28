@@ -409,7 +409,8 @@ export default {
 }
 .message-scroll {
   display: inline-block;
-  max-height: 800px;
+  max-height: 80%;
+  width: 100%;
   overflow-y: auto;
   vertical-align: top;
 }
