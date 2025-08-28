@@ -13,7 +13,9 @@
 </template>
 
 <script setup>
-import { ref, watch, defineProps, defineEmits } from 'vue'
+// [@vue/compiler-sfc] `defineEmits` is a compiler macro and no longer needs to be imported.
+// [@vue/compiler-sfc] `defineProps` is a compiler macro and no longer needs to be imported.
+import { ref, watch } from 'vue'
 
 const props = defineProps({
   title: {
