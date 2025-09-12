@@ -24,9 +24,9 @@ export default route(function (/* { store, ssrContext } */) {
 
   // ✅ Add the sessionId check here
   Router.beforeEach((to, from, next) => {
-    let sessionId = Cookies.get('sessionId')
+    let sessionId = Cookies.get('session_id')
     if (!sessionId) {
-      sessionId = localStorage.getItem('sessionId')
+      sessionId = localStorage.getItem('session_id')
     }
 
     if (!sessionId && to.meta.requiresAuth) {

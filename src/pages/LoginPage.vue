@@ -26,7 +26,7 @@
 import { ref } from 'vue'
 import { tier3info_restful_request } from 'src/plugins/tier3info.js'
 const countDownTimer = ref(5)
-const loginUrl = ref('/login')
+const loginUrl = ref('https://tier3info.mtmsys.us/index.cgi')
 
 function startCountDown() {
   const interval = setInterval(() => {

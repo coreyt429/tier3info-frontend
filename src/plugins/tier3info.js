@@ -79,7 +79,7 @@ function get_session_id() {
   for (let i = 0; i < cookies.length; i++) {
     const cookie = cookies[i].split('=')
     console.log(cookie)
-    if (cookie[0] == 'sessionId') {
+    if (cookie[0] == 'session_id') {
       sessionId = cookie[1]
     }
   }
