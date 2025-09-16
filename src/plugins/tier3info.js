@@ -163,6 +163,10 @@ export async function tier3info_restful_request(request) {
       if (error.response) {
         const response = error.response
         if (response.status === 403) {
+          if (error.response.data && error.response.data.url) {
+            window.location.href = error.response.data.url
+            return
+          }
           message = '403 Forbidden: You do not have permission to access this resource.'
         } else if (response.status === 500) {
           message = `Error: ${response.status} ${response.statusText} \n This normally means we broke something, and we are working on it.  If it persists, please contact Voice Engineering On-Call.`
