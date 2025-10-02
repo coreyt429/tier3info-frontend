@@ -43,7 +43,8 @@
           :exportable="true"
           :pagination-config="pagination"
           :onClick="selectItem"
-          exportPrefix="locate-export"
+          exportPrefix="faxdata-export"
+          table-height="60vh"
         />
       </q-card>
     </div>
@@ -203,28 +204,35 @@ async function fetchResults() {
       return
     }
     console.log('FaxbackReportPage: fetchResults response:', resp)
-    console.log('FaxbackReportPage: fetchResults data:', resp.data)
-    console.log('FaxbackReportPage: fetchResults response data type:', typeof resp.data)
-    // const text = typeof resp?.data === 'string' ? resp.data : ''
-    const text = resp?.data ?? ''
-    console.log('FaxbackReportPage: fetchResults response text:', text)
-    // if (!text) {
-    //   // If server sometimes returns empty body before file is fully written, retry once more
-    //   scheduleResultsRetry('Empty results. Retrying')
-    //   return
-    // }
+    const data = resp?.data
+    const dtype = Array.isArray(data) ? 'array' : typeof data
+    console.log('FaxbackReportPage: fetchResults data type:', dtype)
 
-    const parsed = []
-    for (const line of text.split('\n')) {
-      console.log('FaxbackReportPage: fetchResults parsing line:', line)
-      if (!line.trim()) continue
-      try {
-        parsed.push(JSON.parse(line))
-      } catch {
-        console.warn('Skipping bad NDJSON line:', line)
+    let parsed = []
+
+    if (typeof data === 'string') {
+      // NDJSON text: one JSON object per line
+      for (const line of data.split('\n')) {
+        const trimmed = line.trim()
+        if (!trimmed) continue
+        try {
+          parsed.push(JSON.parse(trimmed))
+        } catch (e) {
+          console.warn('Skipping bad NDJSON line:', trimmed, e)
+        }
       }
+    } else if (Array.isArray(data)) {
+      // Already a JSON array of rows
+      parsed = data
+    } else if (data && typeof data === 'object') {
+      // Single object (single-row result)
+      parsed = [data]
+    } else {
+      // Unknown / empty; retry
+      scheduleResultsRetry('Empty or unknown results format. Retrying')
+      return
     }
-    console.log('FaxbackReportPage: fetchResults parsed lines:', parsed)
+
     if (parsed.length === 0) {
       scheduleResultsRetry('No rows parsed. Retrying')
       return

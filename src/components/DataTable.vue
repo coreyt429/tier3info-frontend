@@ -7,7 +7,7 @@
       flat
       bordered
       :title="props.title"
-      style="height: 40vh"
+      :style="{ height: tableHeight }"
       :grid="$q.screen.xs"
       row-key="id"
       :filter="props.filterable ? filter : ''"
@@ -109,6 +109,7 @@ const props = defineProps({
   allowAdd: { type: Boolean, default: false }, // New prop to control add button visibility
   selection: { type: String, default: 'none' }, // New prop for selection mode
   visibleColumns: { type: Array, default: () => [] },
+  tableHeight: { type: String, default: '40vh' },
 })
 console.log('DataTable props:', JSON.stringify(props))
 const filter = ref('')
