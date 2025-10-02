@@ -202,8 +202,11 @@ async function fetchResults() {
       scheduleResultsRetry('Results not ready (404). Retrying')
       return
     }
-
-    const text = typeof resp?.data === 'string' ? resp.data : ''
+    console.log('FaxbackReportPage: fetchResults response:', resp)
+    console.log('FaxbackReportPage: fetchResults data:', resp.data)
+    console.log('FaxbackReportPage: fetchResults response data type:', typeof resp.data)
+    // const text = typeof resp?.data === 'string' ? resp.data : ''
+    const text = resp?.data ?? ''
     console.log('FaxbackReportPage: fetchResults response text:', text)
     // if (!text) {
     //   // If server sometimes returns empty body before file is fully written, retry once more
