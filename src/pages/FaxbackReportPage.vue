@@ -84,10 +84,10 @@ const columns = [
   { name: 'CSID', label: 'CSID', field: 'CSID' },
   { name: 'TSID', label: 'TSID', field: 'TSID' },
   { name: 'BillingCode', label: 'BillingCode', field: 'BillingCode' },
-  { name: 'EmailAddress', label: 'Email Address', field: 'email_address' },
-  { name: 'ATA SerialNumber', label: 'ATA SerialNumber', field: 'ata_serial_number' },
-  { name: 'ATA MacAddress', label: 'ATA MacAddress', field: 'ata_mac_address' },
-  { name: 'ATA Port', label: 'ATA Port', field: 'ata_port' },
+  { name: 'EmailAddress', label: 'Email Address', field: 'EmailAddress' },
+  { name: 'ATA SerialNumber', label: 'ATA SerialNumber', field: 'ATA SerialNumber' },
+  { name: 'ATA MacAddress', label: 'ATA MacAddress', field: 'ATA MacAddress' },
+  { name: 'ATA Port', label: 'ATA Port', field: 'ATA Port' },
 ]
 const pagination = ref({ rowsPerPage: 0 })
 
