@@ -204,14 +204,16 @@ async function fetchResults() {
     }
 
     const text = typeof resp?.data === 'string' ? resp.data : ''
-    if (!text) {
-      // If server sometimes returns empty body before file is fully written, retry once more
-      scheduleResultsRetry('Empty results. Retrying')
-      return
-    }
+    console.log('FaxbackReportPage: fetchResults response text:', text)
+    // if (!text) {
+    //   // If server sometimes returns empty body before file is fully written, retry once more
+    //   scheduleResultsRetry('Empty results. Retrying')
+    //   return
+    // }
 
     const parsed = []
     for (const line of text.split('\n')) {
+      console.log('FaxbackReportPage: fetchResults parsing line:', line)
       if (!line.trim()) continue
       try {
         parsed.push(JSON.parse(line))
@@ -219,7 +221,7 @@ async function fetchResults() {
         console.warn('Skipping bad NDJSON line:', line)
       }
     }
-
+    console.log('FaxbackReportPage: fetchResults parsed lines:', parsed)
     if (parsed.length === 0) {
       scheduleResultsRetry('No rows parsed. Retrying')
       return
