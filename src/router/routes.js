@@ -273,6 +273,18 @@ const routes = [
     ],
   },
   {
+    path: '/locate/faxback_report',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        component: () => import('pages/FaxbackReportPage.vue'),
+        props: (route) => ({ query: route.query }),
+        meta: { requiresAuth: true },
+      },
+    ],
+  },
+  {
     path: '/logtool',
     component: () => import('layouts/MainLayout.vue'),
     children: [
