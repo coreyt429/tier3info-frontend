@@ -59,7 +59,7 @@ import DataTable from 'src/components/DataTable.vue'
 // import axios from 'axios'
 import { useTitleStore } from 'stores/titleStore'
 const titleStore = useTitleStore()
-titleStore.setMainTitle('Locate Tool')
+titleStore.setMainTitle('Faxback Report')
 
 const searchQuery = ref('')
 const rows = ref([])
@@ -70,6 +70,10 @@ const errorMessage = ref(null)
 const jobId = ref(null)
 const waitCounter = ref(0)
 let pollTimer = null
+
+const resultsRetryCount = ref(0)
+const resultsBackoffMs = ref(1000)
+let resultsTimer = null
 
 const columns = [
   { name: 'AccountId', label: 'AccountId', field: 'AccountId' },
@@ -89,6 +93,9 @@ const pagination = ref({ rowsPerPage: 0 })
 async function executeSearch() {
   // reset state
   clearPoll()
+  clearResultsTimer()
+  resultsRetryCount.value = 0
+  resultsBackoffMs.value = 1000
   errorMessage.value = null
   rows.value = []
   statusMessage.value = `Searching for "${searchQuery.value}"... Please wait.`
@@ -122,6 +129,12 @@ function clearPoll() {
     pollTimer = null
   }
 }
+function clearResultsTimer() {
+  if (resultsTimer) {
+    clearTimeout(resultsTimer)
+    resultsTimer = null
+  }
+}
 
 async function checkJobStatus() {
   try {
@@ -133,6 +146,8 @@ async function checkJobStatus() {
     }
 
     if (resp.data.status === 'completed') {
+      resultsRetryCount.value = 0
+      resultsBackoffMs.value = 1000
       await fetchResults()
       statusMessage.value = null
       isLoading.value = false
@@ -174,19 +189,27 @@ async function checkJobStatus() {
 
 async function fetchResults() {
   try {
-    // Fetch NDJSON results for this job
     const req = {
       path: `/jobs/files/${jobId.value}/results.ndjson`,
       method: 'GET',
       responseType: 'text',
     }
     const resp = await tier3info_restful_request(req)
-    console.log('FaxbackReportPage: fetchResults response:', resp)
-    const text = typeof resp?.data === 'string' ? resp.data : ''
-    if (!text) {
-      rows.value = []
+    // Some clients put the status on resp.status; others nest under resp.response.status
+    const status = resp?.status ?? resp?.response?.status
+    if (status === 404) {
+      // results file not ready yet — schedule a retry with backoff
+      scheduleResultsRetry('Results not ready (404). Retrying')
       return
     }
+
+    const text = typeof resp?.data === 'string' ? resp.data : ''
+    if (!text) {
+      // If server sometimes returns empty body before file is fully written, retry once more
+      scheduleResultsRetry('Empty results. Retrying')
+      return
+    }
+
     const parsed = []
     for (const line of text.split('\n')) {
       if (!line.trim()) continue
@@ -196,13 +219,48 @@ async function fetchResults() {
         console.warn('Skipping bad NDJSON line:', line)
       }
     }
-    // The server promises field names that match our columns
+
+    if (parsed.length === 0) {
+      scheduleResultsRetry('No rows parsed. Retrying')
+      return
+    }
+
     rows.value = parsed
+    statusMessage.value = null
+    clearResultsTimer()
   } catch (err) {
+    // Detect 404 from thrown errors (e.g., axios-like) and back off
+    const code = err?.response?.status || err?.status
+    if (code === 404) {
+      scheduleResultsRetry('Results not ready (404). Retrying')
+      return
+    }
     console.error('FaxbackReportPage: fetchResults error:', err)
-    errorMessage.value = 'Error parsing search results. Please try again later.'
+    errorMessage.value = 'Error retrieving or parsing search results. Please try again later.'
     rows.value = []
+    clearResultsTimer()
   }
+}
+
+function scheduleResultsRetry(reason) {
+  resultsRetryCount.value += 1
+  // cap at 10 retries (~ up to ~17s total with starting at 1s and doubling, but we also cap per-try at 10s)
+  if (resultsRetryCount.value > 10) {
+    errorMessage.value =
+      'Results file is not yet available. Please run the search again in a moment.'
+    statusMessage.value = null
+    isLoading.value = false
+    clearResultsTimer()
+    return
+  }
+  const delay = Math.min(resultsBackoffMs.value, 10000)
+  statusMessage.value = `${reason} in ${Math.round(delay / 1000)}s...`
+  clearResultsTimer()
+  resultsTimer = setTimeout(() => {
+    // exponential backoff for next time
+    resultsBackoffMs.value = Math.min(resultsBackoffMs.value * 2, 10000)
+    fetchResults()
+  }, delay)
 }
 
 function selectItem(row) {
@@ -230,6 +288,9 @@ watch(
   },
 )
 
-onUnmounted(() => clearPoll())
+onUnmounted(() => {
+  clearPoll()
+  clearResultsTimer()
+})
 </script>
 <style lang="sass"></style>
