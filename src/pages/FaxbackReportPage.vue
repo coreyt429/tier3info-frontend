@@ -127,6 +127,7 @@ async function checkJobStatus() {
   try {
     const req = { path: `/jobs/${jobId.value}`, method: 'GET' }
     const resp = await tier3info_restful_request(req)
+    console.log('FaxbackReportPage: checkJobStatus response:', resp)
     if (!resp || !resp.data) {
       throw new Error('Invalid job status response')
     }
@@ -137,11 +138,11 @@ async function checkJobStatus() {
       isLoading.value = false
       clearPoll()
       // attempt to delete job record (best-effort)
-      try {
-        await tier3info_restful_request({ path: `/jobs/${jobId.value}`, method: 'DELETE' })
-      } catch {
-        /* noop */
-      }
+      // try {
+      //   await tier3info_restful_request({ path: `/jobs/${jobId.value}`, method: 'DELETE' })
+      // } catch {
+      //   /* noop */
+      // }
     } else if (resp.data.status === 'failed') {
       errorMessage.value = 'Job failed on the server.'
       statusMessage.value = null
@@ -180,6 +181,7 @@ async function fetchResults() {
       responseType: 'text',
     }
     const resp = await tier3info_restful_request(req)
+    console.log('FaxbackReportPage: fetchResults response:', resp)
     const text = typeof resp?.data === 'string' ? resp.data : ''
     if (!text) {
       rows.value = []
