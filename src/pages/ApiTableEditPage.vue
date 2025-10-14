@@ -30,6 +30,7 @@
         @zip-cert="handleDownload(selectedOption, 'zip')"
         @pfx-cert="handleDownload(selectedOption, 'pfx')"
         @oracle-cert="handleDownload(selectedOption, 'oracle_sbc')"
+        @download-tech-support="handleDownload(selectedOption, 'tech-support')"
       />
       <!-- Add and Delete Dialogs -->
       <q-dialog v-model="add_dialog" persistent :backdrop-filter="backdropFilter">
@@ -147,6 +148,12 @@ const button_definitions = {
     icon: 'dns',
     color: 'deep-orange',
     emit: 'oracle-cert',
+  },
+  'Download Tech Support': {
+    label: 'Download Tech Support',
+    icon: 'download',
+    color: 'accent',
+    emit: 'download-tech-support',
   },
 }
 const buttons = computed(() => {
@@ -314,6 +321,41 @@ async function handleSave(data) {
 
 async function handleDownload(option, format) {
   console.log('ApiTableEditPage: Downloading certificate for option:', option, 'Format:', format)
+  if (format === 'techsupport') {
+    // Find the row with id == option
+    const row = rows.value.find((r) => r.id === option)
+    if (!row) {
+      emit_notification('negative', 'Tech support data not found for this option.')
+      return
+    }
+    const techsupport = row.techsupport
+    const lastUpdated = row.last_updated_parsed
+    if (!techsupport) {
+      emit_notification('negative', 'No tech support data available for this option.')
+      return
+    }
+    // Decode base64 techsupport
+    let decoded = ''
+    try {
+      decoded = atob(techsupport)
+    } catch (e) {
+      emit_notification('negative', 'Failed to decode tech support data.' + e.message)
+      return
+    }
+    // Create a Blob and trigger download
+    const filename = `${option}_${lastUpdated}_techsupport.txt`
+    const blob = new Blob([decoded], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+    emit_notification('positive', 'Tech support file downloaded successfully!')
+    return
+  }
   if (option) {
     const request = {
       path: `${endpoint.value}/${option}/${format}`,
