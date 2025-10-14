@@ -178,6 +178,25 @@ const routePageMap = {
       },
     },
   },
+  '/broadworks/techsupport': {
+    page: ApiTableEditPage,
+    meta: {
+      title: 'Broadworks Tech Support',
+      label: 'Tech Support',
+      endpoint: '/broadworks/techsupport',
+      buttons: ['Download'],
+      fields: [
+        { name: 'server', label: 'Node' },
+        { name: 'type', label: 'Type' },
+        { name: 'last_updated_parsed', label: 'Date' },
+      ],
+      template: {
+        server: '',
+        type: '',
+        last_updated_parsed: '',
+      },
+    },
+  },
   '/broadworks/cli_templates': {
     page: ApiTableEditPage,
     meta: {
