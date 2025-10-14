@@ -323,13 +323,17 @@ async function handleDownload(option, format) {
   console.log('ApiTableEditPage: Downloading certificate for option:', option, 'Format:', format)
   if (format === 'techsupport') {
     // Find the row with id == option
+    console.log('ApiTableEditPage: Handling tech support download for option:', option)
     const row = rows.value.find((r) => r.id === option)
     if (!row) {
       emit_notification('negative', 'Tech support data not found for this option.')
       return
     }
+    console.log('ApiTableEditPage: Found row for tech support:', row)
     const techsupport = row.techsupport
     const lastUpdated = row.last_updated_parsed
+    console.log('ApiTableEditPage: Tech support data:', techsupport)
+    console.log('ApiTableEditPage: Last updated:', lastUpdated)
     if (!techsupport) {
       emit_notification('negative', 'No tech support data available for this option.')
       return
