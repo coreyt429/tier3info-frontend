@@ -325,7 +325,7 @@ async function handleDownload(option, format) {
     // Find the row with id == option
     console.log('ApiTableEditPage: Handling tech support download for option:', option)
     const request = {
-      path: `${endpoint.value}/${option}/${format}`,
+      path: `${endpoint.value}/${option}`,
       method: 'GET',
     }
     const response = await tier3info_restful_request(request)
