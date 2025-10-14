@@ -30,7 +30,7 @@
         @zip-cert="handleDownload(selectedOption, 'zip')"
         @pfx-cert="handleDownload(selectedOption, 'pfx')"
         @oracle-cert="handleDownload(selectedOption, 'oracle_sbc')"
-        @download-tech-support="handleDownload(selectedOption, 'tech-support')"
+        @download-tech-support="handleDownload(selectedOption, 'techsupport')"
       />
       <!-- Add and Delete Dialogs -->
       <q-dialog v-model="add_dialog" persistent :backdrop-filter="backdropFilter">
