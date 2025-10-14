@@ -324,7 +324,13 @@ async function handleDownload(option, format) {
   if (format === 'techsupport') {
     // Find the row with id == option
     console.log('ApiTableEditPage: Handling tech support download for option:', option)
-    const row = rows.value.find((r) => r.id === option)
+    const request = {
+      path: `${endpoint.value}/${option}/${format}`,
+      method: 'GET',
+    }
+    const response = await tier3info_restful_request(request)
+    console.log('ApiTableEditPage: Response from server:', response)
+    const row = response.data
     if (!row) {
       emit_notification('negative', 'Tech support data not found for this option.')
       return
