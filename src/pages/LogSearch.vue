@@ -178,7 +178,7 @@ export default {
   components: { LogViewer },
   created() {
     const titleStore = useTitleStore()
-    titleStore.setMainTitle('Query String Log Search')
+    titleStore.setMainTitle('Query String Log Search 10/27')
 
     const route = useRoute()
     if (route.query.queryString) {
