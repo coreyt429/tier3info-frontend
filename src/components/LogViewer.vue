@@ -1,59 +1,18 @@
 <template>
   <div class="log-viewer">
-    <q-card flat bordered>
-      <q-card-section class="row items-center justify-between">
-        <div class="text-h6">Log Viewer: {{ displayCount }} entries found</div>
-        <div class="q-gutter-sm">
-          <q-btn
-            dense
-            flat
-            round
-            icon="description"
-            @click="saveAsText"
-            :title="'Save text view'"
-          />
-          <q-btn dense flat round icon="code" @click="saveAsJson" :title="'Save raw JSON'" />
-        </div>
-      </q-card-section>
-      <q-card-section>
-        <!-- Virtualized path when parent provides windowed items -->
-        <div v-if="hasWindowedItems">
-          <q-virtual-scroll
-            :items="windowedItems"
-            :item-size="avgItemPx"
-            :virtual-scroll-slice-size="sliceSize"
-            @virtual-scroll="onVirtualScroll"
-            :style="{ height: viewPortHeight + 'px' }"
-          >
-            <template v-slot="{ item, index }">
-              <LogEntry
-                :entry="item"
-                :key="index"
-                @filter-must="$emit('filter-must', $event)"
-                @filter-must-not="$emit('filter-must-not', $event)"
-                @entry-selected="$emit('entry-selected', $event)"
-              />
-            </template>
-          </q-virtual-scroll>
-          <div v-if="busy" class="q-mt-md text-grey">Loading more…</div>
-        </div>
-
-        <!-- Fallback path renders all (original behavior) -->
-        <div v-else-if="legacyHits && legacyHits.length">
-          <LogEntry
-            v-for="(entry, index) in legacyHits"
-            :key="index"
-            :entry="entry"
-            @filter-must="$emit('filter-must', $event)"
-            @filter-must-not="$emit('filter-must-not', $event)"
-            @entry-selected="$emit('entry-selected', $event)"
-          />
-        </div>
-        <div v-else>
-          <p>No log entries found.</p>
-        </div>
-      </q-card-section>
-    </q-card>
+    <div v-if="entries && entries.length">
+      <LogEntry
+        v-for="(entry, index) in entries"
+        :key="index"
+        :entry="entry"
+        @filter-must="$emit('filter-must', $event)"
+        @filter-must-not="$emit('filter-must-not', $event)"
+        @entry-selected="$emit('entry-selected', $event)"
+      />
+    </div>
+    <div v-else>
+      <p>No log entries found.</p>
+    </div>
   </div>
 </template>
 
@@ -82,6 +41,9 @@ export default {
     viewPortHeight: { type: Number, required: false, default: 800 },
   },
   computed: {
+    entries() {
+      return this.hasWindowedItems ? this.items : this.legacyHits
+    },
     legacyHits() {
       return this.logData && this.logData.hits && this.logData.hits.hits
         ? this.logData.hits.hits
@@ -95,7 +57,7 @@ export default {
     },
     displayCount() {
       if (this.totalCount != null) return this.totalCount
-      return this.legacyHits.length
+      return this.entries.length
     },
   },
   emits: [

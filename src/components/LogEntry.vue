@@ -443,8 +443,8 @@ export default {
   vertical-align: top;
 }
 .log-item-section {
-  max-height: 400px;
-  overflow: hidden;
+  /* max-height: 400px;
+  overflow: hidden; */
   display: flex;
   flex-direction: column;
 }
@@ -453,8 +453,8 @@ export default {
   justify-content: flex-start !important;
 }
 
-.expand-scroll {
+/* .expand-scroll {
   max-height: 400px;
   overflow-y: auto;
-}
+} */
 </style>

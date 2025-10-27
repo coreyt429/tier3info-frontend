@@ -151,14 +151,7 @@
     <div class="q-mt-md">
       <q-card v-if="searchResults" class="q-pa-md">
         <LogViewer
-          :totalCount="totalCount"
-          :windowStartIndex="windowStartIndex"
-          :items="windowItems"
-          :avgItemPx="avgItemPx"
-          :sliceSize="sliceSize"
-          :busy="busyWindow"
-          @request-range="onRequestRange"
-          @rendered-range-changed="onRenderedRangeChanged"
+          :items="searchResults?.hits?.hits || []"
           @filter-must="onMust"
           @filter-must-not="onMustNot"
           @entry-selected="onEntrySelected"
@@ -217,12 +210,6 @@ export default {
       // Custom range combined datetime strings
       customStartDT: null, // 'YYYY-MM-DD HH:mm'
       customEndDT: null,
-      // Virtual windowing state for LogViewer
-      windowStartIndex: 0,
-      windowItems: [],
-      sliceSize: 120,
-      avgItemPx: 72,
-      busyWindow: false,
     }
   },
   computed: {
@@ -339,8 +326,6 @@ export default {
           // }
           this.searchResults = tmpData.response || { hits: { total: 0, hits: [] } }
           // Initialize virtual window to the first slice
-          const initialEnd = Math.min(this.totalCount, this.sliceSize * 2)
-          this.setWindow(0, initialEnd)
           await tier3info_restful_request({
             path: `/jobs/${this.jobId}`,
             method: 'DELETE',
@@ -415,33 +400,6 @@ export default {
         console.log(`LogSearch.vue: formatFilterValue error:`, e)
         return String(val)
       }
-    },
-    coerceRange(start, end) {
-      const tc = this.totalCount
-      if (tc <= 0) return { start: 0, end: 0 }
-      const s = Math.max(0, Math.min(start, tc - 1))
-      const e = Math.max(s, Math.min(end, tc))
-      return { start: s, end: e }
-    },
-    setWindow(start, end) {
-      const { start: s, end: e } = this.coerceRange(start, end)
-      const hits = this.searchResults?.hits?.hits || []
-      this.windowStartIndex = s
-      this.windowItems = hits.slice(s, e)
-    },
-    onRequestRange(payload) {
-      // payload: { start, end, reason, searchId? }
-      this.busyWindow = true
-      this.setWindow(payload.start, payload.end)
-      this.$nextTick(() => {
-        this.busyWindow = false
-      })
-    },
-    onRenderedRangeChanged(range) {
-      // range: { start, end }
-      // Optional: Opportunistic prefetch windowing within the local array.
-      // For now, no-op since we already have all data client-side.
-      console.log('LogSearch.vue: onRenderedRangeChanged called with range:', range)
     },
   },
 }
