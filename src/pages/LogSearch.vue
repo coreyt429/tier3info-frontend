@@ -222,6 +222,15 @@ export default {
       }
     },
   },
+  mounted() {
+    // Capture filter events forwarded by MainLayout's LogEntryDetail modal
+    window.addEventListener('log-filter-must', this.filterMustHandler)
+    window.addEventListener('log-filter-must-not', this.filterMustNotHandler)
+  },
+  unmounted() {
+    window.removeEventListener('log-filter-must', this.filterMustHandler)
+    window.removeEventListener('log-filter-must-not', this.filterMustNotHandler)
+  },
   methods: {
     onEntrySelected(entry) {
       try {
@@ -410,3 +419,8 @@ export default {
   text-align: center;
 }
 </style>
+
+filterMustHandler(e) { try { if (e && e.detail) this.onMust(e.detail) } catch (err) {
+console.error('LogSearch.vue: filterMustHandler error:', err) } }, filterMustNotHandler(e) { try {
+if (e && e.detail) this.onMustNot(e.detail) } catch (err) { console.error('LogSearch.vue:
+filterMustNotHandler error:', err) } },
