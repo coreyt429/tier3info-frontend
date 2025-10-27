@@ -377,6 +377,21 @@ export default {
         'LogSearch.vue: onMust added filter:',
         this.queryFilters[this.queryFilters.length - 1],
       )
+      this.$nextTick(() => {
+        try {
+          // Prefer smooth scroll; fallback to instant
+          if (typeof window !== 'undefined' && window.scrollTo) {
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+          }
+        } catch (e) {
+          console.log('LogSearch.vue: onMust scroll error:', e)
+          try {
+            window.scrollTo(0, 0)
+          } catch (e) {
+            console.log('LogSearch.vue: onMust scroll fallback error:', e)
+          }
+        }
+      })
     },
     onMustNot(event) {
       // event: { key: string, value: any }
@@ -392,6 +407,20 @@ export default {
         'LogSearch.vue: onMustNot added filter:',
         this.queryFilters[this.queryFilters.length - 1],
       )
+      this.$nextTick(() => {
+        try {
+          if (typeof window !== 'undefined' && window.scrollTo) {
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+          }
+        } catch (e) {
+          console.log('LogSearch.vue: onMustNot scroll error:', e)
+          try {
+            window.scrollTo(0, 0)
+          } catch (e) {
+            console.log('LogSearch.vue: onMustNot scroll fallback error:', e)
+          }
+        }
+      })
     },
     removeFilter(index) {
       if (index >= 0 && index < this.queryFilters.length) {
