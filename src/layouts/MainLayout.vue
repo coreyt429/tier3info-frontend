@@ -117,7 +117,7 @@
           </q-card-section>
         </q-card>
       </q-dialog>
-      <q-dialog v-model="logDetailOpen" position="right" persistent>
+      <q-dialog v-model="logDetailOpen" position="right" persistent @hide="onLogDetailHide">
         <q-card class="text-primary" style="width: 850px; max-width: 95vw; max-height: 95vh">
           <q-card-section class="row items-center justify-between">
             <div class="text-subtitle1">Log Details</div>
@@ -181,7 +181,7 @@ const colorMap = {
 }
 
 const currentMetric = ref({ label: 'Metric Details', color: 'red' })
-
+const scrollTopAfterClose = ref(false)
 const refreshInterval = 60000 // 1 minute in milliseconds
 dashBoardStore.refreshDashboard()
 
@@ -393,11 +393,32 @@ function handleLogEntrySelected(evt) {
 // Forward filter clicks from the modal to LogSearch (same pattern you used)
 function forwardFilter(must, payload) {
   try {
+    scrollTopAfterClose.value = true
     const type = must ? 'log-filter-must' : 'log-filter-must-not'
     window.dispatchEvent(new CustomEvent(type, { detail: payload }))
   } catch (e) {
     console.error('MainLayout: filter forward error', e)
   }
+}
+
+import { nextTick } from 'vue'
+
+function onLogDetailHide() {
+  if (!scrollTopAfterClose.value) return
+  // reset to avoid unexpected future scrolls
+  scrollTopAfterClose.value = false
+
+  nextTick(() => {
+    try {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    } catch {
+      try {
+        window.scrollTo(0, 0)
+      } catch {
+        // Ignore scroll errors - best effort scroll to top
+      }
+    }
+  })
 }
 </script>
 
