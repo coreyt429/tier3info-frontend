@@ -171,7 +171,7 @@ export default {
   components: { LogViewer },
   created() {
     const titleStore = useTitleStore()
-    titleStore.setMainTitle('Query String Log Search 10/27')
+    titleStore.setMainTitle('Query String Log Search 10/27 - 5')
 
     const route = useRoute()
     if (route.query.queryString) {
@@ -410,6 +410,20 @@ export default {
         return String(val)
       }
     },
+    filterMustHandler(e) {
+      try {
+        if (e && e.detail) this.onMust(e.detail)
+      } catch (err) {
+        console.error('LogSearch.vue: filterMustHandler error:', err)
+      }
+    },
+    filterMustNotHandler(e) {
+      try {
+        if (e && e.detail) this.onMustNot(e.detail)
+      } catch (err) {
+        console.error('LogSearch.vue: filterMustNotHandler error:', err)
+      }
+    },
   },
 }
 </script>
@@ -419,8 +433,3 @@ export default {
   text-align: center;
 }
 </style>
-
-filterMustHandler(e) { try { if (e && e.detail) this.onMust(e.detail) } catch (err) {
-console.error('LogSearch.vue: filterMustHandler error:', err) } }, filterMustNotHandler(e) { try {
-if (e && e.detail) this.onMustNot(e.detail) } catch (err) { console.error('LogSearch.vue:
-filterMustNotHandler error:', err) } },
