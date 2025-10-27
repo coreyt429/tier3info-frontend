@@ -161,6 +161,7 @@
           @rendered-range-changed="onRenderedRangeChanged"
           @filter-must="onMust"
           @filter-must-not="onMustNot"
+          @entry-selected="onEntrySelected"
         />
       </q-card>
     </div>
@@ -235,6 +236,13 @@ export default {
     },
   },
   methods: {
+    onEntrySelected(entry) {
+      try {
+        window.dispatchEvent(new CustomEvent('log-entry-selected', { detail: entry }))
+      } catch (e) {
+        console.error('LogSearch.vue: error dispatching log-entry-selected', e)
+      }
+    },
     onTimePresetChange(val) {
       if (val === 'custom') {
         this.showCustom = true

@@ -1,9 +1,9 @@
 <template>
-  <q-expansion-item dense hide-expand-icon v-model="expanded">
+  <q-expansion-item dense hide-expand-icon>
     <!-- Custom clickable header that also shows the message preview -->
     <template #header>
       <!-- Left side: message preview (does NOT toggle) -->
-      <q-item-section @click.stop class="log-item-section">
+      <q-item-section @click.stop="selectEntry" class="log-item-section">
         <pre class="log-pre q-my-sm">
 <span class="log-header-text">{{ headerText }}</span>
 
@@ -20,15 +20,15 @@
           flat
           round
           size="xs"
-          :icon="expanded ? 'expand_more' : 'chevron_right'"
-          aria-label="Toggle details"
-          @click.stop="expanded = !expanded"
+          :icon="'chevron_right'"
+          aria-label="Show details"
+          @click.stop="selectEntry"
         />
       </q-item-section>
     </template>
 
     <!-- Expanded details (hidden by default) -->
-    <q-card flat bordered class="q-mt-sm expand-scroll">
+    <q-card v-if="false" flat bordered class="q-mt-sm expand-scroll">
       <div class="row no-wrap">
         <div class="col">
           <!-- Meta / chips -->
@@ -169,7 +169,7 @@ export default {
   data() {
     return {
       tab: 'fields',
-      expanded: false,
+      // expanded: false,
     }
   },
   computed: {
@@ -304,11 +304,14 @@ export default {
       return result
     },
   },
-  emits: ['filter-must', 'filter-must-not'],
+  emits: ['filter-must', 'filter-must-not', 'entry-selected'],
   methods: {
     // Safe deep get
     get(obj, path) {
       return path.reduce((o, k) => (o && o[k] !== undefined ? o[k] : undefined), obj)
+    },
+    selectEntry() {
+      this.$emit('entry-selected', this.entry)
     },
 
     // "Capitalize" with special case for FIELDDEBUG

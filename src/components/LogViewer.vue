@@ -31,6 +31,7 @@
                 :key="index"
                 @filter-must="$emit('filter-must', $event)"
                 @filter-must-not="$emit('filter-must-not', $event)"
+                @entry-selected="$emit('entry-selected', $event)"
               />
             </template>
           </q-virtual-scroll>
@@ -45,6 +46,7 @@
             :entry="entry"
             @filter-must="$emit('filter-must', $event)"
             @filter-must-not="$emit('filter-must-not', $event)"
+            @entry-selected="$emit('entry-selected', $event)"
           />
         </div>
         <div v-else>
@@ -104,6 +106,7 @@ export default {
     'filter-change',
     'find-request',
     'jump-to-index',
+    'entry-selected',
   ],
   methods: {
     formatTimestampToET(ts) {

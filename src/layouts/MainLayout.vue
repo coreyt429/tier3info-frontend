@@ -85,6 +85,8 @@
     </q-drawer>
     <!-- Right Drawer for Preferences -->
     <q-drawer v-model="rightDrawerOpen" side="right" bordered class="bg-darkness text-primary">
+      <LogEntryDetail v-if="selectedLogEntry" :entry="selectedLogEntry" />
+      <q-separator v-if="selectedLogEntry" />
       <PreferencesControl :linksList="linksList" />
       <q-separator />
       <ScratchPad />
@@ -139,6 +141,7 @@ import { useDocStore } from 'src/stores/docStore'
 import PreferencesControl from 'components/PreferencesControl.vue'
 import ScratchPad from 'components/ScratchPad.vue'
 import DocumentationSideBar from 'components/DocumentationSideBar.vue'
+import LogEntryDetail from 'components/LogEntryDetail.vue'
 import { usePreferencesStore } from 'src/stores/preferences'
 const preferencesStore = usePreferencesStore()
 console.debug('Preferences Store:', preferencesStore)
@@ -174,12 +177,14 @@ const intervalId = setInterval(async () => {
 
 onUnmounted(() => {
   clearInterval(intervalId)
+  window.removeEventListener('log-entry-selected', handleLogEntrySelected)
 })
 
 const $q = useQuasar()
 
 onMounted(() => {
   $q.dark.set(false) // Force dark mode off
+  window.addEventListener('log-entry-selected', handleLogEntrySelected)
 })
 // const mainTitle = titleStore.mainTitle
 
@@ -308,6 +313,7 @@ onMounted(async () => {
 const leftDrawerOpen = ref(false)
 const rightDrawerOpen = ref(false)
 const dashBoardOpen = ref(false)
+const selectedLogEntry = ref(null)
 
 function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value
@@ -340,6 +346,17 @@ async function openDashBoard(metric) {
   await dashBoardStore.loadDetails(metric)
   console.log('openDashBoard: dashBoardStore.detailsJSON:', dashBoardStore.detailsJSON)
   dashBoardOpen.value = true
+}
+
+function handleLogEntrySelected(evt) {
+  try {
+    selectedLogEntry.value = evt?.detail || null
+    if (selectedLogEntry.value) {
+      rightDrawerOpen.value = true
+    }
+  } catch (e) {
+    console.error('MainLayout: failed to handle log-entry-selected', e)
+  }
 }
 
 function myFilterFn() {
