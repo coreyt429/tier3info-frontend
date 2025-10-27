@@ -117,6 +117,23 @@
           </q-card-section>
         </q-card>
       </q-dialog>
+      <q-dialog v-model="logDetailOpen" position="right" persistent>
+        <q-card class="text-primary" style="width: 520px; max-width: 95vw; max-height: 95vh">
+          <q-card-section class="row items-center justify-between">
+            <div class="text-subtitle1">Log Details</div>
+            <q-btn flat dense round icon="close" @click="logDetailOpen = false" />
+          </q-card-section>
+          <q-separator />
+          <q-card-section class="scroll" style="padding: 0; max-height: calc(95vh - 64px)">
+            <LogEntryDetail
+              v-if="selectedLogEntry"
+              :entry="selectedLogEntry"
+              @filter-must="forwardFilter(true, $event)"
+              @filter-must-not="forwardFilter(false, $event)"
+            />
+          </q-card-section>
+        </q-card>
+      </q-dialog>
       <router-view />
     </q-page-container>
     <q-ajax-bar
@@ -348,17 +365,6 @@ async function openDashBoard(metric) {
   dashBoardOpen.value = true
 }
 
-function handleLogEntrySelected(evt) {
-  try {
-    selectedLogEntry.value = evt?.detail || null
-    if (selectedLogEntry.value) {
-      rightDrawerOpen.value = true
-    }
-  } catch (e) {
-    console.error('MainLayout: failed to handle log-entry-selected', e)
-  }
-}
-
 function myFilterFn() {
   console.log('Ajax bar filter function called')
   return true
@@ -372,6 +378,27 @@ watch(
   },
   { immediate: true },
 )
+
+const logDetailOpen = ref(false)
+
+function handleLogEntrySelected(evt) {
+  try {
+    selectedLogEntry.value = evt?.detail || null
+    if (selectedLogEntry.value) logDetailOpen.value = true
+  } catch (e) {
+    console.error('MainLayout: failed to handle log-entry-selected', e)
+  }
+}
+
+// Forward filter clicks from the modal to LogSearch (same pattern you used)
+function forwardFilter(must, payload) {
+  try {
+    const type = must ? 'log-filter-must' : 'log-filter-must-not'
+    window.dispatchEvent(new CustomEvent(type, { detail: payload }))
+  } catch (e) {
+    console.error('MainLayout: filter forward error', e)
+  }
+}
 </script>
 
 <style scoped>
