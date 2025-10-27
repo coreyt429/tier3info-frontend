@@ -118,7 +118,7 @@
         </q-card>
       </q-dialog>
       <q-dialog v-model="logDetailOpen" position="right" persistent>
-        <q-card class="text-primary" style="width: 520px; max-width: 95vw; max-height: 95vh">
+        <q-card class="text-primary" style="width: 850px; max-width: 95vw; max-height: 95vh">
           <q-card-section class="row items-center justify-between">
             <div class="text-subtitle1">Log Details</div>
             <q-btn flat dense round icon="close" @click="logDetailOpen = false" />
