@@ -1,5 +1,10 @@
 <template>
   <div class="log-viewer">
+    <div class="row justify-end q-gutter-sm q-mb-sm">
+      <q-btn dense flat round icon="download" aria-label="Download text view" @click="saveAsText">
+        <q-tooltip>Download text view</q-tooltip>
+      </q-btn>
+    </div>
     <div v-if="entries && entries.length">
       <LogEntry
         v-for="(entry, index) in entries"

@@ -3,7 +3,7 @@
     <!-- Custom clickable header that also shows the message preview -->
     <template #header>
       <!-- Left side: message preview (does NOT toggle) -->
-      <q-item-section @click.stop="selectEntry" class="log-item-section">
+      <q-item-section class="log-item-section">
         <pre class="log-pre q-my-sm">
 <span class="log-header-text">{{ headerText }}</span>
 
