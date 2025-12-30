@@ -339,6 +339,17 @@ const routes = [
       },
     ],
   },
+  {
+    path: '/devtools/ocitool',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        component: () => import('pages/OciToolPage.vue'),
+        meta: { requiresAuth: true },
+      },
+    ],
+  },
 ]
 
 Object.keys(routePageMap).forEach((path) => {
