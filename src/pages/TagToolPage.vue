@@ -206,6 +206,7 @@ const cursorIndex = ref(null)
 const cursorLineIdx = ref(null)
 const cursorCol = ref(null)
 const tagInputRef = ref(null)
+const desiredCursorIndex = ref(null)
 const pagination = ref({ rowsPerPage: 0 })
 async function executeSearch() {
   console.log('Search Query:', searchQuery.value)
@@ -401,11 +402,12 @@ async function applyTags() {
 function checkTags() {
   console.log(`checkTags called with tagData: ${tagData.value} rows: ${rows.value.length}`)
   const cursorLine = cursorLineIdx.value ?? -1
-  const lines = tagData.value.split('\n').map((line, idx) => {
-    line = line.trim()
+  const originalLines = tagData.value.split('\n')
+  const lines = originalLines.map((originalLine, idx) => {
+    let line = originalLine.trim()
 
     // Drop stray '%' lines unless the user is currently on that line
-    if (line === '%' && idx !== cursorLine) {
+    if (line === '%' && cursorLine !== -1 && idx !== cursorLine) {
       return null
     }
 
@@ -453,7 +455,15 @@ function checkTags() {
     console.log(`checkTags final line: ${line}`)
     return line
   })
-  const filteredLines = lines.filter((line) => line !== null)
+  let targetLineForCursor = null
+  const filteredLines = []
+  lines.forEach((line, idx) => {
+    if (line === null) return
+    if (idx === cursorLine) {
+      targetLineForCursor = filteredLines.length
+    }
+    filteredLines.push(line)
+  })
   console.log(`checkTags lines: ${filteredLines}`)
   let newTagData = filteredLines.join('\n')
   for (const row of rows.value) {
@@ -490,7 +500,7 @@ function checkTags() {
   // Only update the model if normalization actually changed the text to avoid watcher loops
   if (tagData.value !== newTagData) {
     tagData.value = newTagData
-    restoreCursor(newTagData)
+    restoreCursor(newTagData, originalLines, filteredLines, cursorLine, targetLineForCursor)
   }
 }
 
@@ -563,24 +573,42 @@ function updateCursorMeta(index, text) {
   cursorCol.value = safeIndex - lineStart
 }
 
-function restoreCursor(text) {
-  if (cursorLineIdx.value === null || cursorCol.value === null) {
+function restoreCursor(text, originalLines, filteredLines, cursorLine, targetLineForCursor) {
+  if (cursorLine === -1 || cursorCol.value === null) {
+    desiredCursorIndex.value = null
     return
   }
-  const linesArr = text.split('\n')
-  const lineIdx = Math.min(cursorLineIdx.value, linesArr.length - 1)
-  let pos = 0
-  for (let i = 0; i < lineIdx; i++) {
-    pos += linesArr[i].length + 1
+  if (targetLineForCursor === null || targetLineForCursor < 0) {
+    desiredCursorIndex.value = null
+    return
   }
-  const col = Math.min(cursorCol.value, (linesArr[lineIdx] || '').length)
-  const targetPos = pos + col
+
+  const finalLines = filteredLines
+  const origLine = originalLines[cursorLine] ?? ''
+  const finalLine = finalLines[targetLineForCursor] ?? ''
+
+  let targetCol = cursorCol.value
+  if (cursorCol.value >= origLine.length) {
+    targetCol = finalLine.length
+  } else {
+    // Clamp within final line
+    targetCol = Math.min(finalLine.length, cursorCol.value + Math.max(0, finalLine.length - origLine.length))
+  }
+
+  let pos = 0
+  for (let i = 0; i < targetLineForCursor; i++) {
+    pos += (finalLines[i] ? finalLines[i].length : 0) + 1
+  }
+  const targetPos = pos + targetCol
+  desiredCursorIndex.value = targetPos
+
   nextTick(() => {
     const el = tagInputRef.value?.getNativeElement?.()
     if (el && typeof el.setSelectionRange === 'function') {
       el.setSelectionRange(targetPos, targetPos)
     }
     updateCursorMeta(targetPos, text)
+    desiredCursorIndex.value = null
   })
 }
 
