@@ -136,7 +136,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 // Helper to split only on first '=' and preserve subsequent '=' in value
 function splitFirstEqual(str) {
   const idx = str.indexOf('=')
@@ -501,8 +501,25 @@ function handlePaste(event) {
   // Stop the input from inserting the text a second time
   event.preventDefault()
 
-  // Replace current content with the pasted data
-  tagData.value = pastedData.replace(/\r/g, '').trim()
+  // Insert at cursor or replace current selection instead of clobbering the whole field
+  const cleanPaste = pastedData.replace(/\r/g, '')
+  const target = event.target
+  if (!target || typeof target.selectionStart !== 'number') {
+    tagData.value = cleanPaste
+    return
+  }
+  const { selectionStart, selectionEnd } = target
+  const before = tagData.value.slice(0, selectionStart)
+  const after = tagData.value.slice(selectionEnd)
+  const newValue = before + cleanPaste + after
+  tagData.value = newValue
+
+  const newCursorPos = before.length + cleanPaste.length
+  nextTick(() => {
+    if (target && target.setSelectionRange) {
+      target.setSelectionRange(newCursorPos, newCursorPos)
+    }
+  })
 }
 
 function handleSelection(newSelectedRows) {
