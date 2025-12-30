@@ -416,7 +416,11 @@ function checkTags() {
   const cursorLine = cursorLineIdx.value ?? -1
   const originalLines = tagData.value.split('\n')
   const lines = originalLines.map((originalLine) => {
-    let line = originalLine.trim()
+    const trimmed = originalLine.trim()
+    if (trimmed === '') {
+      return ''
+    }
+    let line = trimmed
 
     // Add leading '%' if missing
     if (!line.startsWith('%')) {
@@ -464,7 +468,7 @@ function checkTags() {
   })
   const validation = lines.map((line) => ({
     text: line,
-    valid: /^%.*%=.*$/.test(line),
+    valid: line === '' ? true : /^%.*%=.*$/.test(line),
   }))
   invalidLines.value = validation.map((v, idx) => ({ ...v, index: idx })).filter((v) => !v.valid)
   console.log(`checkTags lines: ${lines}`)
