@@ -11,6 +11,7 @@
               @keyup="rememberCursor"
               @click="rememberCursor"
               @mouseup="rememberCursor"
+              ref="tagInputRef"
               label="Tags"
               outlined
               dense
@@ -202,6 +203,9 @@ console.log('Visible Columns:', visibleColumns.value)
 
 const tagData = ref('')
 const cursorIndex = ref(null)
+const cursorLineIdx = ref(null)
+const cursorCol = ref(null)
+const tagInputRef = ref(null)
 const pagination = ref({ rowsPerPage: 0 })
 async function executeSearch() {
   console.log('Search Query:', searchQuery.value)
@@ -396,10 +400,7 @@ async function applyTags() {
 
 function checkTags() {
   console.log(`checkTags called with tagData: ${tagData.value} rows: ${rows.value.length}`)
-  const cursorLine =
-    cursorIndex.value === null
-      ? -1
-      : tagData.value.slice(0, cursorIndex.value).split('\n').length - 1
+  const cursorLine = cursorLineIdx.value ?? -1
   const lines = tagData.value.split('\n').map((line, idx) => {
     line = line.trim()
 
@@ -489,6 +490,7 @@ function checkTags() {
   // Only update the model if normalization actually changed the text to avoid watcher loops
   if (tagData.value !== newTagData) {
     tagData.value = newTagData
+    restoreCursor(newTagData)
   }
 }
 
@@ -539,14 +541,47 @@ function handlePaste(event) {
       target.setSelectionRange(newCursorPos, newCursorPos)
     }
     cursorIndex.value = newCursorPos
+    updateCursorMeta(newCursorPos, tagData.value)
   })
 }
 
 function rememberCursor(event) {
   const target = event.target
   if (target && typeof target.selectionStart === 'number') {
-    cursorIndex.value = target.selectionStart
+    updateCursorMeta(target.selectionStart, tagData.value)
   }
+}
+
+function updateCursorMeta(index, text) {
+  const safeIndex = Math.max(0, Math.min(index, text.length))
+  cursorIndex.value = safeIndex
+  const before = text.slice(0, safeIndex)
+  const linesBefore = before.split('\n')
+  cursorLineIdx.value = linesBefore.length - 1
+  const lastBreak = before.lastIndexOf('\n')
+  const lineStart = lastBreak === -1 ? 0 : lastBreak + 1
+  cursorCol.value = safeIndex - lineStart
+}
+
+function restoreCursor(text) {
+  if (cursorLineIdx.value === null || cursorCol.value === null) {
+    return
+  }
+  const linesArr = text.split('\n')
+  const lineIdx = Math.min(cursorLineIdx.value, linesArr.length - 1)
+  let pos = 0
+  for (let i = 0; i < lineIdx; i++) {
+    pos += linesArr[i].length + 1
+  }
+  const col = Math.min(cursorCol.value, (linesArr[lineIdx] || '').length)
+  const targetPos = pos + col
+  nextTick(() => {
+    const el = tagInputRef.value?.getNativeElement?.()
+    if (el && typeof el.setSelectionRange === 'function') {
+      el.setSelectionRange(targetPos, targetPos)
+    }
+    updateCursorMeta(targetPos, text)
+  })
 }
 
 function handleSelection(newSelectedRows) {
