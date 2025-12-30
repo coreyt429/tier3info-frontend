@@ -17,8 +17,15 @@
               dense
               type="textarea"
               autogrow
+              :error="invalidLines.length > 0"
+              :error-message="invalidLines.length ? 'Fix invalid lines before applying tags.' : ''"
               class="col-6 q-mr-sm"
             />
+            <div v-if="invalidLines.length" class="col-12 text-negative text-caption q-mt-xs">
+              <div v-for="line in invalidLines" :key="line.index">
+                Line {{ line.index + 1 }} is invalid: "{{ line.text }}"
+              </div>
+            </div>
             <q-input
               v-model="searchQuery"
               label="Search"
@@ -29,12 +36,12 @@
             />
             <q-btn label="Search" icon="search" color="primary" class="" @click="executeSearch" />
           </q-card-section>
-          <q-card-section class="row items-center">
-            <q-btn
-              label="Rebuild Configs"
-              icon="build"
-              color="primary"
-              class="q-mr-sm"
+    <q-card-section class="row items-center">
+      <q-btn
+        label="Rebuild Configs"
+        icon="build"
+        color="primary"
+        class="q-mr-sm"
               :disable="isRebuildConfigsDisabled"
               @click="rebuildConfigs"
             />
@@ -80,16 +87,16 @@
               :disable="isSaveTagSetDisabled"
               @click="showSaveDialog = true"
             />
-            <q-btn
-              label="Apply Tags"
-              icon="label"
-              color="purple"
-              class="q-mr-sm"
-              :disable="isApplyTagsDisabled"
-              @click="applyTags"
-            />
-          </q-card-section>
-        </q-card>
+      <q-btn
+        label="Apply Tags"
+        icon="label"
+        color="purple"
+        class="q-mr-sm"
+        :disable="isApplyTagsDisabled || invalidLines.length > 0"
+        @click="applyTags"
+      />
+    </q-card-section>
+  </q-card>
       </div>
       <q-dialog v-model="showSaveDialog" persistent>
         <q-card>
@@ -207,6 +214,7 @@ const cursorLineIdx = ref(null)
 const cursorCol = ref(null)
 const tagInputRef = ref(null)
 const desiredCursorIndex = ref(null)
+const invalidLines = ref([])
 const pagination = ref({ rowsPerPage: 0 })
 async function executeSearch() {
   console.log('Search Query:', searchQuery.value)
@@ -359,6 +367,10 @@ async function rebootPhones() {
 
 async function applyTags() {
   console.log('applyTags: Applying tags to selected rows:', selectedRows.value)
+  if (invalidLines.value.length > 0) {
+    emit_notification('negative', 'Fix invalid tag lines before applying tags.')
+    return
+  }
   for (const row of selectedRows.value) {
     const request = {
       method: 'PUT',
@@ -403,13 +415,8 @@ function checkTags() {
   console.log(`checkTags called with tagData: ${tagData.value} rows: ${rows.value.length}`)
   const cursorLine = cursorLineIdx.value ?? -1
   const originalLines = tagData.value.split('\n')
-  const lines = originalLines.map((originalLine, idx) => {
+  const lines = originalLines.map((originalLine) => {
     let line = originalLine.trim()
-
-    // Drop stray '%' lines unless the user is currently on that line
-    if (line === '%' && cursorLine !== -1 && idx !== cursorLine) {
-      return null
-    }
 
     // Add leading '%' if missing
     if (!line.startsWith('%')) {
@@ -455,17 +462,15 @@ function checkTags() {
     console.log(`checkTags final line: ${line}`)
     return line
   })
-  let targetLineForCursor = null
-  const filteredLines = []
-  lines.forEach((line, idx) => {
-    if (line === null) return
-    if (idx === cursorLine) {
-      targetLineForCursor = filteredLines.length
-    }
-    filteredLines.push(line)
-  })
-  console.log(`checkTags lines: ${filteredLines}`)
-  let newTagData = filteredLines.join('\n')
+  const validation = lines.map((line) => ({
+    text: line,
+    valid: /^%.*%=.*$/.test(line),
+  }))
+  invalidLines.value = validation
+    .map((v, idx) => ({ ...v, index: idx }))
+    .filter((v) => !v.valid)
+  console.log(`checkTags lines: ${lines}`)
+  let newTagData = lines.join('\n')
   for (const row of rows.value) {
     let hasTag = 0
     let alreadySet = 0
@@ -490,7 +495,8 @@ function checkTags() {
   isSaveTagSetDisabled.value = newTagData.trim() === ''
   isRebuildConfigsDisabled.value = selectedRows.value.length === 0
   isRebootPhonesDisabled.value = selectedRows.value.length === 0
-  isApplyTagsDisabled.value = selectedRows.value.length === 0 || newTagData.trim() === ''
+  isApplyTagsDisabled.value =
+    selectedRows.value.length === 0 || newTagData.trim() === '' || invalidLines.value.length > 0
   console.log(`checkTags: selected ${JSON.stringify(selectedRows.value.length)}`)
   console.log(`checkTags: selected ${JSON.stringify(selectedRows.value.length === 0)}`)
   console.log(`checkTags: tags ${JSON.stringify(newTagData)}`)
@@ -500,7 +506,7 @@ function checkTags() {
   // Only update the model if normalization actually changed the text to avoid watcher loops
   if (tagData.value !== newTagData) {
     tagData.value = newTagData
-    restoreCursor(newTagData, originalLines, filteredLines, cursorLine, targetLineForCursor)
+    restoreCursor(newTagData, originalLines, lines, cursorLine)
   }
 }
 
@@ -573,31 +579,26 @@ function updateCursorMeta(index, text) {
   cursorCol.value = safeIndex - lineStart
 }
 
-function restoreCursor(text, originalLines, filteredLines, cursorLine, targetLineForCursor) {
+function restoreCursor(text, originalLines, normalizedLines, cursorLine) {
   if (cursorLine === -1 || cursorCol.value === null) {
     desiredCursorIndex.value = null
     return
   }
-  if (targetLineForCursor === null || targetLineForCursor < 0) {
-    desiredCursorIndex.value = null
-    return
-  }
 
-  const finalLines = filteredLines
   const origLine = originalLines[cursorLine] ?? ''
-  const finalLine = finalLines[targetLineForCursor] ?? ''
+  const finalLine = normalizedLines[cursorLine] ?? ''
 
+  const delta = finalLine.length - origLine.length
   let targetCol = cursorCol.value
   if (cursorCol.value >= origLine.length) {
-    targetCol = finalLine.length
+    targetCol = Math.min(finalLine.length, cursorCol.value + delta)
   } else {
-    // Clamp within final line
-    targetCol = Math.min(finalLine.length, cursorCol.value + Math.max(0, finalLine.length - origLine.length))
+    targetCol = Math.min(finalLine.length, cursorCol.value)
   }
 
   let pos = 0
-  for (let i = 0; i < targetLineForCursor; i++) {
-    pos += (finalLines[i] ? finalLines[i].length : 0) + 1
+  for (let i = 0; i < cursorLine; i++) {
+    pos += (normalizedLines[i] ? normalizedLines[i].length : 0) + 1
   }
   const targetPos = pos + targetCol
   desiredCursorIndex.value = targetPos
@@ -616,7 +617,8 @@ function handleSelection(newSelectedRows) {
   console.log('Selected rows:', newSelectedRows)
   isRebuildConfigsDisabled.value = newSelectedRows.length === 0
   isRebootPhonesDisabled.value = newSelectedRows.length === 0
-  isApplyTagsDisabled.value = newSelectedRows.length === 0 || tagData.value.trim() === ''
+  isApplyTagsDisabled.value =
+    newSelectedRows.length === 0 || tagData.value.trim() === '' || invalidLines.value.length > 0
   selectedRows.value = newSelectedRows
   for (const row of selectedRows.value) {
     console.log('Selected row:', row)
