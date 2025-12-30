@@ -8,6 +8,9 @@
             <q-input
               v-model="tagData"
               @paste="handlePaste"
+              @keyup="rememberCursor"
+              @click="rememberCursor"
+              @mouseup="rememberCursor"
               label="Tags"
               outlined
               dense
@@ -198,6 +201,7 @@ const visibleColumns = ref(columns.map((col) => col.name).filter((name) => name 
 console.log('Visible Columns:', visibleColumns.value)
 
 const tagData = ref('')
+const cursorIndex = ref(null)
 const pagination = ref({ rowsPerPage: 0 })
 async function executeSearch() {
   console.log('Search Query:', searchQuery.value)
@@ -392,8 +396,17 @@ async function applyTags() {
 
 function checkTags() {
   console.log(`checkTags called with tagData: ${tagData.value} rows: ${rows.value.length}`)
-  const lines = tagData.value.split('\n').map((line) => {
+  const cursorLine =
+    cursorIndex.value === null
+      ? -1
+      : tagData.value.slice(0, cursorIndex.value).split('\n').length - 1
+  const lines = tagData.value.split('\n').map((line, idx) => {
     line = line.trim()
+
+    // Drop stray '%' lines unless the user is currently on that line
+    if (line === '%' && idx !== cursorLine) {
+      return null
+    }
 
     // Add leading '%' if missing
     if (!line.startsWith('%')) {
@@ -431,11 +444,17 @@ function checkTags() {
     if (firstEqualIndex !== -1 && line.charAt(firstEqualIndex - 1) !== '%') {
       line = line.substring(0, firstEqualIndex).trim() + '%' + line.substring(firstEqualIndex)
     }
+    // Replace accidental double percents on the left side of '=' with a single '%'
+    if (firstEqualIndex !== -1) {
+      const left = line.substring(0, firstEqualIndex).replace(/%%+/g, '%')
+      line = left + line.substring(firstEqualIndex)
+    }
     console.log(`checkTags final line: ${line}`)
     return line
   })
-  console.log(`checkTags lines: ${lines}`)
-  let newTagData = lines.join('\n')
+  const filteredLines = lines.filter((line) => line !== null)
+  console.log(`checkTags lines: ${filteredLines}`)
+  let newTagData = filteredLines.join('\n')
   for (const row of rows.value) {
     let hasTag = 0
     let alreadySet = 0
@@ -519,7 +538,15 @@ function handlePaste(event) {
     if (target && target.setSelectionRange) {
       target.setSelectionRange(newCursorPos, newCursorPos)
     }
+    cursorIndex.value = newCursorPos
   })
+}
+
+function rememberCursor(event) {
+  const target = event.target
+  if (target && typeof target.selectionStart === 'number') {
+    cursorIndex.value = target.selectionStart
+  }
 }
 
 function handleSelection(newSelectedRows) {
