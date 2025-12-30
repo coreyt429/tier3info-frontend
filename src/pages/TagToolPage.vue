@@ -593,6 +593,10 @@ function restoreCursor(text, originalLines, normalizedLines, cursorLine) {
   } else {
     targetCol = Math.min(finalLine.length, cursorCol.value)
   }
+  const lastInsert = Math.max(finalLine.lastIndexOf('%'), finalLine.lastIndexOf('='))
+  if (lastInsert >= 0) {
+    targetCol = Math.max(targetCol, Math.min(finalLine.length, lastInsert + 1))
+  }
 
   let pos = 0
   for (let i = 0; i < cursorLine; i++) {
