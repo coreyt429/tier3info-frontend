@@ -36,12 +36,12 @@
             />
             <q-btn label="Search" icon="search" color="primary" class="" @click="executeSearch" />
           </q-card-section>
-    <q-card-section class="row items-center">
-      <q-btn
-        label="Rebuild Configs"
-        icon="build"
-        color="primary"
-        class="q-mr-sm"
+          <q-card-section class="row items-center">
+            <q-btn
+              label="Rebuild Configs"
+              icon="build"
+              color="primary"
+              class="q-mr-sm"
               :disable="isRebuildConfigsDisabled"
               @click="rebuildConfigs"
             />
@@ -87,16 +87,16 @@
               :disable="isSaveTagSetDisabled"
               @click="showSaveDialog = true"
             />
-      <q-btn
-        label="Apply Tags"
-        icon="label"
-        color="purple"
-        class="q-mr-sm"
-        :disable="isApplyTagsDisabled || invalidLines.length > 0"
-        @click="applyTags"
-      />
-    </q-card-section>
-  </q-card>
+            <q-btn
+              label="Apply Tags"
+              icon="label"
+              color="purple"
+              class="q-mr-sm"
+              :disable="isApplyTagsDisabled || invalidLines.length > 0"
+              @click="applyTags"
+            />
+          </q-card-section>
+        </q-card>
       </div>
       <q-dialog v-model="showSaveDialog" persistent>
         <q-card>
@@ -155,7 +155,7 @@ function splitFirstEqual(str) {
   return [str.slice(0, idx).trim(), str.slice(idx + 1).trim()]
 }
 // import { exportFile, useQuasar } from 'quasar'
-import { tier3info_restful_request } from 'src/plugins/tier3info.js'
+import { emit_notification, tier3info_restful_request } from 'src/plugins/tier3info.js'
 import { locate_cache_key_fields } from 'src/plugins/locate.js'
 import DataTable from 'src/components/DataTable.vue'
 
@@ -466,9 +466,7 @@ function checkTags() {
     text: line,
     valid: /^%.*%=.*$/.test(line),
   }))
-  invalidLines.value = validation
-    .map((v, idx) => ({ ...v, index: idx }))
-    .filter((v) => !v.valid)
+  invalidLines.value = validation.map((v, idx) => ({ ...v, index: idx })).filter((v) => !v.valid)
   console.log(`checkTags lines: ${lines}`)
   let newTagData = lines.join('\n')
   for (const row of rows.value) {
