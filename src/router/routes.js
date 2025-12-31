@@ -126,8 +126,8 @@ const routePageMap = {
       endpoint: '/broadworks/kpi',
       buttons: [],
       fields: [
-        { name: 'server', label: 'Server' },
-        { name: 'report', label: 'Report' },
+        // { name: 'server', label: 'Server' },
+        // { name: 'report', label: 'Report' },
         { name: 'type', label: 'Type' },
         { name: 'timestamp', label: 'Timestamp' },
         { name: 'kpi', label: 'KPI' },
