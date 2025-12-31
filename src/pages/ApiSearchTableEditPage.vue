@@ -2,16 +2,21 @@
   <q-page class="flex flex-start">
     <div class="q-pa-md" style="width: 100%">
       <q-card>
-        <q-card-section class="row items-center q-col-gutter-md">
-          <q-input
-            v-model="queryString"
-            label="Search"
-            outlined
-            dense
-            class="col"
-            @keyup.enter="executeSearch"
-          />
-          <q-btn color="primary" icon="search" label="Search" @click="executeSearch" />
+        <q-card-section>
+          <div class="row items-center q-col-gutter-sm">
+            <div class="col">
+              <q-input
+                v-model="queryString"
+                label="Search"
+                outlined
+                dense
+                @keyup.enter="executeSearch"
+              />
+            </div>
+            <div class="col-auto">
+              <q-btn color="primary" icon="search" label="Search" @click="executeSearch" />
+            </div>
+          </div>
         </q-card-section>
       </q-card>
 
@@ -178,7 +183,7 @@ async function executeSearch() {
   try {
     const response = await tier3info_restful_request({
       method: 'POST',
-      path: endpoint.value,
+      path: `${endpoint.value}?include=data`,
       body: { query: queryString.value || defaultSearch.value },
     })
     if (response && response.status === 200) {
