@@ -10,10 +10,10 @@
         :columns="userColumns"
         :filterable="true"
         :exportable="true"
-        selection="single"
         :visibleColumns="visibleColumns"
         :pagination-config="pagination"
         @update:selected="handleSelection"
+        :onClick="handleRowClick"
         table-height="45vh"
       />
     </q-card>
@@ -159,6 +159,14 @@ async function loadUsers() {
 
 function handleSelection(selected) {
   const row = selected && selected.length ? selected[0] : null
+  setSelectedUser(row)
+}
+
+function handleRowClick(row) {
+  setSelectedUser(row)
+}
+
+function setSelectedUser(row) {
   selectedUserId.value = row ? row.user_id : null
   apiKeyValue.value = ''
   apiKeyExists.value = false
