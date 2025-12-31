@@ -25,12 +25,13 @@
           :rows="rows"
           :columns="columns"
           :filterable="true"
-          :exportable="true"
-          :onClick="selectItem"
-          :allowAdd="allowAdd"
-          exportPrefix="search-export"
-          @add="handleAdd"
-        />
+        :exportable="true"
+        :onClick="selectItem"
+        :allowAdd="allowAdd"
+        exportPrefix="search-export"
+        table-height="70vh"
+        @add="handleAdd"
+      />
       </q-card>
       <MyAceEditor
         v-if="selectedOption"
