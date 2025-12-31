@@ -2,6 +2,7 @@ import { h } from 'vue'
 import { Suspense } from 'vue'
 import ApiSelectEditPage from 'pages/ApiSelectEditPage.vue'
 import ApiTableEditPage from 'pages/ApiTableEditPage.vue'
+import ApiSearchTableEditPage from 'pages/ApiSearchTableEditPage.vue'
 
 const routePageMap = {
   '/task_schedule': {
@@ -118,7 +119,7 @@ const routePageMap = {
     },
   },
   '/broadworks/kpi': {
-    page: () => import('pages/ApiSearchTableEditPage.vue'),
+    page: ApiSearchTableEditPage,
     meta: {
       title: 'BroadWorks KPI Search',
       label: 'KPI',
