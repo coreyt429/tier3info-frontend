@@ -96,7 +96,7 @@ export async function tier3info_restful_request(request) {
     request.method = 'GET'
   }
   // add api if missing
-  if (!request.path.includes('api')) {
+  if (!request.path.startsWith('/api/')) {
     request.path = '/api/' + request.path
   }
   // strip double slashes
@@ -122,7 +122,11 @@ export async function tier3info_restful_request(request) {
   console.log(`tier3info_request: body: ${request.body}`)
 
   // Include body for POST or PUT requests
-  if (request.method.toUpperCase() === 'POST' || request.method.toUpperCase() === 'PUT') {
+  if (
+    request.method.toUpperCase() === 'POST' ||
+    request.method.toUpperCase() === 'PUT' ||
+    request.method.toUpperCase() === 'PATCH'
+  ) {
     if (typeof request.body === 'object') {
       fetchOptions.body = JSON.stringify(request.body)
     } else {
@@ -142,7 +146,9 @@ export async function tier3info_restful_request(request) {
     headers: fetchOptions.headers,
     withCredentials: true,
     data:
-      request.method.toUpperCase() === 'POST' || request.method.toUpperCase() === 'PUT'
+      request.method.toUpperCase() === 'POST' ||
+      request.method.toUpperCase() === 'PUT' ||
+      request.method.toUpperCase() === 'PATCH'
         ? request.body
         : undefined,
   })

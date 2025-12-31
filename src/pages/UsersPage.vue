@@ -199,7 +199,7 @@ async function handleApiKeyToggle(val) {
   try {
     if (!val) {
       await tier3info_restful_request({
-        path: `/api/apikey/${selectedUserId.value}`,
+        path: `/apikey/${selectedUserId.value}`,
         method: 'DELETE',
       })
       apiKeyValue.value = ''
@@ -212,7 +212,7 @@ async function handleApiKeyToggle(val) {
         apiKeyValue.value = key
       }
       await tier3info_restful_request({
-        path: `/api/apikey/${selectedUserId.value}`,
+        path: `/apikey/${selectedUserId.value}`,
         method: 'PUT',
         body: { apikey: key },
       })
@@ -241,7 +241,7 @@ async function loadAcls(userId) {
   aclLoading.value = true
   try {
     const response = await tier3info_restful_request({
-      path: `/api/acl/user/${userId}`,
+      path: `/acl/user/${userId}`,
       method: 'GET',
     })
     const data = response?.data || {}
@@ -258,10 +258,11 @@ async function toggleAcl(aclId, enabled) {
   if (!selectedUserId.value) return
   const body = enabled ? { add: [selectedUserId.value] } : { remove: [selectedUserId.value] }
   const response = await tier3info_restful_request({
-    path: `/api/acl/${aclId}`,
+    path: `/acl/${aclId}`,
     method: 'PATCH',
     body,
   })
+
   if (response && response.status === 200) {
     emit_notification('positive', `ACL ${enabled ? 'granted' : 'removed'} for ${aclId}.`)
   }
