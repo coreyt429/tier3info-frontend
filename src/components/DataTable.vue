@@ -86,6 +86,18 @@
           />
         </q-td>
       </template>
+      <template v-slot:body-cell-kpi="props">
+        <q-td :props="props">
+          <q-btn
+            dense
+            flat
+            icon="download"
+            :label="props.row.kpiDownload?.label || 'Download'"
+            :disable="!props.row.kpiDownload"
+            @click="props.row.kpiDownload?.action && props.row.kpiDownload.action()"
+          />
+        </q-td>
+      </template>
     </q-table>
   </q-card-section>
 </template>

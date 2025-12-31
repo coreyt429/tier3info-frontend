@@ -117,6 +117,23 @@ const routePageMap = {
       ],
     },
   },
+  '/broadworks/kpi': {
+    page: () => import('pages/ApiSearchTableEditPage.vue'),
+    meta: {
+      title: 'BroadWorks KPI Search',
+      label: 'KPI',
+      endpoint: '/broadworks/kpi',
+      buttons: [],
+      fields: [
+        { name: 'server', label: 'Server' },
+        { name: 'report', label: 'Report' },
+        { name: 'type', label: 'Type' },
+        { name: 'timestamp', label: 'Timestamp' },
+        { name: 'kpi', label: 'KPI' },
+      ],
+      defaultSearch: new Date().toISOString().slice(0, 10).replace(/-/g, ''),
+    },
+  },
   '/bookmarks': {
     page: ApiTableEditPage,
     meta: {
