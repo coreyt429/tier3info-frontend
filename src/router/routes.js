@@ -350,6 +350,17 @@ const routes = [
       },
     ],
   },
+  {
+    path: '/users',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        component: () => import('pages/UsersPage.vue'),
+        meta: { requiresAuth: true, title: 'Users' },
+      },
+    ],
+  },
 ]
 
 Object.keys(routePageMap).forEach((path) => {
