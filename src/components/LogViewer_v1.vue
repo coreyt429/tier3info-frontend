@@ -23,6 +23,7 @@
             :entry="entry"
             @filter-must="$emit('filter-must', $event)"
             @filter-must-not="$emit('filter-must-not', $event)"
+            @entry-selected="$emit('entry-selected', $event)"
           />
         </div>
         <div v-else>
@@ -44,7 +45,7 @@ export default {
       required: true,
     },
   },
-  emits: ['filter-must', 'filter-must-not'],
+  emits: ['filter-must', 'filter-must-not', 'entry-selected'],
   methods: {
     formatTimestampToET(ts) {
       try {

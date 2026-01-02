@@ -33,7 +33,12 @@
     </q-card>
     <div class="q-mt-md">
       <q-card v-if="searchResults" class="q-pa-md">
-        <LogViewer :logData="searchResults" @filter-must="onMust" @filter-must-not="onMustNot" />
+        <LogViewer
+          :logData="searchResults"
+          @filter-must="onMust"
+          @filter-must-not="onMustNot"
+          @entry-selected="onEntrySelected"
+        />
       </q-card>
     </div>
   </q-page>
@@ -71,6 +76,13 @@ export default {
     }
   },
   methods: {
+    onEntrySelected(entry) {
+      try {
+        window.dispatchEvent(new CustomEvent('log-entry-selected', { detail: entry }))
+      } catch (e) {
+        console.error('AuditLogTrace.vue: error dispatching log-entry-selected', e)
+      }
+    },
     async executeSearch() {
       this.errorMessage = null
       this.statusMessage = `Searching for index ${this.index}, record ${this.record}...`
