@@ -235,7 +235,7 @@ const routePageMap = {
     meta: {
       title: 'BWLog Indices',
       label: 'BWLog Index',
-      endpoint: '/bwlog/indices',
+      endpoint: '/bwlog',
       buttons: [],
       fields: [
         { name: 'index', label: 'Index' },
