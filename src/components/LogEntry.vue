@@ -75,19 +75,19 @@
             <div class="q-gutter-md">
               <div v-for="hk in highlightKeys" :key="hk">
                 <div class="text-caption text-grey-6 q-mb-xs">{{ hk }}</div>
-                <div class="q-gutter-xs">
-                  <q-chip
-                    v-for="(frag, i) in entry.highlight[hk]"
-                    :key="hk + '-' + i"
-                    dense
-                    outline
-                  >
-                    {{ stripTags(frag) }}
-                  </q-chip>
-                </div>
-              </div>
+            <div class="q-gutter-xs">
+              <q-chip
+                v-for="(frag, i) in entry.highlight[hk]"
+                :key="hk + '-' + i"
+                dense
+                outline
+              >
+                {{ stripTags(frag) }}
+              </q-chip>
             </div>
-          </q-card-section>
+          </div>
+        </div>
+      </q-card-section>
 
           <q-separator />
 
@@ -303,6 +303,18 @@ export default {
       recurse(this.src)
       return result
     },
+    tagList() {
+      const tags = this.src.tags
+      if (!Array.isArray(tags)) return []
+      const isAudit = this.get(this.src, ['event', 'dataset']) === 'bworks.auditlogs'
+      return tags
+        .filter((t) => t !== undefined && t !== null && t !== '')
+        .map((t) => {
+          const label = String(t)
+          const isAuditWrite = isAudit && /^write/i.test(label)
+          return { label, isAuditWrite }
+        })
+    },
   },
   emits: ['filter-must', 'filter-must-not', 'entry-selected'],
   methods: {
@@ -312,6 +324,15 @@ export default {
     },
     selectEntry() {
       this.$emit('entry-selected', this.entry)
+    },
+    openAuditTrace() {
+      const idx = this.entry?._index
+      const id = this.entry?._id
+      if (!idx || !id) return
+      const url = `/#/logtool/auditlog_trace?index=${encodeURIComponent(idx)}&record=${encodeURIComponent(
+        id,
+      )}`
+      window.open(url, '_blank', 'noopener')
     },
 
     // "Capitalize" with special case for FIELDDEBUG
