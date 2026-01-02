@@ -245,6 +245,7 @@ const routePageMap = {
         { name: 'pri', label: 'Shards' },
         { name: 'rep', label: 'Replicas' },
         { name: 'size', label: 'Size' },
+        { name: 'category', label: 'Category' },
         { name: 'age', label: 'Age' },
         { name: 'retention', label: 'Retention' },
       ],
