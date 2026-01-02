@@ -6,14 +6,14 @@
       <q-item-section class="log-item-section">
         <pre class="log-pre q-my-sm">
 <span class="log-header-text">
-  {{ headerText }}
-  <q-btn
+  {{ headerText }}<q-btn
     v-if="auditLink"
     dense
     flat
     round
     size="xs"
     icon="open_in_new"
+    label="audit"
     aria-label="Open audit trace"
     class="q-ml-sm"
     @click.stop="openAuditTrace"
