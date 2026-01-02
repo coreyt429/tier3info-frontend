@@ -5,7 +5,20 @@
       <!-- Left side: message preview (does NOT toggle) -->
       <q-item-section class="log-item-section">
         <pre class="log-pre q-my-sm">
-<span class="log-header-text">{{ headerText }}</span>
+<span class="log-header-text">
+  {{ headerText }}
+  <q-btn
+    v-if="auditLink"
+    dense
+    flat
+    round
+    size="xs"
+    icon="open_in_new"
+    aria-label="Open audit trace"
+    class="q-ml-sm"
+    @click.stop="openAuditTrace"
+  />
+</span>
 
 
 <span v-if="message" class="message-scroll">        {{ message }}</span>
@@ -75,19 +88,19 @@
             <div class="q-gutter-md">
               <div v-for="hk in highlightKeys" :key="hk">
                 <div class="text-caption text-grey-6 q-mb-xs">{{ hk }}</div>
-            <div class="q-gutter-xs">
-              <q-chip
-                v-for="(frag, i) in entry.highlight[hk]"
-                :key="hk + '-' + i"
-                dense
-                outline
-              >
-                {{ stripTags(frag) }}
-              </q-chip>
+                <div class="q-gutter-xs">
+                  <q-chip
+                    v-for="(frag, i) in entry.highlight[hk]"
+                    :key="hk + '-' + i"
+                    dense
+                    outline
+                  >
+                    {{ stripTags(frag) }}
+                  </q-chip>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      </q-card-section>
+          </q-card-section>
 
           <q-separator />
 
@@ -315,6 +328,18 @@ export default {
           return { label, isAuditWrite }
         })
     },
+    auditLink() {
+      const isAudit = this.get(this.src, ['event', 'dataset']) === 'bworks.auditlogs'
+      if (!isAudit) return null
+      const hasWrite = this.tagList.some((t) => t.isAuditWrite)
+      if (!hasWrite) return null
+      const idx = this.entry?._index
+      const id = this.entry?._id
+      if (!idx || !id) return null
+      return `/#/logtool/auditlog_trace?index=${encodeURIComponent(idx)}&record=${encodeURIComponent(
+        id,
+      )}`
+    },
   },
   emits: ['filter-must', 'filter-must-not', 'entry-selected'],
   methods: {
@@ -326,13 +351,8 @@ export default {
       this.$emit('entry-selected', this.entry)
     },
     openAuditTrace() {
-      const idx = this.entry?._index
-      const id = this.entry?._id
-      if (!idx || !id) return
-      const url = `/#/logtool/auditlog_trace?index=${encodeURIComponent(idx)}&record=${encodeURIComponent(
-        id,
-      )}`
-      window.open(url, '_blank', 'noopener')
+      if (!this.auditLink) return
+      window.open(this.auditLink, '_blank', 'noopener')
     },
 
     // "Capitalize" with special case for FIELDDEBUG
@@ -461,7 +481,7 @@ export default {
   max-height: 100%;
   width: 100%;
   overflow-y: auto;
-  vertical-align: top;
+  /* vertical-align: top; */
 }
 .log-item-section {
   /* max-height: 400px;
