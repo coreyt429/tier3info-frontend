@@ -240,7 +240,7 @@ const routePageMap = {
       fields: [
         { name: 'index', label: 'Index' },
         { name: 'count', label: 'Count' },
-        { name: 'delete', label: 'Deleted' },
+        { name: 'deleted', label: 'Deleted' },
         { name: 'health', label: 'Health' },
         { name: 'pri', label: 'Shards' },
         { name: 'rep', label: 'Replicas' },
@@ -249,14 +249,7 @@ const routePageMap = {
         { name: 'age', label: 'Age' },
         { name: 'retention', label: 'Retention' },
       ],
-      template: {
-        caption: '',
-        icon: '',
-        link: '',
-        order: 0,
-        menu: 'tools',
-        acl: 'all_users',
-      },
+      template: {},
     },
   },
   '/oracle/sbc': {
@@ -370,6 +363,18 @@ const routes = [
       {
         path: '',
         component: () => import('pages/CorrelationIdSearch.vue'),
+        props: (route) => ({ query: route.query }),
+        meta: { requiresAuth: true },
+      },
+    ],
+  },
+  {
+    path: '/logtool/auditlog_trace',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        component: () => import('pages/AuditLogTrace.vue'),
         props: (route) => ({ query: route.query }),
         meta: { requiresAuth: true },
       },
