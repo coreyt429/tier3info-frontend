@@ -2,7 +2,7 @@
   <q-card-section>
     <q-table
       :rows="props.rows"
-      :columns="props.columns"
+      :columns="computedColumns"
       dense
       flat
       bordered
@@ -28,7 +28,7 @@
           :display-value="$q.lang.table.columns"
           emit-value
           map-options
-          :options="props.columns"
+          :options="computedColumns"
           option-value="name"
           options-cover
           style="min-width: 150px"
@@ -103,7 +103,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { exportFile, useQuasar } from 'quasar'
 const $q = useQuasar()
 
@@ -134,15 +134,46 @@ watch(selected, (newSelection) => {
 })
 
 console.log('DataTable filter:', filter.value)
+const computedColumns = computed(() => {
+  return (props.columns || []).map((col) => {
+    const values = (props.rows || []).map((row) => {
+      if (typeof col.field === 'function') {
+        return col.field(row)
+      }
+      const key = col.field === void 0 ? col.name : col.field
+      return row?.[key]
+    })
+    const numericValues = values.filter((v) => v !== null && v !== undefined && v !== '')
+    const allNumeric =
+      numericValues.length > 0 &&
+      numericValues.every((v) => typeof v === 'number' || (!isNaN(Number(v)) && v !== true && v !== false))
+    if (!allNumeric) {
+      return col
+    }
+    return {
+      ...col,
+      sort: (a, b) => {
+        const aNum = Number(a)
+        const bNum = Number(b)
+        if (isNaN(aNum) && isNaN(bNum)) return 0
+        if (isNaN(aNum)) return -1
+        if (isNaN(bNum)) return 1
+        return aNum - bNum
+      },
+    }
+  })
+})
+
 const localVisibleColumns = ref(
-  props.visibleColumns.length ? [...props.visibleColumns] : props.columns.map((col) => col.name),
+  props.visibleColumns.length ? [...props.visibleColumns] : computedColumns.value.map((col) => col.name),
 )
 console.log('DataTable visibleColumns:', props.visibleColumns)
 console.log('DataTable localVisibleColumns:', localVisibleColumns.value)
 watch(
-  () => props.visibleColumns,
-  (newVal) => {
-    localVisibleColumns.value = newVal.length ? [...newVal] : props.columns.map((col) => col.name)
+  () => [props.visibleColumns, computedColumns.value],
+  ([newVisible]) => {
+    const cols = computedColumns.value
+    localVisibleColumns.value = newVisible.length ? [...newVisible] : cols.map((col) => col.name)
   },
   { immediate: true },
 )
