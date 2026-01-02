@@ -159,6 +159,7 @@ const routePageMap = {
       },
     },
   },
+
   '/broadworks/clusters': {
     page: ApiTableEditPage,
     meta: {
@@ -226,6 +227,34 @@ const routePageMap = {
       template: {
         description: '',
         template: '',
+      },
+    },
+  },
+  '/bwlog/indices': {
+    page: ApiTableEditPage,
+    meta: {
+      title: 'BWLog Indices',
+      label: 'BWLog Index',
+      endpoint: '/bwlog/indices',
+      buttons: [],
+      fields: [
+        { name: 'index', label: 'Index' },
+        { name: 'count', label: 'Count' },
+        { name: 'delete', label: 'Deleted' },
+        { name: 'health', label: 'Health' },
+        { name: 'pri', label: 'Shards' },
+        { name: 'rep', label: 'Replicas' },
+        { name: 'size', label: 'Size' },
+        { name: 'age', label: 'Age' },
+        { name: 'retention', label: 'Retention' },
+      ],
+      template: {
+        caption: '',
+        icon: '',
+        link: '',
+        order: 0,
+        menu: 'tools',
+        acl: 'all_users',
       },
     },
   },
