@@ -13,7 +13,7 @@
     round
     size="xs"
     icon="open_in_new"
-    label="audit"
+    label="audit trace"
     aria-label="Open audit trace"
     class="q-ml-sm"
     @click.stop="openAuditTrace"

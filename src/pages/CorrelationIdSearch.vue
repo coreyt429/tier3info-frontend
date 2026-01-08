@@ -1,3 +1,23 @@
+<!--
+ FIXME: this page should handle Call-Id as well as Correlation-Id, but for now it's just Correlation-Id
+
+ When processing the uploaded OCOM trace file, it should extract all Call-Ids and Correlation-Ids found in the trace,
+ Note Call-Id will be in both long and short forn headers like:
+   Call-id: 1234567890@host
+   i: 1234567890@host
+ So we need to extract both forms and de-duplicate them.
+
+ Correlation Ids will still be in the X-BroadWorks-Correlation-Info headers.
+
+ this goes for both HTML and PCAP files.
+
+ We will also likely need to scrap or augment the validation rules, since Call-Ids are not UUIDs.
+   maybe UUID or alphanumeric with special chars like @ and .
+   looking at production traffic, not all call-ids have an @ sign some are just long hex strings.
+   so we may need to relax the validation to allow for that.
+
+ -->
+
 <template>
   <q-page class="q-pa-md">
     <q-card class="q-pa-md">
@@ -5,11 +25,11 @@
         <div class="col-5 q-mb-xs">
           <q-input
             v-model="correlationId"
-            label="Call Correlation Id"
+            label="Call / Correlation Ids"
             outlined
             type="textarea"
             autogrow
-            :rules="[validateUUID]"
+            :rules="[validateId]"
             clearable
             @blur="checkValidation"
           />
@@ -67,6 +87,8 @@ import { tier3info_restful_request } from 'src/plugins/tier3info'
 import { useRoute } from 'vue-router'
 // Removed unused import for LogViewer
 import LogViewer from 'components/LogViewer_v1.vue'
+const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+const callIdRegex = /^[A-Za-z0-9_.:@-]{4,}$/
 export default {
   components: { LogViewer },
   created() {
@@ -189,29 +211,26 @@ export default {
       console.log('CorrelationIdSearch.vue: onMustNot called with event:', event)
       // Handle the filter-must-not event
     },
-    validateUUID(value) {
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-
-      // Accept multiple UUIDs (one per line or separated by any whitespace/commas)
+    validateId(value) {
+      // Accept multiple IDs (one per line or separated by whitespace/commas)
       const items = String(value || '')
-        .split(/[\s,]+/) // split on newlines, spaces, tabs, commas
-        .filter(Boolean) // drop empties
+        .split(/[\s,]+/)
+        .filter(Boolean)
 
       if (items.length === 0) {
-        // No input yet – let Quasar treat it as neutral and rely on button disable
         this.searchDisabled = true
         return true
       }
 
-      const allValid = items.every((s) => uuidRegex.test(s))
+      const allValid = items.every((s) => uuidRegex.test(s) || callIdRegex.test(s))
       this.searchDisabled = !allValid
 
       return allValid
         ? true
-        : 'One or more lines are not valid UUIDs (format xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx).'
+        : 'One or more lines are not valid Call-Ids or Correlation-Ids.'
     },
     checkValidation() {
-      const isValid = this.validateUUID(this.correlationId)
+      const isValid = this.validateId(this.correlationId)
       this.error = !isValid
       return isValid
     },
@@ -245,6 +264,16 @@ export default {
         /\b[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}\b/g
       return text.match(uuidPattern) || []
     },
+    extractCallIds(text) {
+      const matches = []
+      const regex = /(?:call-id|callid|i)\s*:\s*([^\s<>]+)/gi
+      let m
+      while ((m = regex.exec(text))) {
+        const val = m[1].replace(/[<>]/g, '').trim()
+        if (val) matches.push(val)
+      }
+      return matches
+    },
     extractASCIIStrings(data) {
       let result = ''
       let currentString = ''
@@ -275,30 +304,31 @@ export default {
       const reader = new FileReader()
       console.log('CorrelationIdSearch.vue: Reading file:', file.name)
       reader.onload = (event) => {
+        const ids = new Set()
         if (file.name.includes('html')) {
           console.log('CorrelationIdSearch.vue: Processing HTML file')
           const content = event.target.result
           const data = this.extractVarData(content)
           console.log('CorrelationIdSearch.vue: Extracted data:', data)
-          const correlationIds = new Set()
           if (data) {
             data.messages.forEach((packet) => {
-              if (packet.html.includes('X-BroadWorks-Correlation-Info')) {
-                const uuids = this.extractUUIDs(packet.html)
-                uuids.forEach((uuid) => correlationIds.add(uuid))
-              }
+              const uuids = this.extractUUIDs(packet.html)
+              uuids.forEach((uuid) => ids.add(uuid))
+              const callIds = this.extractCallIds(packet.html)
+              callIds.forEach((cid) => ids.add(cid))
             })
-            console.log('CorrelationIdSearch.vue: Extracted correlationIds:', correlationIds)
-            this.handleCorrelationIds(correlationIds)
+            console.log('CorrelationIdSearch.vue: Extracted ids:', ids)
+            this.handleCorrelationIds(ids)
           }
         } else if (file.name.includes('pcap')) {
           console.log('CorrelationIdSearch.vue: Processing PCAP file')
           const arrayBuffer = event.target.result
           const data = new Uint8Array(arrayBuffer)
           const text = this.extractASCIIStrings(data)
-          const correlationIds = new Set(this.extractUUIDs(text))
-          console.log('CorrelationIdSearch.vue: Extracted correlationIds:', correlationIds)
-          this.handleCorrelationIds(correlationIds)
+          this.extractUUIDs(text).forEach((uuid) => ids.add(uuid))
+          this.extractCallIds(text).forEach((cid) => ids.add(cid))
+          console.log('CorrelationIdSearch.vue: Extracted ids:', ids)
+          this.handleCorrelationIds(ids)
         } else {
           alert('Unhandled file type: ' + file.name)
         }
