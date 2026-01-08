@@ -313,9 +313,9 @@ export default {
           if (data) {
             data.messages.forEach((packet) => {
               console.log('CorrelationIdSearch.vue: Processing packet:', packet)
-              const uuids = this.extractUUIDs(packet.html)
+              const uuids = this.extractUUIDs(packet.data)
               uuids.forEach((uuid) => ids.add(uuid))
-              const callIds = this.extractCallIds(packet.html)
+              const callIds = this.extractCallIds(packet.data)
               callIds.forEach((cid) => ids.add(cid))
             })
             console.log('CorrelationIdSearch.vue: Extracted ids:', ids)
