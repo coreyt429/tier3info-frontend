@@ -225,9 +225,7 @@ export default {
       const allValid = items.every((s) => uuidRegex.test(s) || callIdRegex.test(s))
       this.searchDisabled = !allValid
 
-      return allValid
-        ? true
-        : 'One or more lines are not valid Call-Ids or Correlation-Ids.'
+      return allValid ? true : 'One or more lines are not valid Call-Ids or Correlation-Ids.'
     },
     checkValidation() {
       const isValid = this.validateId(this.correlationId)
@@ -265,11 +263,13 @@ export default {
       return text.match(uuidPattern) || []
     },
     extractCallIds(text) {
+      console.log('CorrelationIdSearch.vue: extractCallIds called with text length:', text)
       const matches = []
       const regex = /(?:call-id|callid|i)\s*:\s*([^\s<>]+)/gi
       let m
       while ((m = regex.exec(text))) {
         const val = m[1].replace(/[<>]/g, '').trim()
+        console.log('CorrelationIdSearch.vue: Found Call-Id:', val)
         if (val) matches.push(val)
       }
       return matches
