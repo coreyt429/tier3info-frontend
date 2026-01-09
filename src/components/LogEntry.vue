@@ -199,9 +199,11 @@ export default {
         (typeof this.src === 'string' ? this.src : null)
 
       const dataset = this.get(this.src, ['event', 'dataset'])
-      if (msg === 'CDR' && dataset === 'sansay.cdr' && this.src.cdr?.term) {
+      console.log('LogEntry.vue: message computed, dataset=', dataset)
+
+      if (dataset === 'sansay.cdr') {
         const t = this.src.cdr.term || {}
-        const line = (label, val) => `${label}: ${val ?? 'N/A'}`
+        const line = (label, val) => `  ${label}: ${val ?? 'N/A'}`
         const lines = [
           'Sansay CDR',
           line('From', t.src_number),
