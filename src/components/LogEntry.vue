@@ -205,7 +205,7 @@ export default {
         console.log('LogEntry.vue: Formatting Sansay CDR message: ', this.src.cdr)
         const t = this.src.cdr.term || {}
         const termField = (key) => t[key] ?? this.src.cdr?.[`term.${key}`]
-        const line = (label, val) => `  ${label}: ${val ?? 'N/A'}`
+        const line = (label, val) => `          ${label}: ${val ?? 'N/A'}`
         const lines = [
           'Sansay CDR',
           line('From', termField('src_number')),
