@@ -198,6 +198,23 @@ export default {
         this.src.log ||
         (typeof this.src === 'string' ? this.src : null)
 
+      const dataset = this.get(this.src, ['event', 'dataset'])
+      if (msg === 'CDR' && dataset === 'sansay.cdr' && this.src.cdr?.term) {
+        const t = this.src.cdr.term || {}
+        const line = (label, val) => `${label}: ${val ?? 'N/A'}`
+        const lines = [
+          'Sansay CDR',
+          line('From', t.src_number),
+          line('To', t.dest_number),
+          line('Trunk Id', t.trunk_id),
+          line('Trunk Alias', t.tid_alias_name),
+          line('Dest IP', t.dest_ip_address),
+          line('Ingress Pkts', t.ingress_pkts),
+          line('Egress Pkts', t.egress_pkts),
+        ]
+        return lines.join('\n')
+      }
+
       if (msg === 'CDR' && this.src.cdr) {
         try {
           return 'Call Detail Record:\n' + JSON.stringify(this.src.cdr, null, 2)
