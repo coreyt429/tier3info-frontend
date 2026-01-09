@@ -204,16 +204,17 @@ export default {
       if (dataset === 'sansay.cdr') {
         console.log('LogEntry.vue: Formatting Sansay CDR message: ', this.src.cdr)
         const t = this.src.cdr.term || {}
+        const termField = (key) => t[key] ?? this.src.cdr?.[`term.${key}`]
         const line = (label, val) => `  ${label}: ${val ?? 'N/A'}`
         const lines = [
           'Sansay CDR',
-          line('From', t.src_number),
-          line('To', t.dest_number),
-          line('Trunk Id', t.trunk_id),
-          line('Trunk Alias', t.tid_alias_name),
-          line('Dest IP', t.dest_ip_address),
-          line('Ingress Pkts', t.ingress_pkts),
-          line('Egress Pkts', t.egress_pkts),
+          line('From', termField('src_number')),
+          line('To', termField('dest_number')),
+          line('Trunk Id', termField('trunk_id')),
+          line('Trunk Alias', termField('tid_alias_name')),
+          line('Dest IP', termField('dest_ip_address')),
+          line('Ingress Pkts', termField('ingress_pkts')),
+          line('Egress Pkts', termField('egress_pkts')),
         ]
         return lines.join('\n')
       }
