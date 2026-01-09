@@ -240,8 +240,16 @@ export default {
 
       const hostname = this.get(this.src, ['host', 'hostname'])
       if (hostname) {
-        const isIp = /^\\d{1,3}(\\.\\d{1,3}){3}$/.test(hostname)
+        const isIp = /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname)
         parts.push(isIp ? hostname : hostname.split('.')[0])
+        console.log(
+          'LogEntry.vue: headerText computed, hostname=',
+          hostname,
+          'isIp=',
+          isIp,
+          'part=',
+          parts[parts.length - 1],
+        )
       }
 
       // log.level (capitalize, special-case FIELDDEBUG)
