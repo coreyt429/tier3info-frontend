@@ -202,6 +202,7 @@ export default {
       console.log('LogEntry.vue: message computed, dataset=', dataset)
 
       if (dataset === 'sansay.cdr') {
+        console.log('LogEntry.vue: Formatting Sansay CDR message: ', this.src.cdr)
         const t = this.src.cdr.term || {}
         const line = (label, val) => `  ${label}: ${val ?? 'N/A'}`
         const lines = [
@@ -237,7 +238,10 @@ export default {
       if (ts) parts.push(ts)
 
       const hostname = this.get(this.src, ['host', 'hostname'])
-      if (hostname) parts.push(hostname.split('.')[0])
+      if (hostname) {
+        const isIp = /^\\d{1,3}(\\.\\d{1,3}){3}$/.test(hostname)
+        parts.push(isIp ? hostname : hostname.split('.')[0])
+      }
 
       // log.level (capitalize, special-case FIELDDEBUG)
       const lvl = this.formatLevel(this.get(this.src, ['log', 'level']))
