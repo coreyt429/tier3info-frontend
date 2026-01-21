@@ -393,6 +393,17 @@ const routes = [
     ],
   },
   {
+    path: '/broadworks/auth_reset',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        component: () => import('pages/BroadworksAuthResetPage.vue'),
+        meta: { requiresAuth: true },
+      },
+    ],
+  },
+  {
     path: '/devtools/ocitool',
     component: () => import('layouts/MainLayout.vue'),
     children: [
