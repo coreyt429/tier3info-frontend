@@ -21,7 +21,7 @@
             outlined
             dense
             :disable="isLoading"
-            placeholder="user_id@example.com\nuser2@example.com"
+            placeholder="2059784479"
           />
         </div>
       </q-card-section>
@@ -446,8 +446,12 @@ async function checkJobStatus(executing) {
 async function refreshDataFiles(jobId, jobStatus) {
   if (!jobId) return
   const filesIndex = await fetchFilesIndex(jobId)
+  console.log('BroadworksAuthReset: Files index:', filesIndex)
   const currentReady = filesIndex?.['current_data.json']?.bytes > 0
   const initialReady = filesIndex?.['initial_data.json']?.bytes > 0
+  console.log(
+    `BroadworksAuthReset: Data files status - current: ${currentReady}, initial: ${initialReady}`,
+  )
 
   if (!currentReady && !initialReady) {
     statusMessage.value = `Waiting on job files... (${jobStatus || 'processing'})`
