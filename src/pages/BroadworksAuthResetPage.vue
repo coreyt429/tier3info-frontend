@@ -445,6 +445,10 @@ async function checkJobStatus(executing) {
 
 async function refreshDataFiles(jobId, jobStatus) {
   if (!jobId) return
+  if (jobStatus === 'new' || jobStatus === 'queued') {
+    statusMessage.value = `Waiting for job to start... (${jobStatus})`
+    return
+  }
   const filesIndex = await fetchFilesIndex(jobId)
   console.log('BroadworksAuthReset: Files index:', filesIndex)
   const currentReady = filesIndex?.['current_data.json']?.bytes > 0
@@ -494,7 +498,7 @@ async function loadInitialData(jobId) {
 async function fetchFile(jobId, fileName) {
   try {
     const resp = await tier3info_restful_request({
-      path: `/jobs/${jobId}/files/${fileName}`,
+      path: `/jobs/files/${jobId}/${fileName}`,
       method: 'GET',
     })
     return resp?.data
@@ -510,7 +514,7 @@ async function fetchFile(jobId, fileName) {
 async function fetchFilesIndex(jobId) {
   try {
     const resp = await tier3info_restful_request({
-      path: `/jobs/${jobId}/files`,
+      path: `/jobs/files/${jobId}`,
       method: 'GET',
     })
     return resp?.data
