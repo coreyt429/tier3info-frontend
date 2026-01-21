@@ -2,6 +2,21 @@
   <q-page class="q-pa-md">
     <q-card class="q-pa-md">
       <q-card-section class="row q-col-gutter-md items-start">
+        <div class="col-12">
+          <q-select
+            v-model="selectedJobId"
+            :options="jobOptions"
+            label="Resume Existing Job"
+            outlined
+            dense
+            clearable
+            emit-value
+            map-options
+            @update:model-value="onJobSelected"
+          />
+        </div>
+      </q-card-section>
+      <q-card-section class="row q-col-gutter-md items-start">
         <div class="col-12 col-md-4">
           <q-input
             v-model="title"
@@ -78,7 +93,7 @@
 </template>
 
 <script setup>
-import { computed, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { tier3info_restful_request } from 'src/plugins/tier3info.js'
 import { useTitleStore } from 'stores/titleStore'
 import DataTable from 'src/components/DataTable.vue'
@@ -93,16 +108,20 @@ const statusMessage = ref(null)
 const errorMessage = ref(null)
 const isLoading = ref(false)
 const currentMode = ref('stage')
+const jobStatus = ref(null)
 
 const stageJobId = ref(null)
 const executeJobId = ref(null)
 const dataJobId = ref(null)
 const waitCounter = ref(0)
 let pollTimer = null
+let jobsRefreshTimer = null
 
 const rowsRaw = ref([])
 const dataSource = ref(null)
 const initialDataMap = ref(new Map())
+const jobsList = ref([])
+const selectedJobId = ref(null)
 
 const pagination = ref({ rowsPerPage: 0 })
 const visibleColumns = ref([
@@ -229,6 +248,13 @@ const tableRows = computed(() => {
   })
 })
 
+const jobOptions = computed(() => {
+  return jobsList.value.map((job) => ({
+    label: formatJobOption(job),
+    value: job.job_id,
+  }))
+})
+
 function parseTargets() {
   return targetsInput.value
     .split(/\n|,/)
@@ -274,6 +300,7 @@ function getLatestDmsEntry(record) {
 }
 
 function cellClass(field, row, options = {}) {
+  if (field === 'user_id' || field === 'device_id' || field === 'line_port') return ''
   if (options.stale) return 'bg-red-2 text-dark'
   if (dataSource.value !== 'current') return ''
   if (row.complete) return ''
@@ -321,6 +348,7 @@ function resetState() {
   errorMessage.value = null
   isLoading.value = false
   currentMode.value = 'stage'
+  jobStatus.value = null
   stageJobId.value = null
   executeJobId.value = null
   dataJobId.value = null
@@ -328,6 +356,7 @@ function resetState() {
   rowsRaw.value = []
   dataSource.value = null
   initialDataMap.value = new Map()
+  selectedJobId.value = null
   clearPoll()
 }
 
@@ -335,6 +364,13 @@ function clearPoll() {
   if (pollTimer) {
     clearTimeout(pollTimer)
     pollTimer = null
+  }
+}
+
+function clearJobsRefresh() {
+  if (jobsRefreshTimer) {
+    clearTimeout(jobsRefreshTimer)
+    jobsRefreshTimer = null
   }
 }
 
@@ -379,6 +415,8 @@ async function submitJob(executeFlag) {
       stageJobId.value = jobId
       dataJobId.value = jobId
     }
+    selectedJobId.value = jobId
+    await fetchJobsList()
     waitCounter.value = 0
     clearPoll()
     pollTimer = setTimeout(() => checkJobStatus(executeFlag), 500)
@@ -400,6 +438,7 @@ async function checkJobStatus(executing) {
       throw new Error('Invalid job status response')
     }
 
+    jobStatus.value = resp.data?.status || null
     await refreshDataFiles(jobId, resp.data?.status)
 
     if (resp.data.status === 'completed') {
@@ -420,15 +459,10 @@ async function checkJobStatus(executing) {
     }
 
     waitCounter.value += 1
-    if (waitCounter.value > 60) {
-      statusMessage.value = 'Job is taking too long. Please try again later.'
-      isLoading.value = false
-      clearPoll()
-      return
+    if (!statusMessage.value) {
+      statusMessage.value = jobStatus.value ? `Job status: ${jobStatus.value}` : 'Job running...'
     }
-
-    statusMessage.value = `Waiting on job data... (${waitCounter.value * 5} seconds)`
-    pollTimer = setTimeout(() => checkJobStatus(executing), 5000)
+    pollTimer = setTimeout(() => checkJobStatus(executing), getPollDelay())
   } catch (err) {
     console.error('BroadworksAuthReset: checkJobStatus error:', err)
     errorMessage.value = 'Invalid response from server. Please try again later.'
@@ -441,7 +475,7 @@ async function checkJobStatus(executing) {
 async function refreshDataFiles(jobId, jobStatus) {
   if (!jobId) return
   if (jobStatus === 'new' || jobStatus === 'queued') {
-    statusMessage.value = `Waiting for job to start... (${jobStatus})`
+    statusMessage.value = `Job status: ${jobStatus}`
     return
   }
   const filesIndex = await fetchFilesIndex(jobId)
@@ -453,7 +487,7 @@ async function refreshDataFiles(jobId, jobStatus) {
   )
 
   if (!currentReady && !initialReady) {
-    statusMessage.value = `Waiting on job files... (${jobStatus || 'processing'})`
+    statusMessage.value = `Job status: ${jobStatus || 'processing'} — waiting on job files`
     return
   }
 
@@ -532,8 +566,100 @@ async function fetchFilesIndex(jobId) {
   }
 }
 
+function getPollDelay() {
+  if (dataSource.value === 'initial') {
+    return 60000
+  }
+  return 5000
+}
+
+function getJobType(job) {
+  return job?.type || job?.job_type || job?.jobType || job?.job_name || ''
+}
+
+function formatJobOption(job) {
+  const id = job?.job_id || job?.id || ''
+  const titleText = job?.title || job?.name || ''
+  const statusText = job?.status || ''
+  const parts = [id, titleText].filter(Boolean).join(' — ')
+  return statusText ? `${parts} (${statusText})` : parts
+}
+
+async function fetchJobsList() {
+  try {
+    const resp = await tier3info_restful_request({
+      path: '/jobs?include=data',
+      method: 'GET',
+    })
+    const data = resp?.data
+    const jobs = []
+    if (Array.isArray(data)) {
+      data.forEach((job) => {
+        if (!job) return
+        jobs.push({ ...job, job_id: job.job_id || job.id })
+      })
+    } else if (data && typeof data === 'object') {
+      Object.entries(data).forEach(([key, job]) => {
+        if (!job) return
+        jobs.push({ ...job, job_id: job.job_id || job.id || key })
+      })
+    }
+
+    const filtered = jobs.filter((job) => {
+      const type = getJobType(job)
+      return type && String(type).includes('broadworks.auth_reset')
+    })
+    jobsList.value = filtered.sort((a, b) => {
+      const aId = String(a.job_id || '')
+      const bId = String(b.job_id || '')
+      return bId.localeCompare(aId)
+    })
+  } catch (err) {
+    console.warn('BroadworksAuthReset: fetchJobsList error:', err)
+  }
+}
+
+function scheduleJobsRefresh() {
+  clearJobsRefresh()
+  jobsRefreshTimer = setTimeout(async () => {
+    await fetchJobsList()
+    scheduleJobsRefresh()
+  }, 60000)
+}
+
+async function onJobSelected(jobId) {
+  if (!jobId) return
+  const selected = jobsList.value.find((job) => job.job_id === jobId)
+  selectedJobId.value = jobId
+  stageJobId.value = jobId
+  executeJobId.value = null
+  dataJobId.value = jobId
+  currentMode.value = 'stage'
+  jobStatus.value = null
+  errorMessage.value = null
+  isLoading.value = true
+  if (selected) {
+    if (!title.value && selected.title) {
+      title.value = selected.title
+    }
+    if (!targetsInput.value && Array.isArray(selected.targets)) {
+      targetsInput.value = selected.targets.join('\n')
+    } else if (!targetsInput.value && Array.isArray(selected?.data?.targets)) {
+      targetsInput.value = selected.data.targets.join('\n')
+    }
+  }
+  clearPoll()
+  await checkJobStatus(false)
+}
+
 onUnmounted(() => {
   clearPoll()
+  clearJobsRefresh()
+})
+
+onMounted(async () => {
+  await fetchJobsList()
+  scheduleJobsRefresh()
 })
 </script>
 

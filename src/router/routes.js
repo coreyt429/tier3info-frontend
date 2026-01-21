@@ -86,6 +86,21 @@ const routePageMap = {
       },
     },
   },
+  '/jobs': {
+    page: ApiTableEditPage,
+    meta: {
+      title: 'Jobs',
+      label: 'Job',
+      endpoint: '/jobs',
+      buttons: ['Delete'],
+      fields: [
+        { name: 'job_id', label: 'Job ID' },
+        { name: 'type', label: 'Type' },
+        { name: 'status', label: 'Status' },
+        { name: 'title', label: 'Title' },
+      ],
+    },
+  },
   '/menu': {
     page: ApiTableEditPage,
     meta: {
