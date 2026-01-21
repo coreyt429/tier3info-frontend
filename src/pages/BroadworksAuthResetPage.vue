@@ -514,7 +514,7 @@ async function fetchFile(jobId, fileName) {
 async function fetchFilesIndex(jobId) {
   try {
     const resp = await tier3info_restful_request({
-      path: `/jobs/files/${jobId}`,
+      path: `/jobs/files/${jobId}?include=data`,
       method: 'GET',
     })
     return resp?.data
