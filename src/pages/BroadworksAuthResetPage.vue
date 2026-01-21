@@ -199,12 +199,7 @@ const canStage = computed(() => {
 })
 
 const canExecute = computed(() => {
-  return (
-    !isLoading.value &&
-    stageJobId.value &&
-    dataSource.value === 'current' &&
-    rowsRaw.value.length > 0
-  )
+  return !isLoading.value && stageJobId.value && dataSource.value === 'initial'
 })
 
 const tableRows = computed(() => {
@@ -464,6 +459,16 @@ async function refreshDataFiles(jobId, jobStatus) {
 
   if (initialReady) {
     await loadInitialData(jobId)
+  }
+
+  // For staged jobs, initial data is the expected output until execution.
+  if (initialReady && !currentReady) {
+    const initialData = await fetchFile(jobId, 'initial_data.json')
+    if (Array.isArray(initialData) && initialData.length) {
+      rowsRaw.value = initialData.map((row) => ({ ...row, complete: false }))
+      dataSource.value = 'initial'
+    }
+    return
   }
 
   if (currentReady) {
