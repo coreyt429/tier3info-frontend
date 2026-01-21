@@ -405,7 +405,7 @@ async function checkJobStatus(executing) {
       throw new Error('Invalid job status response')
     }
 
-    await refreshDataFiles(jobId)
+    await refreshDataFiles(jobId, resp.data?.status)
 
     if (resp.data.status === 'completed') {
       statusMessage.value = executing
@@ -443,20 +443,36 @@ async function checkJobStatus(executing) {
   }
 }
 
-async function refreshDataFiles(jobId) {
+async function refreshDataFiles(jobId, jobStatus) {
   if (!jobId) return
-  await loadInitialData(jobId)
-  const currentData = await fetchFile(jobId, 'current_data.json')
-  if (Array.isArray(currentData) && currentData.length) {
-    rowsRaw.value = currentData
-    dataSource.value = 'current'
+  const filesIndex = await fetchFilesIndex(jobId)
+  const currentReady = filesIndex?.['current_data.json']?.bytes > 0
+  const initialReady = filesIndex?.['initial_data.json']?.bytes > 0
+
+  if (!currentReady && !initialReady) {
+    statusMessage.value = `Waiting on job files... (${jobStatus || 'processing'})`
     return
   }
 
-  const initialData = await fetchFile(jobId, 'initial_data.json')
-  if (Array.isArray(initialData) && initialData.length) {
-    rowsRaw.value = initialData.map((row) => ({ ...row, complete: false }))
-    dataSource.value = 'initial'
+  if (initialReady) {
+    await loadInitialData(jobId)
+  }
+
+  if (currentReady) {
+    const currentData = await fetchFile(jobId, 'current_data.json')
+    if (Array.isArray(currentData) && currentData.length) {
+      rowsRaw.value = currentData
+      dataSource.value = 'current'
+      return
+    }
+  }
+
+  if (initialReady) {
+    const initialData = await fetchFile(jobId, 'initial_data.json')
+    if (Array.isArray(initialData) && initialData.length) {
+      rowsRaw.value = initialData.map((row) => ({ ...row, complete: false }))
+      dataSource.value = 'initial'
+    }
   }
 }
 
@@ -482,6 +498,22 @@ async function fetchFile(jobId, fileName) {
     const status = err?.response?.status || err?.status
     if (status !== 404) {
       console.warn('BroadworksAuthReset: fetchFile error:', fileName, err)
+    }
+    return null
+  }
+}
+
+async function fetchFilesIndex(jobId) {
+  try {
+    const resp = await tier3info_restful_request({
+      path: `/jobs/${jobId}/files`,
+      method: 'GET',
+    })
+    return resp?.data
+  } catch (err) {
+    const status = err?.response?.status || err?.status
+    if (status !== 404) {
+      console.warn('BroadworksAuthReset: fetchFilesIndex error:', err)
     }
     return null
   }
