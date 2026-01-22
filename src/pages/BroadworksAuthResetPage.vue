@@ -393,6 +393,9 @@ async function submitJob(executeFlag) {
     : 'Staging job... Please wait.'
 
   try {
+    const initialDataPath = executeFlag
+      ? `/jobs/files/${stageJobId.value || selectedJobId.value}/initial_data.json`
+      : null
     const response = await tier3info_restful_request({
       method: 'POST',
       path: jobEndpoint,
@@ -400,6 +403,7 @@ async function submitJob(executeFlag) {
         targets,
         title: title.value.trim(),
         execute: executeFlag,
+        ...(executeFlag && initialDataPath ? { initial_data: initialDataPath } : {}),
       },
     })
 
