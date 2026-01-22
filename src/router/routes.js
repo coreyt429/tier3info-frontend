@@ -97,7 +97,7 @@ const routePageMap = {
         { name: 'job_id', label: 'Job ID' },
         { name: 'type', label: 'Type' },
         { name: 'status', label: 'Status' },
-        { name: 'title', label: 'Title' },
+        { name: 'name', label: 'Title' },
       ],
     },
   },
