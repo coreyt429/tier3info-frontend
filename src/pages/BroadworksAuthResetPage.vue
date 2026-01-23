@@ -506,6 +506,7 @@ async function refreshDataFiles(jobId, jobStatus) {
     if (Array.isArray(initialData) && initialData.length) {
       rowsRaw.value = initialData.map((row) => ({ ...row, complete: false }))
       dataSource.value = 'initial'
+      hydrateTargetsFromInitial(initialData)
     }
     return
   }
@@ -524,6 +525,7 @@ async function refreshDataFiles(jobId, jobStatus) {
     if (Array.isArray(initialData) && initialData.length) {
       rowsRaw.value = initialData.map((row) => ({ ...row, complete: false }))
       dataSource.value = 'initial'
+      hydrateTargetsFromInitial(initialData)
     }
   }
 }
@@ -537,6 +539,7 @@ async function loadInitialData(jobId) {
     map.set(getRecordKey(row), row)
   })
   initialDataMap.value = map
+  hydrateTargetsFromInitial(initialData)
 }
 
 async function fetchFile(jobId, fileName) {
@@ -580,6 +583,22 @@ function getPollDelay() {
 
 function getJobType(job) {
   return job?.type || job?.job_type || job?.jobType || job?.job_name || ''
+}
+
+function normalizeTitle(rawTitle) {
+  if (!rawTitle) return ''
+  return String(rawTitle).replace(/\s\d{8}$/, '')
+}
+
+function hydrateTargetsFromInitial(initialData) {
+  if (targetsInput.value) return
+  const unique = new Set()
+  initialData.forEach((row) => {
+    if (row?.user_id) unique.add(row.user_id)
+  })
+  if (unique.size) {
+    targetsInput.value = Array.from(unique).join('\n')
+  }
 }
 
 function formatJobOption(job) {
@@ -645,12 +664,7 @@ async function onJobSelected(jobId) {
   isLoading.value = true
   if (selected) {
     if (!title.value && selected.title) {
-      title.value = selected.title
-    }
-    if (!targetsInput.value && Array.isArray(selected.targets)) {
-      targetsInput.value = selected.targets.join('\n')
-    } else if (!targetsInput.value && Array.isArray(selected?.data?.targets)) {
-      targetsInput.value = selected.data.targets.join('\n')
+      title.value = normalizeTitle(selected.title)
     }
   }
   clearPoll()
