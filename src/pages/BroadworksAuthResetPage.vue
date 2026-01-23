@@ -585,6 +585,10 @@ function getJobType(job) {
   return job?.type || job?.job_type || job?.jobType || job?.job_name || ''
 }
 
+function getJobTitle(job) {
+  return job?.name || ''
+}
+
 function normalizeTitle(rawTitle) {
   if (!rawTitle) return ''
   return String(rawTitle).replace(/\s\d{8}$/, '')
@@ -663,8 +667,9 @@ async function onJobSelected(jobId) {
   errorMessage.value = null
   isLoading.value = true
   if (selected) {
-    if (!title.value && selected.title) {
-      title.value = normalizeTitle(selected.title)
+    const baseTitle = getJobTitle(selected)
+    if (baseTitle) {
+      title.value = normalizeTitle(baseTitle)
     }
   }
   clearPoll()
