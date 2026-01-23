@@ -218,7 +218,8 @@ const canStage = computed(() => {
 })
 
 const canExecute = computed(() => {
-  return !isLoading.value && stageJobId.value && dataSource.value === 'initial'
+  const readyStatus = jobStatus.value === 'completed'
+  return !isLoading.value && stageJobId.value && dataSource.value === 'initial' && readyStatus
 })
 
 const tableRows = computed(() => {
