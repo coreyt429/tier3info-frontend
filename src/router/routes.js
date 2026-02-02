@@ -419,6 +419,17 @@ const routes = [
     ],
   },
   {
+    path: '/broadworks/query_user',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        component: () => import('pages/BroadworksQueryUserPage.vue'),
+        meta: { requiresAuth: true },
+      },
+    ],
+  },
+  {
     path: '/devtools/ocitool',
     component: () => import('layouts/MainLayout.vue'),
     children: [
