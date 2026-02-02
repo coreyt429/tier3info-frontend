@@ -40,7 +40,7 @@
         <div class="col-auto">
           <q-btn
             color="positive"
-            label="Rerun"
+            label="Submit"
             icon="play_arrow"
             :loading="isLoading && currentMode === 'rerun'"
             :disable="!canRerun"
@@ -57,7 +57,19 @@
           />
         </div>
         <div class="col-auto">
+          <q-btn
+            color="secondary"
+            label="Refresh Status"
+            icon="sync"
+            :disable="!selectedJobId || isLoading"
+            @click="refreshSelectedJob"
+          />
+        </div>
+        <div class="col-auto">
           <q-toggle v-model="usePrimary" label="Use Primary AS" dense />
+        </div>
+        <div class="col-auto">
+          <q-toggle v-model="autoPoll" label="Auto refresh" dense />
         </div>
         <div class="col-12 col-md-auto text-caption text-grey-7">
           <span v-if="jobStatus">Status: {{ jobStatus }}</span>
@@ -143,6 +155,19 @@
               {{ request }}
             </q-chip>
           </div>
+          <div v-if="section.tables.length" class="q-gutter-md q-mb-md">
+            <DataTable
+              v-for="table in section.tables"
+              :key="table.key"
+              :rows="table.rows"
+              :columns="table.columns"
+              :title="table.title"
+              :filterable="true"
+              :exportable="true"
+              :pagination-config="table.pagination"
+              table-height="35vh"
+            />
+          </div>
           <pre class="query-user-raw">{{ section.body }}</pre>
         </q-expansion-item>
       </q-card-section>
@@ -175,12 +200,15 @@
 
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { tier3info_restful_request } from 'src/plugins/tier3info.js'
 import { useTitleStore } from 'stores/titleStore'
+import DataTable from 'src/components/DataTable.vue'
 
 const titleStore = useTitleStore()
 const pageTitle = 'Broadworks Query User'
 const jobEndpoint = '/broadworks/bwcli/query_user'
+const route = useRoute()
 
 titleStore.setMainTitle(pageTitle)
 
@@ -196,6 +224,7 @@ const jobsList = ref([])
 const selectedJobId = ref(null)
 const selectedUserId = ref('')
 const usePrimary = ref(false)
+const autoPoll = ref(true)
 const jobSummary = ref(null)
 
 const rawText = ref('')
@@ -229,7 +258,7 @@ watch(selectedJobId, async (jobId) => {
     clearSelection()
     return
   }
-  await loadJob(jobId, { startPolling: true })
+  await loadJob(jobId, { startPolling: autoPoll.value })
 })
 
 watch(rawText, (nextText) => {
@@ -237,6 +266,27 @@ watch(rawText, (nextText) => {
   const parsed = parseQueryUserSections(nextText)
   sections.value = parsed.sections
   preambleText.value = parsed.preamble
+})
+
+watch(
+  () => route.query,
+  (query) => {
+    const jobId = query.job_id || query.jobId
+    if (jobId && String(jobId) !== String(selectedJobId.value || '')) {
+      selectedJobId.value = String(jobId)
+    }
+  },
+  { immediate: true },
+)
+
+watch(autoPoll, (enabled) => {
+  if (!enabled) {
+    clearPoll()
+    return
+  }
+  if (selectedJobId.value && jobStatus.value !== 'completed') {
+    schedulePoll(selectedJobId.value)
+  }
 })
 
 function clearSelection() {
@@ -313,10 +363,12 @@ function parseQueryUserSections(text) {
   const pushCurrent = () => {
     if (!current) return
     const body = buffer.join('\n').trim()
+    const tables = parseTablesFromXml(body)
     parsed.push({
       ...current,
       body,
-      caption: current.requests.length ? `${current.requests.length} request(s)` : '',
+      tables,
+      caption: current.requests.length ? current.requests.join(', ') : '',
       key: `${current.title}-${parsed.length}`,
     })
   }
@@ -342,6 +394,74 @@ function parseQueryUserSections(text) {
 
   pushCurrent()
   return { sections: parsed, preamble: preamble.join('\n').trim() }
+}
+
+function parseTablesFromXml(xmlText) {
+  if (!xmlText) return []
+  if (typeof DOMParser === 'undefined') return []
+  const parser = new DOMParser()
+  const xml = parser.parseFromString(xmlText, 'text/xml')
+  if (xml.getElementsByTagName('parsererror').length) return []
+
+  const elements = Array.from(xml.querySelectorAll('*'))
+  const tables = []
+
+  elements.forEach((el) => {
+    const childNodes = Array.from(el.children || [])
+    const headings = childNodes
+      .filter((child) => child.tagName === 'colHeading')
+      .map((child) => (child.textContent || '').trim())
+    const rows = childNodes.filter((child) => child.tagName === 'row')
+
+    if (!headings.length || !rows.length) return
+
+    const columnKeys = headings.map((heading, index) => {
+      const base = heading
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '')
+      return base || `col_${index + 1}`
+    })
+
+    const columns = headings.map((heading, index) => ({
+      name: columnKeys[index],
+      label: heading || `Column ${index + 1}`,
+      field: columnKeys[index],
+      align: 'left',
+    }))
+
+    const tableRows = rows.map((rowEl, rowIndex) => {
+      const cols = Array.from(rowEl.children || [])
+        .filter((child) => child.tagName === 'col')
+        .map((child) => (child.textContent || '').trim())
+      const row = { id: rowIndex }
+      columnKeys.forEach((key, index) => {
+        row[key] = cols[index] || ''
+      })
+      return row
+    })
+
+    const title = formatTableTitle(el.tagName)
+    tables.push({
+      key: `${title}-${tables.length}`,
+      title,
+      columns,
+      rows: tableRows,
+      pagination: { rowsPerPage: 0 },
+    })
+  })
+
+  return tables
+}
+
+function formatTableTitle(tagName) {
+  if (!tagName) return 'Table'
+  const cleaned = tagName.replace(/Table$/i, '')
+  return cleaned
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/_/g, ' ')
+    .trim()
+    .replace(/\s+/g, ' ')
 }
 
 async function fetchJobsList() {
@@ -424,6 +544,8 @@ async function loadJob(jobId, { startPolling } = {}) {
     isLoading.value = false
     if (startPolling) {
       schedulePoll(jobId)
+    } else {
+      clearPoll()
     }
   } catch (err) {
     console.error('BroadworksQueryUser: loadJob error:', err)
@@ -431,6 +553,11 @@ async function loadJob(jobId, { startPolling } = {}) {
     isLoading.value = false
     clearPoll()
   }
+}
+
+async function refreshSelectedJob() {
+  if (!selectedJobId.value) return
+  await loadJob(selectedJobId.value, { startPolling: autoPoll.value })
 }
 
 function schedulePoll(jobId) {
