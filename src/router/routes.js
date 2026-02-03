@@ -9,6 +9,7 @@ const routePageMap = {
     page: ApiTableEditPage,
     meta: {
       title: 'Tier3info Task Schedule',
+      docUrl: 'docs/task-schedule.html',
       label: 'Task',
       endpoint: '/task_schedule',
       buttons: ['Save', 'Reset', 'Add', 'Delete'],
@@ -34,6 +35,7 @@ const routePageMap = {
     page: ApiSelectEditPage,
     meta: {
       title: 'Tier3info Configuration',
+      docUrl: 'docs/config.html',
       label: 'Configuration',
       endpoint: '/cfg',
       buttons: ['Save', 'Reset', 'Add', 'Delete'],
@@ -44,6 +46,7 @@ const routePageMap = {
     page: ApiSelectEditPage,
     meta: {
       title: 'Tag Tool Tag Sets',
+      docUrl: 'docs/tagtool-tagsets.html',
       label: 'Tag Set',
       endpoint: '/tagtool/tagset',
       buttons: ['Save', 'Reset', 'Add', 'Delete'],
@@ -54,6 +57,7 @@ const routePageMap = {
     page: ApiTableEditPage,
     meta: {
       title: 'Certificate Management',
+      docUrl: 'docs/certificates.html',
       label: 'Certificate',
       endpoint: '/broadworks/certificates',
       buttons: ['Zip', 'Pfx', 'Oracle'],
@@ -71,6 +75,7 @@ const routePageMap = {
     page: ApiTableEditPage,
     meta: {
       title: 'Tier3info Access Control List',
+      docUrl: 'docs/acl.html',
       label: 'Access Control',
       endpoint: '/acl',
       buttons: ['Save', 'Reset', 'Add', 'Delete'],
@@ -90,6 +95,7 @@ const routePageMap = {
     page: ApiTableEditPage,
     meta: {
       title: 'Jobs',
+      docUrl: 'docs/jobs.html',
       label: 'Job',
       endpoint: '/jobs',
       buttons: ['Delete'],
@@ -105,6 +111,7 @@ const routePageMap = {
     page: ApiTableEditPage,
     meta: {
       title: 'Tier3info Menu Management',
+      docUrl: 'docs/menu.html',
       label: 'Menu',
       endpoint: '/menu',
       buttons: ['Save', 'Reset', 'Add', 'Delete'],
@@ -137,6 +144,7 @@ const routePageMap = {
     page: ApiSearchTableEditPage,
     meta: {
       title: 'BroadWorks KPI Search',
+      docUrl: 'docs/broadworks-kpi.html',
       label: 'KPI',
       endpoint: '/broadworks/kpi',
       buttons: [],
@@ -154,6 +162,7 @@ const routePageMap = {
     page: ApiTableEditPage,
     meta: {
       title: 'Tier3info Bookmarks',
+      docUrl: 'docs/bookmarks.html',
       label: 'Bookmark',
       endpoint: '/bookmarks',
       buttons: ['Save', 'Reset', 'Add', 'Delete'],
@@ -179,6 +188,7 @@ const routePageMap = {
     page: ApiTableEditPage,
     meta: {
       title: 'Broadworks Clusters',
+      docUrl: 'docs/broadworks-clusters.html',
       label: 'Cluster',
       endpoint: '/broadworks/clusters',
       buttons: ['Save', 'Reset', 'Add'],
@@ -216,6 +226,7 @@ const routePageMap = {
     page: ApiTableEditPage,
     meta: {
       title: 'Broadworks Tech Support',
+      docUrl: 'docs/broadworks-techsupport.html',
       label: 'Tech Support',
       endpoint: '/broadworks/techsupport',
       buttons: ['Download Tech Support'],
@@ -235,6 +246,7 @@ const routePageMap = {
     page: ApiTableEditPage,
     meta: {
       title: 'Broadworks CLI Templates',
+      docUrl: 'docs/broadworks-cli-templates.html',
       label: 'CLI Template',
       endpoint: '/broadworks/cli_templates',
       buttons: ['Save', 'Reset', 'Add', 'Delete'],
@@ -249,6 +261,7 @@ const routePageMap = {
     page: ApiTableEditPage,
     meta: {
       title: 'BWLog Indices',
+      docUrl: 'docs/bwlog-indices.html',
       label: 'BWLog Index',
       endpoint: '/bwlog',
       buttons: [],
@@ -271,6 +284,7 @@ const routePageMap = {
     page: ApiTableEditPage,
     meta: {
       title: 'Oracle SBC',
+      docUrl: 'docs/oracle-sbc.html',
       label: 'SBC',
       endpoint: '/oracle/sbc',
       buttons: [],
@@ -286,6 +300,7 @@ const routePageMap = {
     page: ApiTableEditPage,
     meta: {
       title: 'Sansay SBC',
+      docUrl: 'docs/sansay-sbc.html',
       label: 'SBC',
       endpoint: '/sansay/sbc',
       fields: [
@@ -300,6 +315,7 @@ const routePageMap = {
     page: ApiTableEditPage,
     meta: {
       title: 'Tier3info Alerts',
+      docUrl: 'docs/alerts.html',
       label: 'Alert',
       endpoint: '/alerts',
       buttons: ['Save', 'Reset', 'Add', 'Delete'],
@@ -327,13 +343,13 @@ const routes = [
     path: '/test',
     component: () => import('layouts/MainLayout.vue'),
     children: [{ path: '', component: () => import('pages/testPage.vue') }],
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, docUrl: 'docs/test.html' },
   },
   {
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [{ path: '', component: () => import('pages/IndexPage.vue') }],
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, docUrl: 'docs/start.html' },
   },
   {
     path: '/locate',
@@ -343,7 +359,7 @@ const routes = [
         path: '',
         component: () => import('pages/LocatePage.vue'),
         props: (route) => ({ query: route.query }),
-        meta: { requiresAuth: true },
+        meta: { requiresAuth: true, docUrl: 'docs/locate.html' },
       },
     ],
   },
@@ -355,7 +371,7 @@ const routes = [
         path: '',
         component: () => import('pages/FaxbackReportPage.vue'),
         props: (route) => ({ query: route.query }),
-        meta: { requiresAuth: true },
+        meta: { requiresAuth: true, docUrl: 'docs/faxback-report.html' },
       },
     ],
   },
@@ -367,7 +383,7 @@ const routes = [
         path: '',
         component: () => import('pages/LogSearch.vue'),
         props: (route) => ({ query: route.query }),
-        meta: { requiresAuth: true },
+        meta: { requiresAuth: true, docUrl: 'docs/log-search.html' },
       },
     ],
   },
@@ -379,7 +395,7 @@ const routes = [
         path: '',
         component: () => import('pages/CorrelationIdSearch.vue'),
         props: (route) => ({ query: route.query }),
-        meta: { requiresAuth: true },
+        meta: { requiresAuth: true, docUrl: 'docs/correlation-id-search.html' },
       },
     ],
   },
@@ -391,7 +407,7 @@ const routes = [
         path: '',
         component: () => import('pages/AuditLogTrace.vue'),
         props: (route) => ({ query: route.query }),
-        meta: { requiresAuth: true },
+        meta: { requiresAuth: true, docUrl: 'docs/audit-log-trace.html' },
       },
     ],
   },
@@ -403,7 +419,7 @@ const routes = [
         path: '',
         component: () => import('pages/TagToolPage.vue'),
         props: (route) => ({ query: route.query }),
-        meta: { requiresAuth: true },
+        meta: { requiresAuth: true, docUrl: 'docs/tagtool.html' },
       },
     ],
   },
@@ -414,7 +430,7 @@ const routes = [
       {
         path: '',
         component: () => import('pages/BroadworksAuthResetPage.vue'),
-        meta: { requiresAuth: true },
+        meta: { requiresAuth: true, docUrl: 'docs/broadworks-auth-reset.html' },
       },
     ],
   },
@@ -425,7 +441,7 @@ const routes = [
       {
         path: '',
         component: () => import('pages/BroadworksQueryUserPage.vue'),
-        meta: { requiresAuth: true },
+        meta: { requiresAuth: true, docUrl: 'docs/broadworks-query-user.html' },
       },
     ],
   },
@@ -436,7 +452,7 @@ const routes = [
       {
         path: '',
         component: () => import('pages/OciToolPage.vue'),
-        meta: { requiresAuth: true },
+        meta: { requiresAuth: true, docUrl: 'docs/oci-tool.html' },
       },
     ],
   },
@@ -447,7 +463,7 @@ const routes = [
       {
         path: '',
         component: () => import('pages/UsersPage.vue'),
-        meta: { requiresAuth: true, title: 'Users' },
+        meta: { requiresAuth: true, title: 'Users', docUrl: 'docs/users.html' },
       },
     ],
   },

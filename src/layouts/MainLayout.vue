@@ -150,6 +150,7 @@
 import { useQuasar } from 'quasar'
 import { version as appVersion } from '../../package.json'
 import { ref } from 'vue'
+import { useRoute } from 'vue-router'
 import EssentialLink from 'components/EssentialLink.vue'
 import DynamicDisplay from 'components/DynamicDisplay.vue'
 import { useTitleStore } from 'src/stores/titleStore'
@@ -171,7 +172,16 @@ const titleStore = useTitleStore()
 titleStore.setMainTitle('Voice Engineering Information Center')
 import { onUnmounted, watch } from 'vue'
 
-useDocStore().setDocUrl('docs/start.html')
+const docStore = useDocStore()
+const route = useRoute()
+
+watch(
+  () => route.meta?.docUrl,
+  (docUrl) => {
+    docStore.setDocUrl(docUrl || 'docs/start.html')
+  },
+  { immediate: true },
+)
 
 const colorMap = {
   green: 'dashboard-green',
