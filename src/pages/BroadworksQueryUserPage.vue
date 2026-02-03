@@ -172,19 +172,26 @@
             </q-chip>
           </div>
           <div v-if="section.tables.length" class="q-gutter-md q-mb-md">
-            <DataTable
-              v-for="table in section.tables"
-              :key="table.key"
-              :rows="table.rows"
-              :columns="table.columns"
-              :title="table.title"
-              :filterable="true"
-              :exportable="true"
-              :pagination-config="table.pagination"
-              table-height="35vh"
-            />
+            <div v-for="table in section.tables" :key="table.key">
+              <div class="text-subtitle2 q-mb-xs">{{ table.title }}</div>
+              <DataTable
+                :rows="table.rows"
+                :columns="table.columns"
+                :title="''"
+                :filterable="true"
+                :exportable="true"
+                :pagination-config="table.pagination"
+                table-height="35vh"
+              />
+            </div>
           </div>
-          <pre class="query-user-raw">{{ section.body }}</pre>
+          <div v-if="section.commands.length">
+            <div v-for="command in section.commands" :key="command.key" class="q-mb-md">
+              <div class="text-subtitle2 q-mb-xs">{{ command.title }}</div>
+              <pre class="query-user-raw">{{ command.xml }}</pre>
+            </div>
+          </div>
+          <pre v-else class="query-user-raw">{{ section.body }}</pre>
         </q-expansion-item>
       </q-card-section>
 
@@ -219,9 +226,12 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { tier3info_restful_request } from 'src/plugins/tier3info.js'
 import { useTitleStore } from 'stores/titleStore'
+import { usePreferencesStore } from 'stores/preferences'
 import DataTable from 'src/components/DataTable.vue'
 
 const titleStore = useTitleStore()
+const preferencesStore = usePreferencesStore()
+const preferences = preferencesStore.preferences
 const baseTitle = 'Broadworks Query'
 const jobBaseEndpoint = '/broadworks/bwcli/query'
 const route = useRoute()
@@ -397,12 +407,12 @@ function updateDownloadUrl(text) {
 }
 
 function formatJobOption(job) {
-  const id = job?.job_id || job?.id || ''
   const status = job?.status ? `(${job.status})` : ''
-  const title = job?.name || job?.title || ''
+  const title = formatJobName(job?.name || job?.title || '')
   const owner = formatOwner(job?.owner)
   const targetLabel = job?.target ? `[${job.target}]` : ''
-  const parts = [id, title].filter(Boolean).join(' — ')
+  const timeLabel = formatJobTimestamp(job)
+  const parts = [timeLabel, title].filter(Boolean).join(' — ')
   return [targetLabel, parts, status, owner].filter(Boolean).join(' ')
 }
 
@@ -412,6 +422,52 @@ function formatOwner(owner) {
   if (typeof owner !== 'string') return String(owner)
   const parts = owner.split(',')
   return parts[parts.length - 1].trim()
+}
+
+function formatJobName(name) {
+  if (!name) return ''
+  return String(name).replace(/^query_(user|group|device):\s*/i, '')
+}
+
+function formatJobTimestamp(job) {
+  const raw = job?._log?.[0]?.timestamp || job?.timestamp || ''
+  if (!raw) return ''
+  const date = new Date(raw)
+  if (Number.isNaN(date.getTime())) return raw
+  const timeZone = preferences?.TimeZone || Intl.DateTimeFormat().resolvedOptions().timeZone
+  const format = preferences?.TimeFormat || 'YYYY-MM-DD HH:mm:ss'
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    }).formatToParts(date)
+    const lookup = parts.reduce((acc, part) => {
+      acc[part.type] = part.value
+      return acc
+    }, {})
+    const hour24 = Number(lookup.hour || 0)
+    const hour12 = ((hour24 + 11) % 12) + 1
+    const ampm = hour24 >= 12 ? 'PM' : 'AM'
+    const pad = (val) => String(val).padStart(2, '0')
+    return format
+      .replace(/YYYY/g, lookup.year || '')
+      .replace(/MM/g, lookup.month || '')
+      .replace(/DD/g, lookup.day || '')
+      .replace(/HH/g, pad(hour24))
+      .replace(/hh/g, pad(hour12))
+      .replace(/mm/g, lookup.minute || '')
+      .replace(/ss/g, lookup.second || '')
+      .replace(/A/g, ampm)
+      .replace(/a/g, ampm.toLowerCase())
+  } catch {
+    return date.toLocaleString()
+  }
 }
 
 function coerceDataDict(maybe) {
@@ -454,10 +510,12 @@ function parseQueryUserSections(text) {
     if (!current) return
     const body = buffer.join('\n').trim()
     const tables = parseTablesFromXml(body)
+    const commands = parseCommandsFromXml(body)
     parsed.push({
       ...current,
       body,
       tables,
+      commands,
       caption: current.requests.length ? current.requests.join(', ') : '',
       key: `${current.title}-${parsed.length}`,
     })
@@ -544,6 +602,24 @@ function parseTablesFromXml(xmlText) {
   return tables
 }
 
+function parseCommandsFromXml(xmlText) {
+  if (!xmlText) return []
+  if (typeof DOMParser === 'undefined' || typeof XMLSerializer === 'undefined') return []
+  const parser = new DOMParser()
+  const xml = parser.parseFromString(xmlText, 'text/xml')
+  if (xml.getElementsByTagName('parsererror').length) return []
+  const serializer = new XMLSerializer()
+  const commands = Array.from(xml.getElementsByTagName('command')).map((command, index) => {
+    const xsiType = command.getAttribute('xsi:type') || command.getAttribute('type') || 'command'
+    return {
+      key: `${xsiType}-${index}`,
+      title: xsiType,
+      xml: serializer.serializeToString(command),
+    }
+  })
+  return commands
+}
+
 function formatTableTitle(tagName) {
   if (!tagName) return 'Table'
   const cleaned = tagName.replace(/Table$/i, '')
@@ -583,7 +659,17 @@ async function fetchJobsList() {
         })
       }
     }
-    jobsList.value = jobs.sort((a, b) => String(b.job_id).localeCompare(String(a.job_id)))
+    jobsList.value = jobs
+      .map((job) => ({
+        ...job,
+        _timestampValue: Date.parse(job?._log?.[0]?.timestamp || job?.timestamp || '') || 0,
+      }))
+      .sort((a, b) => {
+        if (a._timestampValue !== b._timestampValue) {
+          return b._timestampValue - a._timestampValue
+        }
+        return String(b.job_id).localeCompare(String(a.job_id))
+      })
   } catch (err) {
     console.warn('BroadworksQueryUser: fetchJobsList error:', err)
   } finally {
