@@ -15,14 +15,26 @@
             :loading="isJobsLoading"
           />
         </div>
-        <div class="col-12 col-md-6">
-          <q-input
-            v-model="selectedUserId"
-            label="User ID"
+        <div class="col-12 col-md-3">
+          <q-select
+            v-model="targetType"
+            :options="targetOptions"
+            label="Target"
             outlined
             dense
+            emit-value
+            map-options
             :disable="isLoading"
-            placeholder="user@example.com"
+          />
+        </div>
+        <div class="col-12 col-md-3">
+          <q-input
+            v-model="selectedEntityId"
+            :label="`${targetTypeLabel} ID`"
+            outlined
+            dense
+            :disable="isLoading || targetType === 'all'"
+            :placeholder="targetTypePlaceholder"
           />
         </div>
       </q-card-section>
@@ -101,6 +113,10 @@
           <div class="col-12 col-md-4">
             <div class="text-caption text-grey-7">Owner</div>
             <div class="text-body1">{{ jobSummary.owner || '—' }}</div>
+          </div>
+          <div class="col-12 col-md-4">
+            <div class="text-caption text-grey-7">Target</div>
+            <div class="text-body1">{{ jobSummary.target || '—' }}</div>
           </div>
         </div>
       </q-card-section>
@@ -207,7 +223,7 @@ import DataTable from 'src/components/DataTable.vue'
 
 const titleStore = useTitleStore()
 const pageTitle = 'Broadworks Query User'
-const jobEndpoint = '/broadworks/bwcli/query_user'
+const jobBaseEndpoint = '/broadworks/bwcli'
 const route = useRoute()
 
 titleStore.setMainTitle(pageTitle)
@@ -222,7 +238,8 @@ const confirmDelete = ref(false)
 
 const jobsList = ref([])
 const selectedJobId = ref(null)
-const selectedUserId = ref('')
+const selectedEntityId = ref('')
+const targetType = ref('all')
 const usePrimary = ref(false)
 const autoPoll = ref(true)
 const jobSummary = ref(null)
@@ -234,8 +251,9 @@ const preambleText = ref('')
 const downloadUrl = ref('')
 const downloadFileName = computed(() => {
   const jobId = selectedJobId.value || 'query_user'
-  const userId = selectedUserId.value || 'user'
-  return `query_user_${userId}_${jobId}.txt`
+  const effectiveTarget = targetType.value === 'all' ? selectedJobTarget.value : targetType.value
+  const entityId = selectedEntityId.value || effectiveTarget || 'entity'
+  return `query_${effectiveTarget || 'target'}_${entityId}_${jobId}.txt`
 })
 
 let pollTimer = null
@@ -243,7 +261,33 @@ let jobsRefreshTimer = null
 const lastLoadedJobId = ref(null)
 
 const canRerun = computed(() => {
-  return !isLoading.value && selectedUserId.value.trim().length > 0
+  if (targetType.value === 'all') return false
+  return !isLoading.value && selectedEntityId.value.trim().length > 0
+})
+
+const targetOptions = [
+  { label: 'All Targets', value: 'all' },
+  { label: 'User', value: 'user' },
+  { label: 'Group', value: 'group' },
+  { label: 'Device', value: 'device' },
+]
+
+const targetTypeLabel = computed(() => {
+  const match = targetOptions.find((opt) => opt.value === targetType.value)
+  return match ? match.label : 'Target'
+})
+
+const targetTypePlaceholder = computed(() => {
+  switch (targetType.value) {
+    case 'all':
+      return 'Select a target to submit'
+    case 'group':
+      return 'group_id'
+    case 'device':
+      return 'device_id'
+    default:
+      return 'user@example.com'
+  }
 })
 
 const jobOptions = computed(() => {
@@ -253,12 +297,26 @@ const jobOptions = computed(() => {
   }))
 })
 
+const selectedJobTarget = computed(() => {
+  if (!selectedJobId.value) return null
+  const job = jobsList.value.find((item) => item.job_id === selectedJobId.value)
+  return job?.target || null
+})
+
 watch(selectedJobId, async (jobId) => {
   if (!jobId) {
     clearSelection()
     return
   }
   await loadJob(jobId, { startPolling: autoPoll.value })
+})
+
+watch(targetType, async (nextTarget, prevTarget) => {
+  if (nextTarget === prevTarget) return
+  await fetchJobsList()
+  if (selectedJobId.value) {
+    await loadJob(selectedJobId.value, { startPolling: autoPoll.value })
+  }
 })
 
 watch(rawText, (nextText) => {
@@ -272,8 +330,12 @@ watch(
   () => route.query,
   (query) => {
     const jobId = query.job_id || query.jobId
+    const target = query.target
     if (jobId && String(jobId) !== String(selectedJobId.value || '')) {
       selectedJobId.value = String(jobId)
+    }
+    if (target && String(target) !== String(targetType.value || '')) {
+      targetType.value = String(target)
     }
   },
   { immediate: true },
@@ -295,7 +357,7 @@ function clearSelection() {
   preambleText.value = ''
   jobStatus.value = null
   jobSummary.value = null
-  selectedUserId.value = ''
+  selectedEntityId.value = ''
   statusMessage.value = null
   errorMessage.value = null
   lastLoadedJobId.value = null
@@ -317,8 +379,9 @@ function formatJobOption(job) {
   const status = job?.status ? `(${job.status})` : ''
   const title = job?.name || job?.title || ''
   const owner = formatOwner(job?.owner)
+  const targetLabel = job?.target ? `[${job.target}]` : ''
   const parts = [id, title].filter(Boolean).join(' — ')
-  return [parts, status, owner].filter(Boolean).join(' ')
+  return [targetLabel, parts, status, owner].filter(Boolean).join(' ')
 }
 
 function formatOwner(owner) {
@@ -464,25 +527,34 @@ function formatTableTitle(tagName) {
     .replace(/\s+/g, ' ')
 }
 
+function resolveJobTarget(jobId) {
+  if (targetType.value !== 'all') return targetType.value
+  const job = jobsList.value.find((item) => item.job_id === jobId)
+  return job?.target || selectedJobTarget.value || null
+}
+
 async function fetchJobsList() {
   isJobsLoading.value = true
   try {
-    const resp = await tier3info_restful_request({
-      path: `${jobEndpoint}?include=data`,
-      method: 'GET',
-    })
-    const data = resp?.data
     const jobs = []
-    if (Array.isArray(data)) {
-      data.forEach((job) => {
-        if (!job) return
-        jobs.push({ ...job, job_id: job.job_id || job.id })
+    const targets = getTargetsToFetch()
+    for (const target of targets) {
+      const resp = await tier3info_restful_request({
+        path: `${jobBaseEndpoint}/${target}/?include=data`,
+        method: 'GET',
       })
-    } else if (data && typeof data === 'object') {
-      Object.entries(data).forEach(([key, job]) => {
-        if (!job) return
-        jobs.push({ ...job, job_id: job.job_id || job.id || key })
-      })
+      const data = resp?.data
+      if (Array.isArray(data)) {
+        data.forEach((job) => {
+          if (!job) return
+          jobs.push({ ...job, job_id: job.job_id || job.id, target })
+        })
+      } else if (data && typeof data === 'object') {
+        Object.entries(data).forEach(([key, job]) => {
+          if (!job) return
+          jobs.push({ ...job, job_id: job.job_id || job.id || key, target })
+        })
+      }
     }
     jobsList.value = jobs.sort((a, b) => String(b.job_id).localeCompare(String(a.job_id)))
   } catch (err) {
@@ -490,6 +562,11 @@ async function fetchJobsList() {
   } finally {
     isJobsLoading.value = false
   }
+}
+
+function getTargetsToFetch() {
+  if (targetType.value === 'all') return ['user', 'group', 'device']
+  return [targetType.value]
 }
 
 async function loadJob(jobId, { startPolling } = {}) {
@@ -504,8 +581,12 @@ async function loadJob(jobId, { startPolling } = {}) {
   }
 
   try {
+    const jobTarget = resolveJobTarget(jobId)
+    if (!jobTarget) {
+      throw new Error('Missing target for selected job')
+    }
     const resp = await tier3info_restful_request({
-      path: `${jobEndpoint}/${jobId}`,
+      path: `${jobBaseEndpoint}/${jobTarget}/${jobId}`,
       method: 'GET',
     })
     const data = resp?.data || {}
@@ -515,10 +596,18 @@ async function loadJob(jobId, { startPolling } = {}) {
       jobId: jobId,
       title: data.name || data.title || '',
       owner: formatOwner(data.owner),
+      target: jobTarget,
     }
 
-    const nextUserId = payload.user_id || data.user_id || ''
-    selectedUserId.value = nextUserId
+    const nextEntityId =
+      payload.user_id ||
+      payload.group_id ||
+      payload.device_id ||
+      data.user_id ||
+      data.group_id ||
+      data.device_id ||
+      ''
+    selectedEntityId.value = nextEntityId
 
     const nextRaw = normalizeRawQueryUser(payload, data)
     rawText.value = nextRaw
@@ -569,8 +658,8 @@ function schedulePoll(jobId) {
 }
 
 async function rerunJob() {
-  if (!selectedUserId.value.trim()) {
-    errorMessage.value = 'Please provide a user ID to rerun the job.'
+  if (!selectedEntityId.value.trim()) {
+    errorMessage.value = `Please provide a ${targetType.value} ID to submit the job.`
     return
   }
 
@@ -582,9 +671,8 @@ async function rerunJob() {
   try {
     const response = await tier3info_restful_request({
       method: 'POST',
-      path: `${jobEndpoint}/`,
+      path: `${jobBaseEndpoint}/${targetType.value}/${selectedEntityId.value.trim()}`,
       body: {
-        user_id: selectedUserId.value.trim(),
         use_primary: usePrimary.value,
       },
     })
@@ -613,8 +701,12 @@ async function deleteJob() {
   statusMessage.value = 'Deleting job...'
 
   try {
+    const jobTarget = resolveJobTarget(selectedJobId.value)
+    if (!jobTarget) {
+      throw new Error('Missing target for selected job')
+    }
     await tier3info_restful_request({
-      path: `/jobs/${selectedJobId.value}`,
+      path: `${jobBaseEndpoint}/${jobTarget}/${selectedJobId.value}`,
       method: 'DELETE',
     })
     statusMessage.value = 'Job deleted.'
