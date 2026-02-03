@@ -259,6 +259,7 @@ const errorMessage = ref(null)
 const currentMode = ref('idle')
 const jobStatus = ref(null)
 const confirmDelete = ref(false)
+const jobLogTimestamp = ref(null)
 
 const jobsList = ref([])
 const selectedJobId = ref(null)
@@ -404,6 +405,7 @@ function clearSelection() {
   preambleText.value = ''
   jobStatus.value = null
   jobSummary.value = null
+  jobLogTimestamp.value = null
   selectedEntityId.value = ''
   statusMessage.value = null
   errorMessage.value = null
@@ -483,6 +485,14 @@ function formatJobTimestamp(job) {
   } catch {
     return date.toLocaleString()
   }
+}
+
+function getJobAgeSeconds(timestamp) {
+  if (!timestamp) return null
+  const parsed = Date.parse(timestamp)
+  if (Number.isNaN(parsed)) return null
+  const age = Math.floor((Date.now() - parsed) / 1000)
+  return age >= 0 ? age : null
 }
 
 function trimEntityId() {
@@ -732,6 +742,7 @@ async function loadJob(jobId, { startPolling } = {}) {
     const data = resp?.data || {}
     const payload = coerceDataDict(data._data)
     jobStatus.value = data.status || null
+    jobLogTimestamp.value = data?._log?.[0]?.timestamp || null
     jobSummary.value = {
       jobId: jobId,
       title: data.name || data.title || '',
@@ -766,9 +777,19 @@ async function loadJob(jobId, { startPolling } = {}) {
       return
     }
 
-    statusMessage.value = jobStatus.value
-      ? `Job status: ${jobStatus.value}`
-      : 'Job is still running.'
+    if (jobStatus.value === 'new') {
+      const ageSeconds = getJobAgeSeconds(jobLogTimestamp.value)
+      if (ageSeconds === null) {
+        statusMessage.value = 'Job status: new'
+      } else {
+        const slowNote = ageSeconds > 150 ? ' — taking too long' : ''
+        statusMessage.value = `Job status: new (${ageSeconds}s)${slowNote}`
+      }
+    } else {
+      statusMessage.value = jobStatus.value
+        ? `Job status: ${jobStatus.value}`
+        : 'Job is still running.'
+    }
 
     isLoading.value = false
     if (startPolling) {

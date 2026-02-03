@@ -8,9 +8,10 @@
           v-model="tier3InfoScratchPad"
           label="Scratch Pad"
           type="textarea"
-          autogrow
           lazy-rules
           class="q-mb-md"
+          :input-style="scratchpadInputStyle"
+          @blur="trimScratchPad"
         />
       </q-form>
     </q-card-section>
@@ -22,6 +23,10 @@ import { ref, watch } from 'vue'
 import ToggleBanner from './ToggleBanner.vue'
 
 const tier3InfoScratchPad = ref('')
+const scratchpadInputStyle = {
+  resize: 'vertical',
+  minHeight: '140px',
+}
 const showScratchPad = ref(
   localStorage.getItem('showScratchPad') === null
     ? true
@@ -34,4 +39,8 @@ if (localStorage.getItem('TierInfoScratchPad')) {
 watch(tier3InfoScratchPad, (newValue) => {
   localStorage.setItem('TierInfoScratchPad', newValue)
 })
+
+function trimScratchPad() {
+  tier3InfoScratchPad.value = tier3InfoScratchPad.value.trim()
+}
 </script>
