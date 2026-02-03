@@ -291,9 +291,9 @@ const outputTitleLabel = computed(() => {
 })
 
 const downloadFileName = computed(() => {
-  const jobId = selectedJobId.value || 'query_user'
   const entityId = selectedEntityId.value || effectiveTarget.value || 'entity'
-  return `query_${effectiveTarget.value || 'target'}_${entityId}_${jobId}.txt`
+  const completionStamp = formatCompletionTimestamp(selectedJobId.value)
+  return `query_${effectiveTarget.value || 'target'}_${entityId}_${completionStamp}.txt`
 })
 
 let pollTimer = null
@@ -485,6 +485,15 @@ function formatJobTimestamp(job) {
   } catch {
     return date.toLocaleString()
   }
+}
+
+function formatCompletionTimestamp(jobId) {
+  if (!jobId) return 'unknown'
+  const job = jobsList.value.find((item) => item.job_id === jobId)
+  const logEntries = Array.isArray(job?._log) ? job._log : []
+  const raw = logEntries.length ? logEntries[logEntries.length - 1]?.timestamp : job?.timestamp
+  if (!raw) return 'unknown'
+  return String(raw).replace(/[:.]/g, '-')
 }
 
 function getJobAgeSeconds(timestamp) {
