@@ -125,7 +125,7 @@
     <q-card v-if="rawText" class="q-mt-md">
       <q-card-section class="row items-center q-col-gutter-sm">
         <div class="col">
-          <div class="text-h6">{{ pageTitleLabel }} Output</div>
+          <div class="text-h6">{{ outputTitleLabel }}</div>
           <div class="text-caption text-grey-7">
             {{ sections.length ? `${sections.length} sections` : 'Raw output' }}
           </div>
@@ -257,6 +257,11 @@ const effectiveTarget = computed(() => {
 const pageTitleLabel = computed(() => {
   const target = effectiveTarget.value || 'user'
   return `${baseTitle} ${target.charAt(0).toUpperCase()}${target.slice(1)}`
+})
+
+const outputTitleLabel = computed(() => {
+  const target = effectiveTarget.value || 'user'
+  return `Query ${target.charAt(0).toUpperCase()}${target.slice(1)} Output`
 })
 
 const downloadFileName = computed(() => {
@@ -416,7 +421,8 @@ function coerceDataDict(maybe) {
     try {
       return JSON.parse(maybe)
     } catch {
-      return { query_user: maybe }
+      const target = effectiveTarget.value || 'user'
+      return { [`query_${target}`]: maybe }
     }
   }
   return {}
@@ -429,14 +435,10 @@ function normalizeRawQueryUser(payload, responseData) {
   if (payload?.query_user) return String(payload.query_user)
   if (payload?.query_group) return String(payload.query_group)
   if (payload?.query_device) return String(payload.query_device)
-  if (payload && Object.keys(payload).length) return JSON.stringify(payload, null, 2)
   if (responseData?.[queryKey]) return String(responseData[queryKey])
   if (responseData?.query_user) return String(responseData.query_user)
   if (responseData?.query_group) return String(responseData.query_group)
   if (responseData?.query_device) return String(responseData.query_device)
-  if (responseData && Object.keys(responseData).length) {
-    return JSON.stringify(responseData, null, 2)
-  }
   return ''
 }
 
