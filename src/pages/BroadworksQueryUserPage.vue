@@ -760,6 +760,9 @@ async function loadJob(jobId, { startPolling } = {}) {
     }
 
     const nextEntityId =
+      payload?.user_data?.user_id ||
+      payload?.group_data?.group_id ||
+      payload?.device_data?.device_id ||
       payload.user_id ||
       payload.group_id ||
       payload.device_id ||
@@ -767,7 +770,7 @@ async function loadJob(jobId, { startPolling } = {}) {
       data.group_id ||
       data.device_id ||
       ''
-    selectedEntityId.value = nextEntityId
+    selectedEntityId.value = String(nextEntityId).trim()
 
     const nextRaw = normalizeRawQueryUser(payload, data)
     rawText.value = nextRaw
