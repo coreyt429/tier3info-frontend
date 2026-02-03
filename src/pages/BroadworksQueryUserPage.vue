@@ -223,7 +223,7 @@ import DataTable from 'src/components/DataTable.vue'
 
 const titleStore = useTitleStore()
 const pageTitle = 'Broadworks Query User'
-const jobBaseEndpoint = '/broadworks/bwcli'
+const jobBaseEndpoint = '/broadworks/bwcli/query'
 const route = useRoute()
 
 titleStore.setMainTitle(pageTitle)
@@ -671,8 +671,9 @@ async function rerunJob() {
   try {
     const response = await tier3info_restful_request({
       method: 'POST',
-      path: `${jobBaseEndpoint}/${targetType.value}/${selectedEntityId.value.trim()}`,
+      path: `${jobBaseEndpoint}/${targetType.value}`,
       body: {
+        [`${targetType.value}_id`]: selectedEntityId.value.trim(),
         use_primary: usePrimary.value,
       },
     })
