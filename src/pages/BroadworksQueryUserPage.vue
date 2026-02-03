@@ -125,7 +125,7 @@
     <q-card v-if="rawText" class="q-mt-md">
       <q-card-section class="row items-center q-col-gutter-sm">
         <div class="col">
-          <div class="text-h6">Query User Output</div>
+          <div class="text-h6">{{ pageTitleLabel }} Output</div>
           <div class="text-caption text-grey-7">
             {{ sections.length ? `${sections.length} sections` : 'Raw output' }}
           </div>
@@ -222,11 +222,11 @@ import { useTitleStore } from 'stores/titleStore'
 import DataTable from 'src/components/DataTable.vue'
 
 const titleStore = useTitleStore()
-const pageTitle = 'Broadworks Query User'
+const baseTitle = 'Broadworks Query'
 const jobBaseEndpoint = '/broadworks/bwcli/query'
 const route = useRoute()
 
-titleStore.setMainTitle(pageTitle)
+titleStore.setMainTitle(`${baseTitle} User`)
 
 const isLoading = ref(false)
 const isJobsLoading = ref(false)
@@ -249,11 +249,20 @@ const sections = ref([])
 const preambleText = ref('')
 
 const downloadUrl = ref('')
+const effectiveTarget = computed(() => {
+  if (targetType.value === 'all') return selectedJobTarget.value || 'user'
+  return targetType.value
+})
+
+const pageTitleLabel = computed(() => {
+  const target = effectiveTarget.value || 'user'
+  return `${baseTitle} ${target.charAt(0).toUpperCase()}${target.slice(1)}`
+})
+
 const downloadFileName = computed(() => {
   const jobId = selectedJobId.value || 'query_user'
-  const effectiveTarget = targetType.value === 'all' ? selectedJobTarget.value : targetType.value
-  const entityId = selectedEntityId.value || effectiveTarget || 'entity'
-  return `query_${effectiveTarget || 'target'}_${entityId}_${jobId}.txt`
+  const entityId = selectedEntityId.value || effectiveTarget.value || 'entity'
+  return `query_${effectiveTarget.value || 'target'}_${entityId}_${jobId}.txt`
 })
 
 let pollTimer = null
@@ -325,6 +334,14 @@ watch(rawText, (nextText) => {
   sections.value = parsed.sections
   preambleText.value = parsed.preamble
 })
+
+watch(
+  () => pageTitleLabel.value,
+  (nextTitle) => {
+    titleStore.setMainTitle(nextTitle)
+  },
+  { immediate: true },
+)
 
 watch(
   () => route.query,
@@ -406,9 +423,17 @@ function coerceDataDict(maybe) {
 }
 
 function normalizeRawQueryUser(payload, responseData) {
+  const target = effectiveTarget.value || 'user'
+  const queryKey = `query_${target}`
+  if (payload?.[queryKey]) return String(payload[queryKey])
   if (payload?.query_user) return String(payload.query_user)
+  if (payload?.query_group) return String(payload.query_group)
+  if (payload?.query_device) return String(payload.query_device)
   if (payload && Object.keys(payload).length) return JSON.stringify(payload, null, 2)
+  if (responseData?.[queryKey]) return String(responseData[queryKey])
   if (responseData?.query_user) return String(responseData.query_user)
+  if (responseData?.query_group) return String(responseData.query_group)
+  if (responseData?.query_device) return String(responseData.query_device)
   if (responseData && Object.keys(responseData).length) {
     return JSON.stringify(responseData, null, 2)
   }
@@ -530,7 +555,7 @@ function formatTableTitle(tagName) {
 function resolveJobTarget(jobId) {
   if (targetType.value !== 'all') return targetType.value
   const job = jobsList.value.find((item) => item.job_id === jobId)
-  return job?.target || selectedJobTarget.value || null
+  return job?.target || selectedJobTarget.value || 'user'
 }
 
 async function fetchJobsList() {
