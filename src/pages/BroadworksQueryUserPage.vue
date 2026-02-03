@@ -35,6 +35,8 @@
             dense
             :disable="isLoading || targetType === 'all'"
             :placeholder="targetTypePlaceholder"
+            @blur="trimEntityId"
+            @keyup.enter="handleEnterSubmit"
           />
         </div>
       </q-card-section>
@@ -78,9 +80,21 @@
           />
         </div>
         <div class="col-auto">
+          <q-btn
+            flat
+            round
+            dense
+            icon="settings"
+            :color="showSettings ? 'primary' : 'grey'"
+            @click="showSettings = !showSettings"
+          >
+            <q-tooltip>Settings</q-tooltip>
+          </q-btn>
+        </div>
+        <div v-if="showSettings" class="col-auto">
           <q-toggle v-model="usePrimary" label="Use Primary AS" dense />
         </div>
-        <div class="col-auto">
+        <div v-if="showSettings" class="col-auto">
           <q-toggle v-model="autoPoll" label="Auto refresh" dense />
         </div>
         <div class="col-12 col-md-auto text-caption text-grey-7">
@@ -251,7 +265,8 @@ const selectedJobId = ref(null)
 const selectedEntityId = ref('')
 const targetType = ref('all')
 const usePrimary = ref(false)
-const autoPoll = ref(true)
+const autoPoll = ref(false)
+const showSettings = ref(false)
 const jobSummary = ref(null)
 
 const rawText = ref('')
@@ -468,6 +483,18 @@ function formatJobTimestamp(job) {
   } catch {
     return date.toLocaleString()
   }
+}
+
+function trimEntityId() {
+  if (!selectedEntityId.value) return
+  selectedEntityId.value = String(selectedEntityId.value).trim()
+}
+
+function handleEnterSubmit() {
+  trimEntityId()
+  if (targetType.value === 'all') return
+  if (!selectedEntityId.value) return
+  rerunJob()
 }
 
 function coerceDataDict(maybe) {
@@ -771,7 +798,8 @@ function schedulePoll(jobId) {
 }
 
 async function rerunJob() {
-  if (!selectedEntityId.value.trim()) {
+  trimEntityId()
+  if (!selectedEntityId.value) {
     errorMessage.value = `Please provide a ${targetType.value} ID to submit the job.`
     return
   }
@@ -786,7 +814,7 @@ async function rerunJob() {
       method: 'POST',
       path: `${jobBaseEndpoint}/${targetType.value}`,
       body: {
-        [`${targetType.value}_id`]: selectedEntityId.value.trim(),
+        [`${targetType.value}_id`]: selectedEntityId.value,
         use_primary: usePrimary.value,
       },
     })
