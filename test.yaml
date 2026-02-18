@@ -1,0 +1,14 @@
+one: value1
+two: value2
+three: value3
+four:
+  - item1
+  - item2
+  - item3
+five:
+  nested:
+    key1: value1
+    key2: value2
+six: true
+seven: 12345
+eight: null

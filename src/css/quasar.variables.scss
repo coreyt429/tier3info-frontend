@@ -14,14 +14,73 @@
 
 // src/css/quasar.variables.scss
 
-$primary: #001d4a;
+// $primary: #0d2f62;
+// $secondary: #26a69a;
+// $accent: #93c832;
+
+// $dark: #1d1d1d;
+// $dark-page: #121212;
+
+// $positive: #128c37;
+// $negative: #b3261e;
+// $info: #00b9de;
+// $warning: #c69204;
+
+// src/css/quasar.variables.scss
+
+// pre 20250729
+// $primary: #1c4975;
+// $secondary: #26a69a;
+// $accent: #afd600;
+// $dark: #2e2a2a;
+// $dark-page: #383838;
+// $darkness: #37363d;
+// $positive: #1c9c3a;
+// $negative: #a31424;
+// $info: #32bdd9;
+// $warning: #d4a422;
+
+// 20250729
+$primary: #1c4975;
 $secondary: #26a69a;
-$accent: #93c832;
+$accent: #afd600;
+$dark: #2e2a2a;
+$dark-page: #383838;
+$darkness: #37363d;
+$positive: #2e751c;
+$negative: #751c2d;
+$info: #b5d5f5;
+$warning: #d4a422;
 
-$dark: #1d1d1d;
-$dark-page: #121212;
+$dashboard-green: $positive;
+$dashboard-yellow: $warning;
+$dashboard-red: rgb(183, 41, 41);
+$dashboard-blue: #334fec;
 
-$positive: #09b832;
-$negative: #e00720;
-$info: #00b9de;
-$warning: #f0b105;
+// https://color.adobe.com/create/color-wheel
+// Complementary rooted with #1c4975
+// #1C4975
+// #BA9352
+// #FAAE2F
+// #567EA5
+// #7A6C54
+
+// Complementary split with #1c4975
+// #1C7569
+// #B5D5F5
+
+// Complementary to #1C7569
+// #75271C
+
+.bg-dashboard-green {
+  background-color: $dashboard-green !important;
+}
+.bg-dashboard-yellow {
+  background-color: $dashboard-yellow !important;
+}
+.bg-dashboard-red {
+  background-color: $dashboard-red !important;
+}
+.bg-dashboard-blue {
+  background-color: $dashboard-blue !important;
+}

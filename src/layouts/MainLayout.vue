@@ -1,16 +1,71 @@
 <template>
-  <q-layout view="lHh Lpr lFf">
+  <q-layout view="lHh Lpr lFf" class="text-primary bg-darkness">
     <q-header elevated>
       <q-toolbar>
         <q-btn flat dense round icon="menu" aria-label="Menu" @click="toggleLeftDrawer" />
 
-        <q-toolbar-title> Voice Engineering Information Center </q-toolbar-title>
-
-        <div>Tier3info v{{ appVersion }}</div>
+        <q-toolbar-title class="col-7"> {{ titleStore.mainTitle }} </q-toolbar-title>
+        <div class="col-3 row no-wrap q-gutter-md justify-end">
+          <q-btn
+            v-for="(color, index) in dashBoardStore.colors"
+            :key="index"
+            :color="colorMap[color]"
+            round
+            dense
+            :label="dashBoardStore.counts[color]"
+          >
+            <q-menu
+              anchor="bottom middle"
+              self="top middle"
+              transition-show="scale"
+              transition-hide="scale"
+              class="text-white"
+              dark
+              elevated
+              rounded
+              :elevation="10"
+            >
+              <q-list>
+                <template v-for="(item, idx) in dashBoardStore.metrics[color]" :key="idx">
+                  <q-item
+                    clickable
+                    v-ripple
+                    @click="
+                      () => {
+                        openDashBoard(item)
+                      }
+                    "
+                  >
+                    <q-item-section>
+                      {{ item.textContent }}
+                    </q-item-section>
+                  </q-item>
+                  <q-separator
+                    :color="color"
+                    inset
+                    spaced
+                    v-if="idx < dashBoardStore.metrics[color].length - 1"
+                  />
+                </template>
+              </q-list>
+            </q-menu>
+          </q-btn>
+        </div>
+        <div class="col-2 text-right row items-center justify-end q-gutter-sm">
+          <div>v{{ appVersion }}</div>
+          <q-btn
+            flat
+            dense
+            round
+            :icon="rightDrawerOpen ? 'arrow_right' : 'arrow_left'"
+            aria-label="Side Panel"
+            @click="toggleRightDrawer"
+          />
+        </div>
       </q-toolbar>
     </q-header>
-
-    <q-drawer v-model="leftDrawerOpen" show-if-above bordered class="bg-warning">
+    <!-- Left drawer for menu links -->
+    <q-drawer v-model="leftDrawerOpen" show-if-above bordered class="bg-warning text-primary">
       <q-list>
         <!-- <q-item-label header> Menu </q-item-label> -->
         <q-input
@@ -28,8 +83,57 @@
         <EssentialLink v-for="link in linksListFiltered" :key="link.title" v-bind="link" />
       </q-list>
     </q-drawer>
-
+    <!-- Right Drawer for Preferences -->
+    <q-drawer v-model="rightDrawerOpen" side="right" bordered class="bg-darkness text-primary">
+      <LogEntryDetail v-if="selectedLogEntry" :entry="selectedLogEntry" />
+      <q-separator v-if="selectedLogEntry" />
+      <PreferencesControl :linksList="linksList" />
+      <q-separator />
+      <ScratchPad />
+      <q-separator />
+      <DocumentationSideBar />
+    </q-drawer>
+    <!-- Dashboard -->
     <q-page-container>
+      <q-dialog v-model="dashBoardOpen" persistent>
+        <q-card class="q-pa-md text-primary elevated glow" style="width: 80vw; max-width: 80vw">
+          <q-card-section class="row items-center justify-between">
+            <div class="text-h6 q-pa-sm cols-11">
+              <q-icon name="flag" :color="colorMap[currentMetric.color]" class="q-mr-sm" />
+              Dashboard Details: {{ currentMetric.label }}
+            </div>
+            <q-btn
+              flat
+              dense
+              round
+              icon="close"
+              aria-label="Close Details"
+              @click="dashBoardOpen = false"
+            ></q-btn>
+          </q-card-section>
+          <q-separator />
+          <q-card-section>
+            <DynamicDisplay :data="dashBoardStore.detailsJSON" />
+          </q-card-section>
+        </q-card>
+      </q-dialog>
+      <q-dialog v-model="logDetailOpen" position="right" persistent @hide="onLogDetailHide">
+        <q-card class="text-primary" style="width: 850px; max-width: 95vw; max-height: 95vh">
+          <q-card-section class="row items-center justify-between">
+            <div class="text-subtitle1">Log Details</div>
+            <q-btn flat dense round icon="close" @click="logDetailOpen = false" />
+          </q-card-section>
+          <q-separator />
+          <q-card-section class="scroll" style="padding: 0; max-height: calc(95vh - 64px)">
+            <LogEntryDetail
+              v-if="selectedLogEntry"
+              :entry="selectedLogEntry"
+              @filter-must="forwardFilter(true, $event)"
+              @filter-must-not="forwardFilter(false, $event)"
+            />
+          </q-card-section>
+        </q-card>
+      </q-dialog>
       <router-view />
     </q-page-container>
     <q-ajax-bar
@@ -43,19 +147,84 @@
 </template>
 
 <script setup>
+import { useQuasar } from 'quasar'
 import { version as appVersion } from '../../package.json'
 import { ref } from 'vue'
+import { useRoute } from 'vue-router'
 import EssentialLink from 'components/EssentialLink.vue'
+import DynamicDisplay from 'components/DynamicDisplay.vue'
+import { useTitleStore } from 'src/stores/titleStore'
+import { useDashBoardStore } from 'src/stores/dashBoard'
+import { useDocStore } from 'src/stores/docStore'
+import PreferencesControl from 'components/PreferencesControl.vue'
+import ScratchPad from 'components/ScratchPad.vue'
+import DocumentationSideBar from 'components/DocumentationSideBar.vue'
+import LogEntryDetail from 'components/LogEntryDetail.vue'
+import { usePreferencesStore } from 'src/stores/preferences'
+const preferencesStore = usePreferencesStore()
+console.debug('Preferences Store:', preferencesStore)
+preferencesStore.loadPreferences()
+console.log('Preferences loaded:', preferencesStore.preferences)
 
+const dashBoardStore = useDashBoardStore()
+console.debug('Dashboard Store:', dashBoardStore)
+const titleStore = useTitleStore()
+titleStore.setMainTitle('Voice Engineering Information Center')
+import { onUnmounted, watch } from 'vue'
+
+const docStore = useDocStore()
+const route = useRoute()
+
+watch(
+  () => route.meta?.docUrl,
+  (docUrl) => {
+    docStore.setDocUrl(docUrl || 'docs/start.html')
+  },
+  { immediate: true },
+)
+
+const colorMap = {
+  green: 'dashboard-green',
+  yellow: 'dashboard-yellow',
+  red: 'dashboard-red',
+  blue: 'dashboard-blue',
+}
+
+const currentMetric = ref({ label: 'Metric Details', color: 'red' })
+const scrollTopAfterClose = ref(false)
+const refreshInterval = 60000 // 1 minute in milliseconds
+dashBoardStore.refreshDashboard()
+
+heartbeat()
+const intervalId = setInterval(async () => {
+  dashBoardStore.refreshDashboard()
+  const response = await heartbeat()
+  console.log('Heartbeat response:', response)
+}, refreshInterval)
+
+onUnmounted(() => {
+  clearInterval(intervalId)
+  window.removeEventListener('log-entry-selected', handleLogEntrySelected)
+})
+
+const $q = useQuasar()
+
+onMounted(() => {
+  $q.dark.set(false) // Force dark mode off
+  window.addEventListener('log-entry-selected', handleLogEntrySelected)
+})
+// const mainTitle = titleStore.mainTitle
+
+// const mainTitle = ref('Voice Engineering Information Center')
 const filter = ref('')
 
 function onMenuEnter() {
-  console.log('Enter key pressed' + linksListFiltered.value.length)
+  console.log('onMenuEnter called with menu count:', filter.value.length)
   if (linksListFiltered.value.length === 1) {
+    console.log('Single link found, navigating to:', linksListFiltered.value[0].link)
     const singleLink = linksListFiltered.value[0]
     if (singleLink.link) {
       // Navigate to the link
-      console.log('Single link found. Navigating to:', singleLink.link)
       window.location.href = singleLink.link
     } else {
       if (singleLink.children && singleLink.children.length === 1) {
@@ -64,22 +233,26 @@ function onMenuEnter() {
           child = child.children[0]
         }
         if (child.link) {
-          console.log('Navigating to child link:', child.link)
           window.location.href = child.link
         } else {
-          console.log('No valid link found in the child hierarchy.')
+          window.location.href = `/#/locate?query=${encodeURIComponent(filter.value)}`
         }
       } else {
-        console.log('No single child or link found.')
+        window.location.href = `/#/locate?query=${encodeURIComponent(filter.value)}`
       }
     }
+  } else if (linksListFiltered.value.length === 0) {
+    console.log('No links found, navigating to locate with query:', filter.value)
+    console.log('Navigating to locate with query:', encodeURIComponent(filter.value))
+    window.location.href = `/#/locate?query=${encodeURIComponent(filter.value)}`
   } else {
-    console.log('Enter pressed. Filter value:', filter.value)
+    console.log('Multiple links found, not navigating:', linksListFiltered.value.length)
   }
 }
 
 function filterLinks(links, filterValue = '') {
-  return links
+  console.log('filterLinks called with filterValue:', filterValue)
+  const filteredLinks = links
     .map((item) => {
       const matches =
         item.title.toLowerCase().includes(filterValue) ||
@@ -87,7 +260,7 @@ function filterLinks(links, filterValue = '') {
         item.link.toLowerCase().includes(filterValue)
 
       if (item.children) {
-        const filteredChildren = filterLinks(item.children)
+        const filteredChildren = filterLinks(item.children, filterValue)
         if (filteredChildren.length > 0 || matches) {
           return { ...item, children: filteredChildren }
         }
@@ -96,44 +269,173 @@ function filterLinks(links, filterValue = '') {
       return matches ? { ...item } : null
     })
     .filter((item) => item !== null)
+  console.log('Filtered links:', filteredLinks)
+  return filteredLinks
 }
 
 function onMenuSearchChange(val) {
+  console.log('onMenuSearchChange called with:', val)
   // Now receives the latest value as 'val'
-  console.log('Key pressed. Filter value:', val)
   linksListFiltered.value = filterLinks(linksList.value, val.toLowerCase())
 }
 
 import { onMounted } from 'vue'
-// import axios from 'axios'
-import { tier3info_restful_request } from 'src/plugins/tier3info.js'
+import { heartbeat, tier3info_restful_request } from 'src/plugins/tier3info.js'
 
 const linksList = ref([])
 const linksListFiltered = ref([])
+
 onMounted(async () => {
   try {
+    const cachedLinks = localStorage.getItem('linksList')
+    if (cachedLinks) {
+      linksList.value = JSON.parse(cachedLinks)
+      // uncomment when menu stabilizes
+      // linksListFiltered.value = linksList.value
+      // return
+    }
     const request = {
       method: 'GET',
-      path: '/menu',
+      path: '/menu/user',
     }
     const response = await tier3info_restful_request(request)
-    console.log('Menu links response:', response)
     linksList.value = response.data
-    console.log('Links list:', linksList.value)
+    localStorage.setItem('linksList', JSON.stringify(linksList.value))
+    // linksList.value = []
     linksListFiltered.value = linksList.value // Initialize filtered list with all links
-    console.log('Initial filtered links list:', linksListFiltered.value)
   } catch (error) {
     console.error('Error fetching menu links:', error)
+    linksList.value = [
+      {
+        title: 'Home',
+        link: '/',
+        icon: 'home',
+        caption: 'Go to homepage',
+      },
+      {
+        title: 'Tools',
+        icon: 'build',
+        caption: 'Useful tools',
+        children: [
+          {
+            title: 'Locate',
+            icon: 'search',
+            link: '/#/locate',
+            caption: 'Find Stuff',
+          },
+          {
+            title: 'Configuration',
+            link: '/#/config',
+            icon: 'settings',
+            caption: 'Set stuff up',
+          },
+        ],
+      },
+    ]
+    linksListFiltered.value = linksList.value
+    localStorage.setItem('linksList', JSON.stringify(linksList.value))
   }
 })
 
 const leftDrawerOpen = ref(false)
+const rightDrawerOpen = ref(false)
+const dashBoardOpen = ref(false)
+const selectedLogEntry = ref(null)
 
 function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value
+  localStorage.setItem('leftDrawerOpen', JSON.stringify(leftDrawerOpen.value))
 }
+function toggleRightDrawer() {
+  rightDrawerOpen.value = !rightDrawerOpen.value
+  localStorage.setItem('rightDrawerOpen', JSON.stringify(rightDrawerOpen.value))
+}
+
+onMounted(() => {
+  const savedLeftDrawerState = localStorage.getItem('leftDrawerOpen')
+  if (savedLeftDrawerState !== null) {
+    leftDrawerOpen.value = JSON.parse(savedLeftDrawerState)
+  }
+
+  const savedRightDrawerState = localStorage.getItem('rightDrawerOpen')
+  if (savedRightDrawerState !== null) {
+    rightDrawerOpen.value = JSON.parse(savedRightDrawerState)
+  }
+  console.log('Left Drawer Open:', leftDrawerOpen.value)
+  console.log('Right Drawer Open:', rightDrawerOpen.value)
+})
+
+async function openDashBoard(metric) {
+  console.log(`openDashBoard(${metric})`)
+  console.log(`openDashBoard(${JSON.stringify(metric)})`)
+  currentMetric.value = metric
+  console.log(`openDashBoard: currentMetric: ${JSON.stringify(currentMetric.value)}`, currentMetric)
+  await dashBoardStore.loadDetails(metric)
+  console.log('openDashBoard: dashBoardStore.detailsJSON:', dashBoardStore.detailsJSON)
+  dashBoardOpen.value = true
+}
+
 function myFilterFn() {
   console.log('Ajax bar filter function called')
   return true
 }
+
+// Watch for changes to the mainTitle and update document.title accordingly
+watch(
+  () => titleStore.mainTitle,
+  (newTitle) => {
+    document.title = `Tier3Info: ${newTitle}`
+  },
+  { immediate: true },
+)
+
+const logDetailOpen = ref(false)
+
+function handleLogEntrySelected(evt) {
+  try {
+    selectedLogEntry.value = evt?.detail || null
+    if (selectedLogEntry.value) logDetailOpen.value = true
+  } catch (e) {
+    console.error('MainLayout: failed to handle log-entry-selected', e)
+  }
+}
+
+// Forward filter clicks from the modal to LogSearch (same pattern you used)
+function forwardFilter(must, payload) {
+  try {
+    scrollTopAfterClose.value = true
+    const type = must ? 'log-filter-must' : 'log-filter-must-not'
+    window.dispatchEvent(new CustomEvent(type, { detail: payload }))
+  } catch (e) {
+    console.error('MainLayout: filter forward error', e)
+  }
+}
+
+import { nextTick } from 'vue'
+
+function onLogDetailHide() {
+  if (!scrollTopAfterClose.value) return
+  // reset to avoid unexpected future scrolls
+  scrollTopAfterClose.value = false
+
+  nextTick(() => {
+    try {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    } catch {
+      try {
+        window.scrollTo(0, 0)
+      } catch {
+        // Ignore scroll errors - best effort scroll to top
+      }
+    }
+  })
+}
 </script>
+
+<style scoped>
+.highlight-panel {
+  backdrop-filter: blur(5px);
+  /* background: rgba(73, 75, 74, 0.85); */
+  border-left: 3px solid var(--q-primary);
+}
+</style>

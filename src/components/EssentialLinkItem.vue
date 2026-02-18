@@ -26,7 +26,7 @@
     <q-item
       v-else
       :key="props.title + '-parent'"
-      clickable="!props.children || !props.children.length"
+      :clickable="!props.children || !props.children.length"
       :tag="!props.children || !props.children.length ? 'a' : undefined"
       :target="!props.children || !props.children.length ? props.target : undefined"
       :href="!props.children || !props.children.length ? props.link : undefined"
@@ -79,7 +79,7 @@ const props = defineProps({
   parent: { type: String, default: '' },
 })
 
-const isOpen = ref(false)
+const isOpen = ref(true)
 function toggle() {
   isOpen.value = !isOpen.value
 }

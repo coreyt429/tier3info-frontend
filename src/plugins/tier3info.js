@@ -3,20 +3,91 @@ import axios from 'axios'
 var sessionId = null
 var tier3info_preferences = null
 
+function getTabId() {
+  let tabId = sessionStorage.getItem('tabId')
+  if (!tabId) {
+    tabId = crypto.randomUUID() // Generate a new UUID
+    sessionStorage.setItem('tabId', tabId) // Store it in session storage
+  }
+  return tabId
+}
+
+export async function heartbeat() {
+  const url = new URL(window.location.href)
+  const data = {
+    url: window.location.href,
+    uri: {
+      host: url.host.split('.')[0], // Get the first part of the hostname
+      path: url.pathname,
+      hash: url.hash,
+      search: url.search,
+      protocol: url.protocol,
+      port: url.port,
+      origin: url.origin,
+    },
+    referrer: document.referrer,
+    viewport: {
+      width: window.innerWidth,
+      height: window.innerHeight,
+    },
+    screen: {
+      width: screen.width,
+      height: screen.height,
+      colorDepth: screen.colorDepth,
+    },
+    tabId: getTabId(),
+    visible: document.visibilityState,
+    userAgent: navigator.userAgent,
+    language: navigator.language,
+    platform: navigator.platform,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    // Additional fields
+    // timestamp: Date.now(),
+    appVersion: navigator.appVersion,
+    platformDetails: navigator.userAgentData || null,
+    isMobile: window.matchMedia('(pointer: coarse)').matches,
+    navigationType: performance.getEntriesByType('navigation')[0]?.type || null,
+    pageLoadTime: performance.timing
+      ? performance.timing.loadEventEnd - performance.timing.navigationStart
+      : null,
+    connection: navigator.connection
+      ? {
+          effectiveType: navigator.connection.effectiveType,
+          downlink: navigator.connection.downlink,
+          rtt: navigator.connection.rtt,
+        }
+      : null,
+    cookieEnabled: navigator.cookieEnabled,
+    localStorageSupported: 'localStorage' in window && window.localStorage !== null,
+    serviceWorkerRegistered: 'serviceWorker' in navigator && !!navigator.serviceWorker.controller,
+    // https: window.location.protocol === 'https:',
+    secureContext: window.isSecureContext,
+  }
+
+  const request = {
+    method: 'POST',
+    path: '/heartbeat',
+    body: data,
+  }
+
+  return await tier3info_restful_request(request)
+}
+
 function get_session_id() {
   const cookies = document.cookie.split('; ')
   console.log(cookies)
   for (let i = 0; i < cookies.length; i++) {
     const cookie = cookies[i].split('=')
     console.log(cookie)
-    if (cookie[0] == 'sessionId') {
+    if (cookie[0] == 'session_id') {
       sessionId = cookie[1]
     }
-  } 
-  console.log(sessionId)
-  if(import.meta.env.VITE_TIER3INFO_API_KEY){
-    sessionId = import.meta.env.VITE_TIER3INFO_API_KEY
   }
+  if (import.meta.env.VITE_TIER3INFO_API_KEY) {
+    sessionId = import.meta.env.VITE_TIER3INFO_API_KEY
+    console.log('Using VITE_TIER3INFO_API_KEY from environment variables', sessionId)
+  }
+  console.log('sessionId: ', sessionId)
   return sessionId
 }
 export async function tier3info_restful_request(request) {
@@ -25,7 +96,7 @@ export async function tier3info_restful_request(request) {
     request.method = 'GET'
   }
   // add api if missing
-  if (!request.path.includes('api')) {
+  if (!request.path.startsWith('/api/')) {
     request.path = '/api/' + request.path
   }
   // strip double slashes
@@ -41,9 +112,21 @@ export async function tier3info_restful_request(request) {
     },
     method: request.method,
   }
-  console.log(request.body)
+  if (request.data && !request.body) {
+    request.body = request.data
+  }
+  if (request.body) {
+    fetchOptions.headers['Content-Type'] = 'application/json'
+  }
+  console.log(`tier3info_request: ${request.method} ${request.path}`)
+  console.log(`tier3info_request: body: ${request.body}`)
+
   // Include body for POST or PUT requests
-  if (request.method.toUpperCase() === 'POST' || request.method.toUpperCase() === 'PUT') {
+  if (
+    request.method.toUpperCase() === 'POST' ||
+    request.method.toUpperCase() === 'PUT' ||
+    request.method.toUpperCase() === 'PATCH'
+  ) {
     if (typeof request.body === 'object') {
       fetchOptions.body = JSON.stringify(request.body)
     } else {
@@ -53,16 +136,19 @@ export async function tier3info_restful_request(request) {
   if (import.meta.env.VITE_TIER3INFO_API_BASE) {
     request.path = import.meta.env.VITE_TIER3INFO_API_BASE + request.path
   }
+  console.log('tier3info: Request path:', request.path)
 
-  console.log(request.path)
-  console.log(fetchOptions)
+  console.log('tier3info:', request.path)
+  console.log('tier3info:', fetchOptions)
   return axios({
     url: request.path,
     method: request.method,
     headers: fetchOptions.headers,
     withCredentials: true,
     data:
-      request.method.toUpperCase() === 'POST' || request.method.toUpperCase() === 'PUT'
+      request.method.toUpperCase() === 'POST' ||
+      request.method.toUpperCase() === 'PUT' ||
+      request.method.toUpperCase() === 'PATCH'
         ? request.body
         : undefined,
   })
@@ -79,35 +165,35 @@ export async function tier3info_restful_request(request) {
       console.error('Axios error:', error)
       console.error('Response:', error.response)
       console.error('Request:', error.request)
+      let message = ''
       if (error.response) {
         const response = error.response
         if (response.status === 403) {
-          alert('403 Forbidden: You do not have permission to access this resource.')
+          if (error.response.data && error.response.data.url) {
+            window.location.href = error.response.data.url
+            return
+          }
+          message = '403 Forbidden: You do not have permission to access this resource.'
         } else if (response.status === 500) {
-          alert(
-            `Error: ${response.status} ${response.statusText} \n This normally means we broke something, and we are working on it.  If it persists, please contact Voice Engineering On-Call.`,
-          )
+          message = `Error: ${response.status} ${response.statusText} \n This normally means we broke something, and we are working on it.  If it persists, please contact Voice Engineering On-Call.`
         } else if (response.status === 401) {
-          console.log('ReAuthenticating')
+          message = 'ReAuthenticating'
         } else {
           const data = response.data
-          if (data && data.message) {
-            alert(`Error: ${response.status} ${data.message}`)
-          } else {
-            alert(`Error: ${response.status} ${response.statusText}`)
-          }
+          message = data && data.message ? data.message : response.statusText
+          // Use a Vue event bus or a global state management solution to trigger a toast or banner
         }
       } else {
-        console.log('An error occurred:')
-        console.log(error)
+        message = `An unexpected error occurred. ${error.message}`
       }
+      emit_notification('negative', `Error: ${error.response?.status || 'Unknown'} ${message}`) // Emit notification with error message
     })
 }
 
 // Function to fetch preferences from the server
 function fetchPreferencesFromServer() {
   tier3info_restful_request({
-    path: '/preferences',
+    path: '/preferences/',
     callback: tier3info_preferences_set,
   })
 }
@@ -137,6 +223,20 @@ function loadPreferences() {
   } else {
     // Fetch preferences from the server if not found or older than 24 hours
     fetchPreferencesFromServer()
+  }
+}
+
+export function emit_notification(type, message) {
+  const eventBus = window.eventBus // Assuming you have an event bus set up
+  if (eventBus) {
+    console.log('Emitting show-notification event')
+    const errorMessage = message || 'An unexpected error occurred.' // Ensure message is defined
+    eventBus.emit('show-notification', {
+      type: type,
+      message: errorMessage,
+    })
+  } else {
+    console.error('Event bus not found. Unable to show notification.')
   }
 }
 
