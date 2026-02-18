@@ -98,6 +98,12 @@
           />
         </q-td>
       </template>
+      <template v-slot:body-cell="props">
+        <q-td :props="props">
+          <span v-if="props.col?.renderHtml" v-html="coerceHtml(props.value)"></span>
+          <span v-else>{{ props.value }}</span>
+        </q-td>
+      </template>
     </q-table>
   </q-card-section>
 </template>
@@ -195,6 +201,11 @@ function handleRowClick(evt, row, index) {
   if (props.onClick) {
     props.onClick(row) // Call the onClick function with the clicked row
   }
+}
+
+function coerceHtml(value) {
+  if (value === null || value === undefined) return ''
+  return String(value)
 }
 
 function wrapCsvValue(val, formatFn, row) {

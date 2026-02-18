@@ -20,6 +20,7 @@ const tableColumns = computed(() =>
     field: (row) => row[idx],
     align: 'left',
     sortable: true,
+    renderHtml: true,
   })),
 )
 
