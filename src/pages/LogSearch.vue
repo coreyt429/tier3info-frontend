@@ -21,6 +21,7 @@
             v-model="customStartDT"
             label="Start (local)"
             hint="YYYY-MM-DD HH:mm:ss.SSS (ms optional)"
+            @update:model-value="updateCustomRange"
           >
             <template v-slot:prepend>
               <q-icon name="event" class="cursor-pointer">
@@ -63,6 +64,7 @@
             v-model="customEndDT"
             label="End (local)"
             hint="YYYY-MM-DD HH:mm:ss.SSS (ms optional)"
+            @update:model-value="updateCustomRange"
           >
             <template v-slot:prepend>
               <q-icon name="event" class="cursor-pointer">
@@ -301,6 +303,9 @@ export default {
     async executeSearch() {
       this.errorMessage = null
       this.queryString = this.queryString.trim()
+      if (this.timePreset === 'custom') {
+        this.updateCustomRange()
+      }
       this.statusMessage = `Searching for ${this.queryString}... Please wait.`
       console.log('LogSearch.vue: executeSearch called with queryString:', this.queryString)
       console.log('LogSearch.vue: executeSearch called with queryFilters:', this.queryFilters)
