@@ -15,13 +15,19 @@
           />
         </div>
         <div v-if="showCustom" class="col-auto">
-          <q-input filled dense v-model="customStartDT" label="Start (local)">
+          <q-input
+            filled
+            dense
+            v-model="customStartDT"
+            label="Start (local)"
+            hint="YYYY-MM-DD HH:mm:ss.SSS (ms optional)"
+          >
             <template v-slot:prepend>
               <q-icon name="event" class="cursor-pointer">
                 <q-popup-proxy cover transition-show="scale" transition-hide="scale">
                   <q-date
                     v-model="customStartDT"
-                    mask="YYYY-MM-DD HH:mm"
+                    mask="YYYY-MM-DD HH:mm:ss"
                     @update:model-value="updateCustomRange"
                   >
                     <div class="row items-center justify-end">
@@ -36,8 +42,9 @@
                 <q-popup-proxy cover transition-show="scale" transition-hide="scale">
                   <q-time
                     v-model="customStartDT"
-                    mask="YYYY-MM-DD HH:mm"
+                    mask="YYYY-MM-DD HH:mm:ss"
                     format24h
+                    with-seconds
                     @update:model-value="updateCustomRange"
                   >
                     <div class="row items-center justify-end">
@@ -50,13 +57,19 @@
           </q-input>
         </div>
         <div v-if="showCustom" class="col-auto">
-          <q-input filled dense v-model="customEndDT" label="End (local)">
+          <q-input
+            filled
+            dense
+            v-model="customEndDT"
+            label="End (local)"
+            hint="YYYY-MM-DD HH:mm:ss.SSS (ms optional)"
+          >
             <template v-slot:prepend>
               <q-icon name="event" class="cursor-pointer">
                 <q-popup-proxy cover transition-show="scale" transition-hide="scale">
                   <q-date
                     v-model="customEndDT"
-                    mask="YYYY-MM-DD HH:mm"
+                    mask="YYYY-MM-DD HH:mm:ss"
                     @update:model-value="updateCustomRange"
                   >
                     <div class="row items-center justify-end">
@@ -71,8 +84,9 @@
                 <q-popup-proxy cover transition-show="scale" transition-hide="scale">
                   <q-time
                     v-model="customEndDT"
-                    mask="YYYY-MM-DD HH:mm"
+                    mask="YYYY-MM-DD HH:mm:ss"
                     format24h
+                    with-seconds
                     @update:model-value="updateCustomRange"
                   >
                     <div class="row items-center justify-end">
@@ -203,7 +217,7 @@ export default {
         { label: 'Custom', value: 'custom' },
       ],
       // Custom range combined datetime strings
-      customStartDT: null, // 'YYYY-MM-DD HH:mm'
+      customStartDT: null, // 'YYYY-MM-DD HH:mm:ss.SSS'
       customEndDT: null,
     }
   },
@@ -220,29 +234,42 @@ export default {
 
     updateCustomRange() {
       if (!(this.customStartDT && this.customEndDT)) return
+      this.customStartDT = this.customStartDT.trim()
+      this.customEndDT = this.customEndDT.trim()
       const startIso = this.dtToIso(this.customStartDT)
       const endIso = this.dtToIso(this.customEndDT)
+      if (!(startIso && endIso)) return
       this.timeFilters.value = { gte: startIso, lte: endIso }
     },
 
     dtToIso(datetimeStr) {
-      // Expects 'YYYY-MM-DD HH:mm' in local time
+      // Expects 'YYYY-MM-DD HH:mm[:ss][.SSS]' in local time
       if (!datetimeStr) return null
-      const [d, t] = datetimeStr.trim().split(' ')
+      const [d, t] = datetimeStr.trim().split(/\s+/, 2)
+      if (!d) return null
       const [y, m, day] = d.split('-').map((n) => parseInt(n, 10))
-      const [hh, mm] = (t || '00:00').split(':').map((n) => parseInt(n, 10))
-      const dt = new Date(y, (m || 1) - 1, day || 1, hh || 0, mm || 0, 0, 0)
+      const timeParts = (t || '00:00').split(':')
+      const hh = parseInt(timeParts[0] || '0', 10)
+      const mm = parseInt(timeParts[1] || '0', 10)
+      const secAndMs = timeParts[2] || '0'
+      const [ssRaw, msRaw] = secAndMs.split('.')
+      const ss = parseInt(ssRaw || '0', 10)
+      const ms = parseInt((msRaw || '0').padEnd(3, '0').slice(0, 3), 10)
+      const dt = new Date(y, (m || 1) - 1, day || 1, hh || 0, mm || 0, ss || 0, ms || 0)
+      if (Number.isNaN(dt.getTime())) return null
       const pad = (n) => String(n).padStart(2, '0')
+      const pad3 = (n) => String(n).padStart(3, '0')
       const offMin = -dt.getTimezoneOffset()
       const sign = offMin >= 0 ? '+' : '-'
       const absMin = Math.abs(offMin)
       const offHH = pad(Math.floor(absMin / 60))
       const offMM = pad(absMin % 60)
-      return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}:${pad(dt.getSeconds())}${sign}${offHH}:${offMM}`
+      return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}:${pad(dt.getSeconds())}.${pad3(dt.getMilliseconds())}${sign}${offHH}:${offMM}`
     },
 
     async executeSearch() {
       this.errorMessage = null
+      this.queryString = this.queryString.trim()
       this.statusMessage = `Searching for ${this.queryString}... Please wait.`
       console.log('LogSearch.vue: executeSearch called with queryString:', this.queryString)
       console.log('LogSearch.vue: executeSearch called with queryFilters:', this.queryFilters)
