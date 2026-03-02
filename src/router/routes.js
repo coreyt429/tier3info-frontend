@@ -1,6 +1,7 @@
 import { h } from 'vue'
 import { Suspense } from 'vue'
 import ApiSelectEditPage from 'pages/ApiSelectEditPage.vue'
+import ChangeManagementPage from 'pages/ChangeManagementPage.vue'
 import ApiTableEditPage from 'pages/ApiTableEditPage.vue'
 import ApiSearchTableEditPage from 'pages/ApiSearchTableEditPage.vue'
 
@@ -51,6 +52,15 @@ const routePageMap = {
       endpoint: '/tagtool/tagset',
       buttons: ['Save', 'Reset', 'Add', 'Delete'],
       template: { structure: 'freeform' },
+    },
+  },
+  '/change_management': {
+    page: ChangeManagementPage,
+    meta: {
+      title: 'Change Management',
+      docUrl: 'docs/start.html',
+      label: 'Change Management',
+      endpoint: '/change_management',
     },
   },
   '/certificates': {
@@ -337,6 +347,7 @@ const routePageMap = {
 //aliases
 routePageMap['/certs'] = routePageMap['/certificates']
 routePageMap['/cfg'] = routePageMap['/config']
+const selectedItemRoutePages = new Set([ApiSelectEditPage, ChangeManagementPage])
 
 const routes = [
   {
@@ -470,12 +481,14 @@ const routes = [
 ]
 
 Object.keys(routePageMap).forEach((path) => {
+  const hasSelectedItemRoute = selectedItemRoutePages.has(routePageMap[path].page)
+
   routes.push({
     path,
     component: () => import('layouts/MainLayout.vue'),
     children: [
       {
-        path: '',
+        path: hasSelectedItemRoute ? ':selectedItem?' : '',
         component: {
           render() {
             return h(Suspense, null, {

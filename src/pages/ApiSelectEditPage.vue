@@ -78,7 +78,7 @@
 
 <script setup>
 import { tier3info_restful_request, emit_notification } from 'src/plugins/tier3info.js'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { reactive, ref, computed, watch } from 'vue'
 import FilterSelect from 'src/components/FilterSelect.vue'
 import MyAceEditor from 'src/components/MyAceEditor.vue'
@@ -96,10 +96,36 @@ const states = reactive({
 })
 
 const route = useRoute()
+const router = useRouter()
 import { useTitleStore } from 'stores/titleStore'
 const titleStore = useTitleStore()
 titleStore.setMainTitle(route.meta.title || 'ApiSelectEditPage Title Not Set')
 const endpoint = computed(() => route.meta.endpoint || '/cfg')
+const routeBasePath = computed(() => route.matched[0]?.path || route.path)
+
+function normalizeSelection(value) {
+  if (typeof value !== 'string') {
+    return null
+  }
+  const normalized = value.trim()
+  return normalized || null
+}
+
+async function syncRouteWithSelection(option) {
+  const normalizedOption = normalizeSelection(option)
+  const routeSelection = normalizeSelection(route.params.selectedItem)
+  if (normalizedOption === routeSelection) {
+    return
+  }
+  const targetPath = normalizedOption
+    ? `${routeBasePath.value}/${encodeURIComponent(normalizedOption)}`
+    : routeBasePath.value
+  await router.replace({
+    path: targetPath,
+    query: route.query,
+    hash: route.hash,
+  })
+}
 console.log(`ApiSelectEditPage.vue: Endpoint set to ${endpoint.value} `)
 const button_definitions = {
   Save: {
@@ -289,11 +315,32 @@ async function handleAddConfirm() {
 }
 
 watch(selectedOption, async (newOption) => {
-  if (newOption) {
-    console.log('ApiSelectEditPage: Selected option changed:', newOption)
-    await load_editorContent(newOption)
+  const normalizedOption = normalizeSelection(newOption)
+  if (normalizedOption !== newOption) {
+    selectedOption.value = normalizedOption
+    return
+  }
+
+  if (normalizedOption) {
+    console.log('ApiSelectEditPage: Selected option changed:', normalizedOption)
+    await syncRouteWithSelection(normalizedOption)
+    await load_editorContent(normalizedOption)
+  } else {
+    editorContent.value = null
+    await syncRouteWithSelection(null)
   }
 })
+
+watch(
+  () => route.params.selectedItem,
+  (routeSelection) => {
+    const normalizedRouteSelection = normalizeSelection(routeSelection)
+    if (normalizedRouteSelection !== selectedOption.value) {
+      selectedOption.value = normalizedRouteSelection
+    }
+  },
+  { immediate: true },
+)
 </script>
 
 <style lang="scss" scoped></style>
