@@ -331,7 +331,7 @@ async function selectItem(row) {
     const [filesResponse, lastPullResponse] = await Promise.all([
       tier3info_restful_request({
         method: 'GET',
-        path: `/broadworks/access_device/files/${encodeURIComponent(row.device_id)}`,
+        path: `/broadworks/access_device/files/${encodeURIComponent(row.device_id)}?include=data`,
       }),
       tier3info_restful_request({
         method: 'GET',
