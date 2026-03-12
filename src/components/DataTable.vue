@@ -75,15 +75,39 @@
       </template>
       <template v-slot:body-cell-tagsButton="props">
         <q-td :props="props">
-          <q-btn
-            flat
-            dense
-            round
-            size="sm"
-            icon="content_copy"
-            :title="props.row.tagsButton.tooltip"
-            @click="props.row.tagsButton.copyToClipboard"
-          />
+          <div class="row items-center no-wrap q-gutter-xs">
+            <q-btn
+              flat
+              dense
+              round
+              size="sm"
+              icon="content_copy"
+              @click.stop="props.row.tagsButton.copyToClipboard"
+            >
+              <q-tooltip
+                v-if="props.row.tagsButton.tooltip"
+                anchor="top middle"
+                self="bottom middle"
+                style="white-space: pre-line; max-width: 320px"
+              >
+                {{ props.row.tagsButton.tooltip }}
+              </q-tooltip>
+            </q-btn>
+            <q-btn
+              v-if="props.row.tagsButton.editAction"
+              flat
+              dense
+              round
+              size="sm"
+              icon="edit"
+              color="primary"
+              @click.stop="props.row.tagsButton.editAction"
+            >
+              <q-tooltip anchor="top middle" self="bottom middle">
+                {{ props.row.tagsButton.editTooltip || 'Edit' }}
+              </q-tooltip>
+            </q-btn>
+          </div>
         </q-td>
       </template>
       <template v-slot:body-cell-kpi="props">

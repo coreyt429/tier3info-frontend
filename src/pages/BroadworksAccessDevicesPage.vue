@@ -171,12 +171,11 @@ const columns = [
   { name: 'device_id', label: 'Device Id', field: 'device_id', sortable: true, align: 'left' },
   { name: 'mac_address', label: 'MAC Address', field: 'mac_address', sortable: true, align: 'left' },
   {
-    name: 'custom_tags_display',
+    name: 'tagsButton',
     label: 'Custom Tags',
-    field: 'custom_tags_display',
+    field: 'tagsButton',
     sortable: false,
     align: 'left',
-    renderHtml: true,
   },
   {
     name: 'users_display',
@@ -237,21 +236,22 @@ function buildTagToolUrl(deviceId) {
   return `/#/tagtool?device_id=${encodeURIComponent(deviceId)}`
 }
 
-function formatCustomTagsAsHtml(lines, deviceId) {
-  const tagsHtml = formatLinesAsHtml(lines)
-  if (!deviceId) {
-    return tagsHtml
+function buildTagsButton(tags, deviceId) {
+  const tooltip = tags.join('\n')
+  return {
+    tooltip,
+    copyToClipboard: () => {
+      navigator.clipboard
+        .writeText(tooltip)
+        .catch((error) => console.error('Failed to copy access device tags:', error))
+    },
+    editAction: deviceId
+      ? () => {
+          window.open(buildTagToolUrl(deviceId), '_blank', 'noopener')
+        }
+      : null,
+    editTooltip: deviceId ? `Edit tags for ${deviceId}` : 'Edit tags',
   }
-  const editLinkHtml = [
-    `<a href="${buildTagToolUrl(deviceId)}"`,
-    ' target="_blank"',
-    ' rel="noopener noreferrer"',
-    ' class="text-primary q-ml-sm"',
-    ' title="Edit tags in Tag Tool">',
-    '<i class="q-icon notranslate material-icons" aria-hidden="true" style="font-size: 16px; vertical-align: middle;">edit</i>',
-    '</a>',
-  ].join('')
-  return tagsHtml ? `${tagsHtml}${editLinkHtml}` : editLinkHtml
 }
 
 function parseOrder(value) {
@@ -276,7 +276,7 @@ function mapAccessDeviceRow([id, record]) {
     id,
     ...record,
     mac_address: record.mac_address || '',
-    custom_tags_display: formatCustomTagsAsHtml(customTags, record.device_id || id),
+    tagsButton: buildTagsButton(customTags, record.device_id || id),
     users_display: formatLinesAsHtml(users),
   }
 }
