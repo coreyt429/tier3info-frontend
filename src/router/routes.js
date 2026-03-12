@@ -4,6 +4,7 @@ import ApiSelectEditPage from 'pages/ApiSelectEditPage.vue'
 import ChangeManagementPage from 'pages/ChangeManagementPage.vue'
 import ApiTableEditPage from 'pages/ApiTableEditPage.vue'
 import ApiSearchTableEditPage from 'pages/ApiSearchTableEditPage.vue'
+import BroadworksAccessDevicesPage from 'pages/BroadworksAccessDevicesPage.vue'
 
 const routePageMap = {
   '/task_schedule': {
@@ -319,6 +320,13 @@ const routePageMap = {
         { name: 'description', label: 'Description' },
         { name: 'management_ip_address', label: 'Management IP' },
       ],
+    },
+  },
+  '/broadworks/access_devices': {
+    page: BroadworksAccessDevicesPage,
+    meta: {
+      title: 'Broadworks Access Devices',
+      docUrl: 'docs/start.html',
     },
   },
   '/alerts': {
