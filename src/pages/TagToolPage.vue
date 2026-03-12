@@ -32,6 +32,7 @@
               outlined
               dense
               class="col-4 q-mr-sm"
+              @blur="trimSearchQuery"
               @keyup.enter="executeSearch"
             />
             <q-btn label="Search" icon="search" color="primary" class="" @click="executeSearch" />
@@ -147,7 +148,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, nextTick, watch } from 'vue'
 // Helper to split only on first '=' and preserve subsequent '=' in value
 function splitFirstEqual(str) {
   const idx = str.indexOf('=')
@@ -216,8 +217,44 @@ const tagInputRef = ref(null)
 const desiredCursorIndex = ref(null)
 const invalidLines = ref([])
 const pagination = ref({ rowsPerPage: 0 })
+
+function trimSearchQuery() {
+  searchQuery.value = searchQuery.value.trim()
+}
+
+function getSingleQueryValue(value) {
+  if (Array.isArray(value)) {
+    return typeof value[0] === 'string' ? value[0].trim() : ''
+  }
+  return typeof value === 'string' ? value.trim() : ''
+}
+
+function getRouteSearchQuery(query) {
+  const directSearch = getSingleQueryValue(query?.search)
+  if (directSearch) {
+    return directSearch
+  }
+
+  const legacyQuery = getSingleQueryValue(query?.query)
+  if (legacyQuery) {
+    return legacyQuery
+  }
+
+  const deviceId = getSingleQueryValue(query?.device_id)
+  if (deviceId) {
+    return `device_id:"${deviceId.replaceAll('"', '\\"')}"`
+  }
+
+  return ''
+}
+
 async function executeSearch() {
+  trimSearchQuery()
   console.log('Search Query:', searchQuery.value)
+  if (!searchQuery.value) {
+    rows.value = []
+    return
+  }
   const request = {
     method: 'POST',
     path: '/locate/',
@@ -270,21 +307,21 @@ const props = defineProps({
   query: Object,
 })
 
-import { watch } from 'vue'
-
 onMounted(() => {
   loadTagSetNames()
-  if (props.query?.query) {
-    searchQuery.value = props.query.query
+  const routeSearchQuery = getRouteSearchQuery(props.query)
+  if (routeSearchQuery) {
+    searchQuery.value = routeSearchQuery
     executeSearch()
   }
 })
 
 watch(
-  () => props.query?.query,
+  () => props.query,
   (newQuery) => {
-    if (newQuery) {
-      searchQuery.value = newQuery
+    const routeSearchQuery = getRouteSearchQuery(newQuery)
+    if (routeSearchQuery && routeSearchQuery !== searchQuery.value) {
+      searchQuery.value = routeSearchQuery
       executeSearch()
     }
   },

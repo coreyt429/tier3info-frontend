@@ -233,6 +233,27 @@ function formatLinesAsHtml(lines) {
   return lines.map((line) => escapeHtml(line)).join('<br>')
 }
 
+function buildTagToolUrl(deviceId) {
+  return `/#/tagtool?device_id=${encodeURIComponent(deviceId)}`
+}
+
+function formatCustomTagsAsHtml(lines, deviceId) {
+  const tagsHtml = formatLinesAsHtml(lines)
+  if (!deviceId) {
+    return tagsHtml
+  }
+  const editLinkHtml = [
+    `<a href="${buildTagToolUrl(deviceId)}"`,
+    ' target="_blank"',
+    ' rel="noopener noreferrer"',
+    ' class="text-primary q-ml-sm"',
+    ' title="Edit tags in Tag Tool">',
+    '<i class="q-icon notranslate material-icons" aria-hidden="true" style="font-size: 16px; vertical-align: middle;">edit</i>',
+    '</a>',
+  ].join('')
+  return tagsHtml ? `${tagsHtml}${editLinkHtml}` : editLinkHtml
+}
+
 function parseOrder(value) {
   const numericValue = Number(value)
   return Number.isFinite(numericValue) ? numericValue : Number.MAX_SAFE_INTEGER
@@ -255,7 +276,7 @@ function mapAccessDeviceRow([id, record]) {
     id,
     ...record,
     mac_address: record.mac_address || '',
-    custom_tags_display: formatLinesAsHtml(customTags),
+    custom_tags_display: formatCustomTagsAsHtml(customTags, record.device_id || id),
     users_display: formatLinesAsHtml(users),
   }
 }
