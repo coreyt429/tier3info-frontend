@@ -434,6 +434,10 @@ async function handleAddConfirm() {
   console.log('ApiTableEditPage: Adding new meta template:', route.meta.template)
   if (route.meta.template) {
     body = { ...route.meta.template }
+    body = Object.entries(body).reduce((acc, [key, value]) => {
+      acc[key] = value === 'newOption' ? newOption : value
+      return acc
+    }, {})
   }
   console.log('ApiTableEditPage: Id for new item:', newOption)
   console.log('ApiTableEditPage: Body for new item:', body)
