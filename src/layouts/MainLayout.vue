@@ -218,14 +218,26 @@ onMounted(() => {
 // const mainTitle = ref('Voice Engineering Information Center')
 const filter = ref('')
 
+function navigateToMenuLink(link, target = '') {
+  if (!link) return
+
+  if (target === '_blank') {
+    window.open(link, '_blank', 'noopener')
+    return
+  }
+
+  window.location.href = link
+}
+
 function onMenuEnter() {
-  console.log('onMenuEnter called with menu count:', filter.value.length)
+  const trimmedFilter = filter.value.trim()
+  filter.value = trimmedFilter
+  console.log('onMenuEnter called with menu count:', trimmedFilter.length)
   if (linksListFiltered.value.length === 1) {
     console.log('Single link found, navigating to:', linksListFiltered.value[0].link)
     const singleLink = linksListFiltered.value[0]
     if (singleLink.link) {
-      // Navigate to the link
-      window.location.href = singleLink.link
+      navigateToMenuLink(singleLink.link, singleLink.target)
     } else {
       if (singleLink.children && singleLink.children.length === 1) {
         let child = singleLink.children[0]
@@ -233,18 +245,18 @@ function onMenuEnter() {
           child = child.children[0]
         }
         if (child.link) {
-          window.location.href = child.link
+          navigateToMenuLink(child.link, child.target)
         } else {
-          window.location.href = `/#/locate?query=${encodeURIComponent(filter.value)}`
+          window.location.href = `/#/locate?query=${encodeURIComponent(trimmedFilter)}`
         }
       } else {
-        window.location.href = `/#/locate?query=${encodeURIComponent(filter.value)}`
+        window.location.href = `/#/locate?query=${encodeURIComponent(trimmedFilter)}`
       }
     }
   } else if (linksListFiltered.value.length === 0) {
-    console.log('No links found, navigating to locate with query:', filter.value)
-    console.log('Navigating to locate with query:', encodeURIComponent(filter.value))
-    window.location.href = `/#/locate?query=${encodeURIComponent(filter.value)}`
+    console.log('No links found, navigating to locate with query:', trimmedFilter)
+    console.log('Navigating to locate with query:', encodeURIComponent(trimmedFilter))
+    window.location.href = `/#/locate?query=${encodeURIComponent(trimmedFilter)}`
   } else {
     console.log('Multiple links found, not navigating:', linksListFiltered.value.length)
   }
@@ -274,9 +286,11 @@ function filterLinks(links, filterValue = '') {
 }
 
 function onMenuSearchChange(val) {
-  console.log('onMenuSearchChange called with:', val)
+  const normalizedValue = typeof val === 'string' ? val.trim() : ''
+  filter.value = normalizedValue
+  console.log('onMenuSearchChange called with:', normalizedValue)
   // Now receives the latest value as 'val'
-  linksListFiltered.value = filterLinks(linksList.value, val.toLowerCase())
+  linksListFiltered.value = filterLinks(linksList.value, normalizedValue.toLowerCase())
 }
 
 import { onMounted } from 'vue'

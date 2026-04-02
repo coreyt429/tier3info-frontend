@@ -6,6 +6,7 @@
       :clickable="!props.children || !props.children.length"
       :tag="!props.children || !props.children.length ? 'a' : undefined"
       :target="!props.children || !props.children.length ? props.target : undefined"
+      :rel="linkRel"
       :href="!props.children || !props.children.length ? props.link : undefined"
     >
       <q-item-section v-if="props.icon" avatar>
@@ -29,6 +30,7 @@
       :clickable="!props.children || !props.children.length"
       :tag="!props.children || !props.children.length ? 'a' : undefined"
       :target="!props.children || !props.children.length ? props.target : undefined"
+      :rel="linkRel"
       :href="!props.children || !props.children.length ? props.link : undefined"
     >
       <q-item-section>
@@ -55,6 +57,7 @@
         :caption="child.caption"
         :link="child.link"
         :icon="child.icon"
+        :target="child.target"
         :children="child.children"
         :parent="props.title"
       />
@@ -80,6 +83,8 @@ const props = defineProps({
 })
 
 const isOpen = ref(true)
+const linkRel = props.target === '_blank' ? 'noopener noreferrer' : undefined
+
 function toggle() {
   isOpen.value = !isOpen.value
 }
