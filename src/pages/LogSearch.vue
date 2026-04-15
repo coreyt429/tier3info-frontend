@@ -370,10 +370,23 @@ export default {
     },
 
     decodeRisonValue(value) {
-      return value.replace(/!!/g, '__RISON_BANG__').replace(/!'/g, "'").replace(
+      const risonDecoded = value.replace(/!!/g, '__RISON_BANG__').replace(/!'/g, "'").replace(
         /__RISON_BANG__/g,
         '!',
       )
+
+      let uriDecoded = risonDecoded
+      for (let i = 0; i < 2; i += 1) {
+        try {
+          const nextValue = decodeURIComponent(uriDecoded)
+          if (nextValue === uriDecoded) break
+          uriDecoded = nextValue
+        } catch {
+          break
+        }
+      }
+
+      return uriDecoded
     },
 
     applyKibanaTimeRange(timeRange) {
