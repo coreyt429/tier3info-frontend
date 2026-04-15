@@ -111,6 +111,7 @@
             type="textarea"
             autogrow
             clearable
+            @paste="handleQueryPaste"
           />
         </div>
         <div class="col-3 q-mb-xs text-center">
@@ -248,6 +249,166 @@ export default {
     window.removeEventListener('log-filter-must-not', this.filterMustNotHandler)
   },
   methods: {
+    handleQueryPaste(event) {
+      const pastedText = event?.clipboardData?.getData('text')?.trim()
+      if (!pastedText) return
+
+      const parsedPaste = this.parseKibanaPaste(pastedText)
+      if (!parsedPaste) return
+
+      event.preventDefault()
+      this.queryString = parsedPaste.query
+
+      if (parsedPaste.timeRange) {
+        this.applyKibanaTimeRange(parsedPaste.timeRange)
+      }
+    },
+
+    parseKibanaPaste(rawValue) {
+      const trimmedValue = rawValue?.trim()
+      if (!trimmedValue) return null
+
+      let parsedUrl
+      try {
+        parsedUrl = new URL(trimmedValue)
+      } catch {
+        return null
+      }
+
+      if (!this.looksLikeKibanaUrl(parsedUrl, trimmedValue)) {
+        return null
+      }
+
+      const searchCandidates = this.getKibanaSearchCandidates(parsedUrl, trimmedValue)
+      const query = this.extractKibanaQuery(searchCandidates)
+      if (!query) return null
+
+      return {
+        query,
+        timeRange: this.extractKibanaTimeRange(searchCandidates),
+      }
+    },
+
+    looksLikeKibanaUrl(parsedUrl, rawValue) {
+      const candidate = `${parsedUrl.hostname}${parsedUrl.pathname}${parsedUrl.hash}${parsedUrl.search}`
+      return /kibana|discover|app\/logs|_a=|_g=/i.test(candidate || rawValue)
+    },
+
+    getKibanaSearchCandidates(parsedUrl, rawValue) {
+      const candidates = new Set()
+      const addCandidate = (value) => {
+        if (!value || typeof value !== 'string') return
+        candidates.add(value)
+        try {
+          candidates.add(decodeURIComponent(value))
+        } catch {
+          // Ignore malformed URI segments.
+        }
+      }
+
+      addCandidate(rawValue)
+      addCandidate(parsedUrl.hash)
+      addCandidate(parsedUrl.search)
+
+      const collectParams = (value) => {
+        if (!value) return
+        const queryString = value.includes('?') ? value.split('?').slice(1).join('?') : value
+        const params = new URLSearchParams(queryString.replace(/^#/, ''))
+        ;['_a', '_g', 'query'].forEach((key) => addCandidate(params.get(key)))
+      }
+
+      collectParams(parsedUrl.search)
+      collectParams(parsedUrl.hash)
+
+      return Array.from(candidates)
+    },
+
+    extractKibanaQuery(candidates) {
+      const patterns = [
+        /query:\(language:[^,]+,query:'((?:!!|!'|[^'])*)'\)/,
+        /query:\(query:'((?:!!|!'|[^'])*)',language:[^)]+\)/,
+        /query:'((?:!!|!'|[^'])*)'/,
+      ]
+
+      for (const candidate of candidates) {
+        for (const pattern of patterns) {
+          const match = candidate.match(pattern)
+          if (!match?.[1]) continue
+          const query = this.decodeRisonValue(match[1]).trim()
+          if (query) return query
+        }
+      }
+
+      return null
+    },
+
+    extractKibanaTimeRange(candidates) {
+      for (const candidate of candidates) {
+        const fromMatch = candidate.match(/from:('(?:!!|!'|[^'])*'|[^,)\s]+)/)
+        const toMatch = candidate.match(/to:('(?:!!|!'|[^'])*'|[^,)\s]+)/)
+        const from = this.normalizeKibanaTimeValue(fromMatch?.[1])
+        const to = this.normalizeKibanaTimeValue(toMatch?.[1])
+
+        if (from || to) {
+          return { from, to }
+        }
+      }
+
+      return null
+    },
+
+    normalizeKibanaTimeValue(value) {
+      if (!value) return null
+      const trimmedValue = value.trim()
+      if (!trimmedValue) return null
+      const unwrappedValue =
+        trimmedValue.startsWith("'") && trimmedValue.endsWith("'")
+          ? trimmedValue.slice(1, -1)
+          : trimmedValue
+      const decodedValue = this.decodeRisonValue(unwrappedValue).trim()
+      return decodedValue || null
+    },
+
+    decodeRisonValue(value) {
+      return value.replace(/!!/g, '__RISON_BANG__').replace(/!'/g, "'").replace(
+        /__RISON_BANG__/g,
+        '!',
+      )
+    },
+
+    applyKibanaTimeRange(timeRange) {
+      const { from, to } = timeRange || {}
+      if (!from && !to) return
+
+      if (to === 'now' && from && this.timeOptions.some((option) => option.value === from)) {
+        this.timePreset = from
+        this.showCustom = false
+        this.timeFilters.value = { gte: from }
+        return
+      }
+
+      const customStart = this.isoToLocalDateTime(from)
+      const customEnd = this.isoToLocalDateTime(to)
+      if (!(customStart && customEnd)) return
+
+      this.timePreset = 'custom'
+      this.showCustom = true
+      this.customStartDT = customStart
+      this.customEndDT = customEnd
+      this.updateCustomRange()
+    },
+
+    isoToLocalDateTime(value) {
+      if (!value || value === 'now') return null
+      const date = new Date(value)
+      if (Number.isNaN(date.getTime())) return null
+
+      const pad = (n) => String(n).padStart(2, '0')
+      const pad3 = (n) => String(n).padStart(3, '0')
+
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}.${pad3(date.getMilliseconds())}`
+    },
+
     onEntrySelected(entry) {
       try {
         window.dispatchEvent(new CustomEvent('log-entry-selected', { detail: entry }))
