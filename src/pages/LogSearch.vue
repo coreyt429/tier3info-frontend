@@ -181,7 +181,6 @@
 <script>
 import { useTitleStore } from 'stores/titleStore'
 import { tier3info_restful_request } from 'src/plugins/tier3info'
-import { useRoute } from 'vue-router'
 // Removed unused import for LogViewer
 import LogViewer from 'components/LogViewer.vue'
 export default {
@@ -189,10 +188,8 @@ export default {
   created() {
     const titleStore = useTitleStore()
     titleStore.setMainTitle('Query String Log Search')
-
-    const route = useRoute()
-    if (route.query.queryString) {
-      this.queryString = route.query.queryString
+    this.applyRouteQuery(this.$route?.query)
+    if (this.queryString) {
       console.log('LogSearch.vue: Query String valid, executing search')
       this.executeSearch()
     }
@@ -248,7 +245,42 @@ export default {
     window.removeEventListener('log-filter-must', this.filterMustHandler)
     window.removeEventListener('log-filter-must-not', this.filterMustNotHandler)
   },
+  watch: {
+    '$route.query'(newQuery) {
+      this.applyRouteQuery(newQuery)
+    },
+  },
   methods: {
+    applyRouteQuery(routeQuery) {
+      const esquery = routeQuery?.esquery || routeQuery?.queryString || ''
+      const trimmedQuery = typeof esquery === 'string' ? esquery.trim() : ''
+      if (trimmedQuery !== this.queryString) {
+        this.queryString = trimmedQuery
+      }
+
+      this.applyRouteTimeRange(routeQuery)
+    },
+
+    applyRouteTimeRange(routeQuery) {
+      const start = typeof routeQuery?.start === 'string' ? routeQuery.start.trim() : ''
+      const end = typeof routeQuery?.end === 'string' ? routeQuery.end.trim() : ''
+
+      if (!start && !end) {
+        return
+      }
+
+      if (end === 'now' && start && this.timeOptions.some((option) => option.value === start)) {
+        this.timePreset = start
+        this.showCustom = false
+        this.timeFilters.value = { gte: start }
+        this.customStartDT = null
+        this.customEndDT = null
+        return
+      }
+
+      this.applyKibanaTimeRange({ from: start, to: end })
+    },
+
     handleQueryPaste(event) {
       const pastedText = event?.clipboardData?.getData('text')?.trim()
       if (!pastedText) return
@@ -397,6 +429,8 @@ export default {
         this.timePreset = from
         this.showCustom = false
         this.timeFilters.value = { gte: from }
+        this.customStartDT = null
+        this.customEndDT = null
         return
       }
 
@@ -409,6 +443,68 @@ export default {
       this.customStartDT = customStart
       this.customEndDT = customEnd
       this.updateCustomRange()
+    },
+
+    getShareableTimeRange() {
+      const timeFilter = this.timeFilters?.value || {}
+      const start = this.resolveTimeValueToAbsolute(timeFilter.gte)
+      const end = this.resolveTimeValueToAbsolute(timeFilter.lte || 'now')
+      return { start, end }
+    },
+
+    resolveTimeValueToAbsolute(value) {
+      if (!value) return null
+      if (/^\d{4}-\d{2}-\d{2}T/.test(value)) return value
+      if (value === 'now') return new Date().toISOString()
+
+      const relativeMatch = value.match(/^now-(\d+)([mhdwy])$/)
+      if (!relativeMatch) return null
+
+      const amount = parseInt(relativeMatch[1], 10)
+      const unit = relativeMatch[2]
+      const now = new Date()
+      const date = new Date(now)
+      const unitMap = {
+        m: 'Minutes',
+        h: 'Hours',
+        d: 'Date',
+        w: 'Date',
+        y: 'FullYear',
+      }
+      const multiplierMap = {
+        m: 1,
+        h: 1,
+        d: 1,
+        w: 7,
+        y: 1,
+      }
+      const getter = `get${unitMap[unit]}`
+      const setter = `set${unitMap[unit]}`
+
+      date[setter](date[getter]() - amount * multiplierMap[unit])
+      return date.toISOString()
+    },
+
+    syncRouteQuery() {
+      const esquery = this.queryString.trim()
+      const { start, end } = this.getShareableTimeRange()
+      const nextQuery = {}
+
+      if (esquery) nextQuery.esquery = esquery
+      if (start) nextQuery.start = start
+      if (end) nextQuery.end = end
+
+      const currentQuery = this.$route?.query || {}
+      if (
+        (currentQuery.esquery || '') === (nextQuery.esquery || '') &&
+        (currentQuery.start || '') === (nextQuery.start || '') &&
+        (currentQuery.end || '') === (nextQuery.end || '') &&
+        !currentQuery.queryString
+      ) {
+        return
+      }
+
+      this.$router.replace({ path: this.$route.path, query: nextQuery })
     },
 
     isoToLocalDateTime(value) {
@@ -480,6 +576,7 @@ export default {
       if (this.timePreset === 'custom') {
         this.updateCustomRange()
       }
+      this.syncRouteQuery()
       this.statusMessage = `Searching for ${this.queryString}... Please wait.`
       console.log('LogSearch.vue: executeSearch called with queryString:', this.queryString)
       console.log('LogSearch.vue: executeSearch called with queryFilters:', this.queryFilters)
