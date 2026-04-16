@@ -258,7 +258,47 @@ export default {
         this.queryString = trimmedQuery
       }
 
+      this.applyRouteFilters(routeQuery)
       this.applyRouteTimeRange(routeQuery)
+    },
+
+    applyRouteFilters(routeQuery) {
+      const filters = this.parseRouteFilters(routeQuery?.filters)
+      const currentFilters = JSON.stringify(this.queryFilters || [])
+      const nextFilters = JSON.stringify(filters)
+
+      if (currentFilters !== nextFilters) {
+        this.queryFilters = filters
+      }
+    },
+
+    parseRouteFilters(rawFilters) {
+      if (typeof rawFilters !== 'string' || !rawFilters.trim()) {
+        return []
+      }
+
+      try {
+        const parsedFilters = JSON.parse(rawFilters)
+        if (!Array.isArray(parsedFilters)) return []
+
+        return parsedFilters
+          .filter(
+            (filter) =>
+              filter &&
+              typeof filter === 'object' &&
+              typeof filter.field === 'string' &&
+              Object.prototype.hasOwnProperty.call(filter, 'value'),
+          )
+          .map((filter) => ({
+            must: Boolean(filter.must),
+            field: filter.field.trim(),
+            value: filter.value,
+          }))
+          .filter((filter) => filter.field)
+      } catch (error) {
+        console.error('LogSearch.vue: unable to parse route filters', error)
+        return []
+      }
     },
 
     applyRouteTimeRange(routeQuery) {
@@ -488,23 +528,40 @@ export default {
     syncRouteQuery() {
       const esquery = this.queryString.trim()
       const { start, end } = this.getShareableTimeRange()
+      const filters = this.getShareableFilters()
       const nextQuery = {}
 
       if (esquery) nextQuery.esquery = esquery
       if (start) nextQuery.start = start
       if (end) nextQuery.end = end
+      if (filters) nextQuery.filters = filters
 
       const currentQuery = this.$route?.query || {}
       if (
         (currentQuery.esquery || '') === (nextQuery.esquery || '') &&
         (currentQuery.start || '') === (nextQuery.start || '') &&
         (currentQuery.end || '') === (nextQuery.end || '') &&
+        (currentQuery.filters || '') === (nextQuery.filters || '') &&
         !currentQuery.queryString
       ) {
         return
       }
 
       this.$router.replace({ path: this.$route.path, query: nextQuery })
+    },
+
+    getShareableFilters() {
+      if (!Array.isArray(this.queryFilters) || !this.queryFilters.length) {
+        return null
+      }
+
+      return JSON.stringify(
+        this.queryFilters.map((filter) => ({
+          must: Boolean(filter.must),
+          field: typeof filter.field === 'string' ? filter.field.trim() : '',
+          value: filter.value,
+        })),
+      )
     },
 
     isoToLocalDateTime(value) {
@@ -695,6 +752,7 @@ export default {
           }
         }
       })
+      this.syncRouteQuery()
     },
     onMustNot(event) {
       // event: { key: string, value: any }
@@ -724,11 +782,13 @@ export default {
           }
         }
       })
+      this.syncRouteQuery()
     },
     removeFilter(index) {
       if (index >= 0 && index < this.queryFilters.length) {
         const removed = this.queryFilters.splice(index, 1)
         console.log('LogSearch.vue: removed filter:', removed)
+        this.syncRouteQuery()
       }
     },
     formatFilterValue(val) {
