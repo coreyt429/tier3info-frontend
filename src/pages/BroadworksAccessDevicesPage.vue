@@ -155,6 +155,7 @@ const rows = ref([])
 const selectedItem = ref(null)
 const fileMap = ref({})
 const lastPullMap = ref({})
+const refreshingDeviceIds = ref(new Set())
 const pagination = ref({ rowsPerPage: 0 })
 
 const columns = [
@@ -168,6 +169,14 @@ const columns = [
   },
   { name: 'group_id', label: 'Group Id', field: 'group_id', sortable: true, align: 'left' },
   { name: 'device_type', label: 'Device Type', field: 'device_type', sortable: true, align: 'left' },
+  {
+    name: 'security_state',
+    label: 'Security',
+    field: 'security_state',
+    sortable: false,
+    align: 'center',
+    renderHtml: true,
+  },
   { name: 'device_id', label: 'Device Id', field: 'device_id', sortable: true, align: 'left' },
   { name: 'mac_address', label: 'MAC Address', field: 'mac_address', sortable: true, align: 'left' },
   {
@@ -184,6 +193,13 @@ const columns = [
     sortable: false,
     align: 'left',
     renderHtml: true,
+  },
+  {
+    name: 'refreshAction',
+    label: 'Refresh',
+    field: 'refreshAction',
+    sortable: false,
+    align: 'center',
   },
 ]
 
@@ -259,6 +275,39 @@ function parseOrder(value) {
   return Number.isFinite(numericValue) ? numericValue : Number.MAX_SAFE_INTEGER
 }
 
+function getSecurityLevelMetadata(securityLevel) {
+  switch (Number(securityLevel)) {
+    case 0:
+      return { color: '#d32f2f', label: 'Security level 0' }
+    case 1:
+      return { color: '#edb100', label: 'Security level 1' }
+    case 2:
+      return { color: '#2e7d32', label: 'Security level 2' }
+    default:
+      return { color: '#1976d2', label: 'Security level unknown' }
+  }
+}
+
+function buildSecurityStateIndicator(record) {
+  const securityLevel = record?.dms_security_state?.security_level
+  const metadata = getSecurityLevelMetadata(securityLevel)
+  return `<span title="${escapeHtml(metadata.label)}" style="display:inline-block;width:12px;height:12px;border-radius:999px;background:${metadata.color};"></span>`
+}
+
+function buildRefreshAction(deviceId) {
+  if (!deviceId) {
+    return null
+  }
+
+  return {
+    tooltip: `Queue refresh for ${deviceId}`,
+    get loading() {
+      return refreshingDeviceIds.value.has(deviceId)
+    },
+    action: () => queueRefresh(deviceId),
+  }
+}
+
 function mapAccessDeviceRow([id, record]) {
   const customTags = Array.isArray(record.custom_tags)
     ? record.custom_tags
@@ -275,9 +324,38 @@ function mapAccessDeviceRow([id, record]) {
   return {
     id,
     ...record,
+    security_state: buildSecurityStateIndicator(record),
     mac_address: record.mac_address || '',
     tagsButton: buildTagsButton(customTags, record.device_id || id),
     users_display: formatLinesAsHtml(users),
+    refreshAction: buildRefreshAction(record.device_id || id),
+  }
+}
+
+async function queueRefresh(deviceId) {
+  if (!deviceId || refreshingDeviceIds.value.has(deviceId)) {
+    return
+  }
+
+  refreshingDeviceIds.value.add(deviceId)
+  rows.value = [...rows.value]
+
+  try {
+    await tier3info_restful_request({
+      method: 'POST',
+      path: '/locate/refresh',
+      body: {
+        entity: 'access_device',
+        identifier: deviceId,
+      },
+    })
+    emit_notification('positive', `${deviceId} queued for refresh.`)
+  } catch (error) {
+    console.error('Failed to queue access device refresh:', error)
+    emit_notification('negative', `Failed to queue refresh for ${deviceId}.`)
+  } finally {
+    refreshingDeviceIds.value.delete(deviceId)
+    rows.value = [...rows.value]
   }
 }
 

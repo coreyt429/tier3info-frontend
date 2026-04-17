@@ -122,6 +122,25 @@
           />
         </q-td>
       </template>
+      <template v-slot:body-cell-refreshAction="props">
+        <q-td :props="props">
+          <q-btn
+            v-if="props.row.refreshAction?.action"
+            flat
+            dense
+            round
+            size="sm"
+            icon="refresh"
+            color="primary"
+            :loading="Boolean(props.row.refreshAction?.loading)"
+            @click.stop="props.row.refreshAction.action()"
+          >
+            <q-tooltip anchor="top middle" self="bottom middle">
+              {{ props.row.refreshAction.tooltip || 'Refresh' }}
+            </q-tooltip>
+          </q-btn>
+        </q-td>
+      </template>
       <template v-slot:body-cell="props">
         <q-td :props="props">
           <span v-if="props.col?.renderHtml" v-html="coerceHtml(props.value)"></span>
