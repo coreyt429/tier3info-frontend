@@ -35,6 +35,32 @@
       />
     </q-card>
 
+    <q-dialog v-model="showSecureDialog" persistent>
+      <q-card style="min-width: 360px; max-width: 480px; width: 100%">
+        <q-card-section>
+          <div class="text-h6">Secure Access Device</div>
+          <div class="q-mt-sm">
+            Secure
+            <strong>{{ secureDialogDeviceId || 'this access device' }}</strong
+            >?
+          </div>
+        </q-card-section>
+        <q-card-section class="q-pt-none">
+          <q-checkbox v-model="secureDialogReboot" label="Reboot after securing" />
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat label="Cancel" :disable="isSecuringDialog" @click="closeSecureDialog" />
+          <q-btn
+            color="warning"
+            icon="lock"
+            label="Secure"
+            :loading="isSecuringDialog"
+            @click="confirmSecureDevice"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
     <q-card v-if="selectedItem" class="q-mt-md">
       <q-card-section class="row items-start q-col-gutter-md">
         <div class="col-12 col-md-6">
@@ -156,6 +182,11 @@ const selectedItem = ref(null)
 const fileMap = ref({})
 const lastPullMap = ref({})
 const refreshingDeviceIds = ref(new Set())
+const securingDeviceIds = ref(new Set())
+const showSecureDialog = ref(false)
+const secureDialogDeviceId = ref('')
+const secureDialogReboot = ref(loadSecureRebootPreference())
+const isSecuringDialog = ref(false)
 const pagination = ref({ rowsPerPage: 0 })
 
 const columns = [
@@ -198,6 +229,13 @@ const columns = [
     name: 'refreshAction',
     label: 'Refresh',
     field: 'refreshAction',
+    sortable: false,
+    align: 'center',
+  },
+  {
+    name: 'secureAction',
+    label: 'Secure',
+    field: 'secureAction',
     sortable: false,
     align: 'center',
   },
@@ -275,6 +313,28 @@ function parseOrder(value) {
   return Number.isFinite(numericValue) ? numericValue : Number.MAX_SAFE_INTEGER
 }
 
+function loadSecureRebootPreference() {
+  try {
+    if (typeof window === 'undefined' || !window.localStorage) {
+      return false
+    }
+    return window.localStorage.getItem('access-device-secure-reboot') === 'true'
+  } catch {
+    return false
+  }
+}
+
+function saveSecureRebootPreference(value) {
+  try {
+    if (typeof window === 'undefined' || !window.localStorage) {
+      return
+    }
+    window.localStorage.setItem('access-device-secure-reboot', String(Boolean(value)))
+  } catch {
+    // Ignore storage errors and keep the in-memory preference.
+  }
+}
+
 function getSecurityLevelMetadata(securityLevel) {
   switch (Number(securityLevel)) {
     case 0:
@@ -294,6 +354,16 @@ function buildSecurityStateIndicator(record) {
   return `<span title="${escapeHtml(metadata.label)}" style="display:inline-block;width:12px;height:12px;border-radius:999px;background:${metadata.color};"></span>`
 }
 
+function isSecureGreen(record) {
+  return Number(record?.dms_security_state?.security_level) === 2
+}
+
+function isYealinkDevice(record) {
+  return String(record?.device_type || '')
+    .toLowerCase()
+    .includes('yealink')
+}
+
 function buildRefreshAction(deviceId) {
   if (!deviceId) {
     return null
@@ -305,6 +375,20 @@ function buildRefreshAction(deviceId) {
       return refreshingDeviceIds.value.has(deviceId)
     },
     action: () => queueRefresh(deviceId),
+  }
+}
+
+function buildSecureAction(record, deviceId) {
+  if (!deviceId || isSecureGreen(record) || !isYealinkDevice(record)) {
+    return null
+  }
+
+  return {
+    tooltip: `Secure ${deviceId}`,
+    get loading() {
+      return securingDeviceIds.value.has(deviceId)
+    },
+    action: () => openSecureDialog(deviceId),
   }
 }
 
@@ -329,6 +413,7 @@ function mapAccessDeviceRow([id, record]) {
     tagsButton: buildTagsButton(customTags, record.device_id || id),
     users_display: formatLinesAsHtml(users),
     refreshAction: buildRefreshAction(record.device_id || id),
+    secureAction: buildSecureAction(record, record.device_id || id),
   }
 }
 
@@ -355,6 +440,54 @@ async function queueRefresh(deviceId) {
     emit_notification('negative', `Failed to queue refresh for ${deviceId}.`)
   } finally {
     refreshingDeviceIds.value.delete(deviceId)
+    rows.value = [...rows.value]
+  }
+}
+
+function openSecureDialog(deviceId) {
+  if (!deviceId || securingDeviceIds.value.has(deviceId)) {
+    return
+  }
+
+  secureDialogDeviceId.value = deviceId
+  showSecureDialog.value = true
+}
+
+function closeSecureDialog() {
+  if (isSecuringDialog.value) {
+    return
+  }
+
+  showSecureDialog.value = false
+  secureDialogDeviceId.value = ''
+}
+
+async function confirmSecureDevice() {
+  const deviceId = secureDialogDeviceId.value
+  if (!deviceId || securingDeviceIds.value.has(deviceId)) {
+    return
+  }
+
+  const reboot = Boolean(secureDialogReboot.value)
+  saveSecureRebootPreference(reboot)
+  isSecuringDialog.value = true
+  securingDeviceIds.value.add(deviceId)
+  rows.value = [...rows.value]
+
+  try {
+    await tier3info_restful_request({
+      method: 'POST',
+      path: `/broadworks/access_device/${encodeURIComponent(deviceId)}/secure/yealink?reboot=${reboot}`,
+    })
+    emit_notification('positive', `${deviceId} security request submitted.`)
+    showSecureDialog.value = false
+    secureDialogDeviceId.value = ''
+  } catch (error) {
+    console.error('Failed to secure Yealink access device:', error)
+    emit_notification('negative', `Failed to secure ${deviceId}.`)
+  } finally {
+    isSecuringDialog.value = false
+    securingDeviceIds.value.delete(deviceId)
     rows.value = [...rows.value]
   }
 }
