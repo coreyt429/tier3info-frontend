@@ -35,6 +35,50 @@
       />
     </q-card>
 
+    <q-card v-if="showMacRefreshPanel" class="q-mt-md">
+      <q-card-section class="row items-center q-col-gutter-md">
+        <div class="col">
+          <div class="text-subtitle1">No results found for these MAC addresses</div>
+          <div class="text-caption text-grey-7">
+            Refresh the selected MAC addresses in locate, then rerun the last search.
+          </div>
+        </div>
+        <div class="col-auto">
+          <q-btn
+            color="primary"
+            icon="refresh"
+            label="Refresh Selected and Search Again"
+            :disable="!selectedRefreshMacAddresses.length"
+            :loading="isBulkRefreshingMacs"
+            @click="refreshSelectedMacAddresses"
+          />
+        </div>
+      </q-card-section>
+
+      <q-separator />
+
+      <q-list separator>
+        <q-item v-for="macAddress in refreshableMacAddresses" :key="macAddress">
+          <q-item-section avatar>
+            <q-checkbox v-model="selectedRefreshMacAddresses" :val="macAddress" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>{{ macAddress }}</q-item-label>
+          </q-item-section>
+          <q-item-section side>
+            <q-btn
+              flat
+              color="primary"
+              icon="refresh"
+              label="Refresh"
+              :loading="refreshingMacAddresses.has(macAddress)"
+              @click="refreshMacAddress(macAddress)"
+            />
+          </q-item-section>
+        </q-item>
+      </q-list>
+    </q-card>
+
     <q-dialog v-model="showSecureDialog" persistent>
       <q-card style="min-width: 360px; max-width: 480px; width: 100%">
         <q-card-section>
@@ -181,6 +225,12 @@ const rows = ref([])
 const selectedItem = ref(null)
 const fileMap = ref({})
 const lastPullMap = ref({})
+const hasSearched = ref(false)
+const lastSearchQuery = ref('')
+const lastSearchHadNoResults = ref(false)
+const selectedRefreshMacAddresses = ref([])
+const refreshingMacAddresses = ref(new Set())
+const isBulkRefreshingMacs = ref(false)
 const refreshingDeviceIds = ref(new Set())
 const securingDeviceIds = ref(new Set())
 const showSecureDialog = ref(false)
@@ -266,8 +316,38 @@ const orphanPulls = computed(() => {
     .sort((a, b) => String(a.path).localeCompare(String(b.path)))
 })
 
+const refreshableMacAddresses = computed(() => extractMacAddresses(lastSearchQuery.value))
+
+const showMacRefreshPanel = computed(() => {
+  return hasSearched.value && lastSearchHadNoResults.value && refreshableMacAddresses.value.length > 0
+})
+
 function trimSearchQuery() {
   searchQuery.value = searchQuery.value.trim()
+}
+
+function normalizeMacAddress(value) {
+  const hexOnly = String(value || '').replace(/[^0-9a-f]/gi, '')
+  if (hexOnly.length !== 12) {
+    return null
+  }
+
+  return hexOnly
+    .toUpperCase()
+    .match(/.{1,2}/g)
+    ?.join(':') || null
+}
+
+function extractMacAddresses(value) {
+  const query = String(value || '')
+  const matches = [
+    ...(query.match(/\b(?:[0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}\b/g) || []),
+    ...(query.match(/\b(?:[0-9A-Fa-f]{4}\.){2}[0-9A-Fa-f]{4}\b/g) || []),
+    ...(query.match(/\b[0-9A-Fa-f]{12}\b/g) || []),
+  ]
+
+  const normalized = matches.map(normalizeMacAddress).filter(Boolean)
+  return [...new Set(normalized)]
 }
 
 function escapeHtml(value) {
@@ -444,6 +524,72 @@ async function queueRefresh(deviceId) {
   }
 }
 
+async function postLocateRefresh(macAddress) {
+  return await tier3info_restful_request({
+    method: 'POST',
+    path: `/locate/refresh/${encodeURIComponent(macAddress)}`,
+  })
+}
+
+async function refreshMacAddresses(macAddresses, rerunSearch = true) {
+  const uniqueMacAddresses = [...new Set((macAddresses || []).filter(Boolean))]
+  if (!uniqueMacAddresses.length) {
+    return
+  }
+
+  uniqueMacAddresses.forEach((macAddress) => refreshingMacAddresses.value.add(macAddress))
+  if (uniqueMacAddresses.length > 1) {
+    isBulkRefreshingMacs.value = true
+  }
+
+  let successfulRefreshCount = 0
+
+  try {
+    const results = await Promise.allSettled(uniqueMacAddresses.map((macAddress) => postLocateRefresh(macAddress)))
+
+    results.forEach((result) => {
+      if (result.status === 'fulfilled' && result.value) {
+        successfulRefreshCount += 1
+      }
+    })
+
+    if (successfulRefreshCount > 0) {
+      emit_notification(
+        'positive',
+        `Queued ${successfulRefreshCount} MAC address${successfulRefreshCount === 1 ? '' : 'es'} for refresh.`,
+      )
+    }
+
+    if (successfulRefreshCount !== uniqueMacAddresses.length) {
+      emit_notification('negative', 'One or more MAC address refresh requests failed.')
+    }
+
+    if (rerunSearch && successfulRefreshCount > 0) {
+      await executeSearch({ queryOverride: lastSearchQuery.value })
+    }
+  } finally {
+    uniqueMacAddresses.forEach((macAddress) => refreshingMacAddresses.value.delete(macAddress))
+    isBulkRefreshingMacs.value = false
+  }
+}
+
+async function refreshMacAddress(macAddress) {
+  if (!macAddress || refreshingMacAddresses.value.has(macAddress)) {
+    return
+  }
+
+  await refreshMacAddresses([macAddress], true)
+}
+
+async function refreshSelectedMacAddresses() {
+  if (!selectedRefreshMacAddresses.value.length || isBulkRefreshingMacs.value) {
+    return
+  }
+
+  isBulkRefreshingMacs.value = true
+  await refreshMacAddresses(selectedRefreshMacAddresses.value, true)
+}
+
 function openSecureDialog(deviceId) {
   if (!deviceId || securingDeviceIds.value.has(deviceId)) {
     return
@@ -492,17 +638,32 @@ async function confirmSecureDevice() {
   }
 }
 
-async function executeSearch() {
-  trimSearchQuery()
-  if (!searchQuery.value) {
+async function executeSearch(options = {}) {
+  const queryOverride =
+    options && typeof options === 'object' && typeof options.queryOverride === 'string'
+      ? options.queryOverride
+      : null
+  const normalizedQuery = String(queryOverride ?? searchQuery.value).trim()
+
+  if (queryOverride === null) {
+    searchQuery.value = normalizedQuery
+  }
+
+  if (!normalizedQuery) {
     rows.value = []
     selectedItem.value = null
     fileMap.value = {}
     lastPullMap.value = {}
+    hasSearched.value = false
+    lastSearchQuery.value = ''
+    lastSearchHadNoResults.value = false
+    selectedRefreshMacAddresses.value = []
     emit_notification('negative', 'Enter a search string.')
     return
   }
 
+  hasSearched.value = true
+  lastSearchQuery.value = normalizedQuery
   isSearching.value = true
   try {
     const response = await tier3info_restful_request({
@@ -520,7 +681,7 @@ async function executeSearch() {
                 },
                 {
                   query_string: {
-                    query: searchQuery.value,
+                    query: normalizedQuery,
                   },
                 },
               ],
@@ -533,6 +694,10 @@ async function executeSearch() {
     if (!response?.data || typeof response.data !== 'object') {
       rows.value = []
       selectedItem.value = null
+      fileMap.value = {}
+      lastPullMap.value = {}
+      lastSearchHadNoResults.value = false
+      selectedRefreshMacAddresses.value = []
       emit_notification('negative', 'Failed to load access devices.')
       return
     }
@@ -541,6 +706,8 @@ async function executeSearch() {
     selectedItem.value = null
     fileMap.value = {}
     lastPullMap.value = {}
+    lastSearchHadNoResults.value = rows.value.length === 0
+    selectedRefreshMacAddresses.value = lastSearchHadNoResults.value ? [...refreshableMacAddresses.value] : []
 
     if (!rows.value.length) {
       emit_notification('negative', 'No access devices found.')
