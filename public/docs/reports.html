@@ -1,0 +1,14 @@
+<h1>Reports</h1>
+<p>
+  The Reports interface lists available report definitions, prompts for report parameters, submits
+  report jobs, and displays completed CSV results.
+</p>
+<h2>API</h2>
+<ul>
+  <li><code>GET /reports</code> returns the available report ids.</li>
+  <li><code>GET /reports?include=data</code> returns report definitions keyed by report id.</li>
+  <li><code>GET /reports/&lt;report_id&gt;</code> returns the selected report definition.</li>
+  <li><code>POST /reports/&lt;report_id&gt;</code> submits parameter values and returns a job id.</li>
+  <li><code>GET /jobs/&lt;job_id&gt;</code> returns job status.</li>
+  <li><code>GET /jobs/files/&lt;job_id&gt;/data.csv</code> returns the completed report CSV.</li>
+</ul>

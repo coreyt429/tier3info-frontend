@@ -418,11 +418,13 @@ function saveSecureRebootPreference(value) {
 function getSecurityLevelMetadata(securityLevel) {
   switch (Number(securityLevel)) {
     case 0:
-      return { color: '#d32f2f', label: 'Security level 0' }
+      return { color: '#d32f2f', label: 'Security level 0: MAC address only' }
     case 1:
-      return { color: '#edb100', label: 'Security level 1' }
+      return { color: '#f57c00', label: 'Security level 1: user-agent validation' }
     case 2:
-      return { color: '#2e7d32', label: 'Security level 2' }
+      return { color: '#edb100', label: 'Security level 2: HTTP credentials' }
+    case 3:
+      return { color: '#2e7d32', label: 'Security level 3: client certificate validation' }
     default:
       return { color: '#1976d2', label: 'Security level unknown' }
   }
@@ -435,7 +437,7 @@ function buildSecurityStateIndicator(record) {
 }
 
 function isSecureGreen(record) {
-  return Number(record?.dms_security_state?.security_level) === 2
+  return Number(record?.dms_security_state?.security_level) >= 2
 }
 
 function isYealinkDevice(record) {

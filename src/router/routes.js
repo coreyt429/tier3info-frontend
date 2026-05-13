@@ -488,6 +488,17 @@ const routes = [
       },
     ],
   },
+  {
+    path: '/reports',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        component: () => import('pages/ReportsPage.vue'),
+        meta: { requiresAuth: true, title: 'Reports', docUrl: 'docs/reports.html' },
+      },
+    ],
+  },
 ]
 
 Object.keys(routePageMap).forEach((path) => {
