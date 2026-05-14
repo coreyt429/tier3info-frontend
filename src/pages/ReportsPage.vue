@@ -54,6 +54,7 @@
                   :options="parameter.options"
                   :multiple="parameter.multiple"
                   :rules="parameter.required ? [requiredRule] : []"
+                  :hint="parameter.hint"
                   outlined
                   dense
                   emit-value
@@ -219,6 +220,28 @@ function normalizeReportItem(item, fallbackId = '') {
   return { ...report, id }
 }
 
+function normalizeReportDetail(data, fallbackId) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    return normalizeReportItem(data, fallbackId)
+  }
+
+  if (data.parameters || data.task_name || data.output || data.title) {
+    return normalizeReportItem(data, fallbackId)
+  }
+
+  if (fallbackId && data[fallbackId]) {
+    return normalizeReportItem(data[fallbackId], fallbackId)
+  }
+
+  const entries = Object.entries(data)
+  if (entries.length === 1) {
+    const [id, report] = entries[0]
+    return normalizeReportItem(report, id)
+  }
+
+  return normalizeReportItem(data, fallbackId)
+}
+
 function normalizeParameters(parameters) {
   if (!parameters) return []
   const entries = Array.isArray(parameters)
@@ -244,9 +267,15 @@ function normalizeParameter(name, definition) {
     options,
     multiple: Boolean(param.multiple),
     required: Boolean(param.required),
-    hint: param.hint || param.description || '',
+    hint: normalizeHint(param.hint || param.description || param.example),
     defaultValue: param.default ?? param.value ?? defaultValueForType(inputType, param.multiple),
   }
+}
+
+function normalizeHint(value) {
+  if (value === null || value === undefined) return ''
+  if (typeof value === 'string') return value
+  return JSON.stringify(value)
 }
 
 function normalizeInputType(type) {
@@ -315,7 +344,7 @@ async function selectReport(row) {
       path: `/reports/${encodeURIComponent(row.id)}`,
     })
     if (response?.data) {
-      selectedReport.value = normalizeReportItem(response.data, row.id)
+      selectedReport.value = normalizeReportDetail(response.data, row.id)
       resetParameterValues()
     }
   } catch (error) {
@@ -428,9 +457,10 @@ async function checkJobStatus() {
 
 async function fetchResults() {
   try {
+    const outputFileName = getReportOutputFileName()
     const response = await tier3info_restful_request({
       method: 'GET',
-      path: `/jobs/files/${encodeURIComponent(jobId.value)}/data.csv`,
+      path: `/jobs/files/${encodeURIComponent(jobId.value)}/${encodeURIComponent(outputFileName)}`,
     })
     const csvText = normalizeCsvResponse(response?.data)
     if (!csvText.trim()) {
@@ -467,6 +497,12 @@ async function fetchResults() {
     isLoading.value = false
     clearResultsTimer()
   }
+}
+
+function getReportOutputFileName() {
+  const output = selectedReport.value?.output || selectedReport.value?.file_name || selectedReport.value?.filename
+  const normalizedOutput = typeof output === 'string' ? output.trim() : ''
+  return normalizedOutput || 'data.csv'
 }
 
 function normalizeCsvResponse(data) {
