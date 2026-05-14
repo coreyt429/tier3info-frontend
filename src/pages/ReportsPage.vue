@@ -41,7 +41,11 @@
         <q-separator />
         <q-card-section>
           <q-form class="row q-col-gutter-md" @submit.prevent="submitReport">
-            <template v-if="parameterFields.length">
+            <div v-if="reportDetailsLoading" class="col-12 row items-center text-grey-7 q-gutter-sm">
+              <q-spinner size="20px" color="primary" />
+              <span>Loading report parameters...</span>
+            </div>
+            <template v-else-if="parameterFields.length">
               <div
                 v-for="parameter in parameterFields"
                 :key="parameter.name"
@@ -153,6 +157,7 @@ const titleStore = useTitleStore()
 titleStore.setMainTitle('Reports')
 
 const reportsLoading = ref(false)
+const reportDetailsLoading = ref(false)
 const reports = ref([])
 const selectedReport = ref(null)
 const parameterValues = ref({})
@@ -194,7 +199,9 @@ const selectedReportDescription = computed(
   () => selectedReport.value?.description || selectedReport.value?.caption || '',
 )
 
-const parameterFields = computed(() => normalizeParameters(selectedReport.value?.parameters))
+const parameterFields = computed(() =>
+  normalizeParameters(selectedReport.value?.parameters || selectedReport.value?.Parameters),
+)
 
 function requiredRule(value) {
   if (Array.isArray(value)) return value.length > 0 || 'Required'
@@ -202,13 +209,21 @@ function requiredRule(value) {
 }
 
 function normalizeReports(data) {
-  if (Array.isArray(data)) {
-    return data.map((item) => normalizeReportItem(item))
+  const reportData = unwrapReportsResponse(data)
+  if (Array.isArray(reportData)) {
+    return reportData.map((item) => normalizeReportItem(item))
   }
-  if (data && typeof data === 'object') {
-    return Object.entries(data).map(([id, item]) => normalizeReportItem(item, id))
+  if (reportData && typeof reportData === 'object') {
+    return Object.entries(reportData).map(([id, item]) => normalizeReportItem(item, id))
   }
   return []
+}
+
+function unwrapReportsResponse(data) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    return data
+  }
+  return data.reports || data.items || data.data || data
 }
 
 function normalizeReportItem(item, fallbackId = '') {
@@ -221,11 +236,16 @@ function normalizeReportItem(item, fallbackId = '') {
 }
 
 function normalizeReportDetail(data, fallbackId) {
+  const detail = unwrapReportDetailResponse(data)
+  if (detail !== data) {
+    return normalizeReportDetail(detail, fallbackId)
+  }
+
   if (!data || typeof data !== 'object' || Array.isArray(data)) {
     return normalizeReportItem(data, fallbackId)
   }
 
-  if (data.parameters || data.task_name || data.output || data.title) {
+  if (data.parameters || data.Parameters || data.task_name || data.output || data.title) {
     return normalizeReportItem(data, fallbackId)
   }
 
@@ -240,6 +260,13 @@ function normalizeReportDetail(data, fallbackId) {
   }
 
   return normalizeReportItem(data, fallbackId)
+}
+
+function unwrapReportDetailResponse(data) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    return data
+  }
+  return data.report || data.definition || data.data || data
 }
 
 function normalizeParameters(parameters) {
@@ -337,6 +364,7 @@ async function selectReport(row) {
   resultColumns.value = []
   selectedReport.value = row
   resetParameterValues()
+  reportDetailsLoading.value = true
 
   try {
     const response = await tier3info_restful_request({
@@ -349,6 +377,9 @@ async function selectReport(row) {
     }
   } catch (error) {
     console.error('ReportsPage: selectReport detail error:', error)
+    errorMessage.value = `Unable to load report details for ${row.id}.`
+  } finally {
+    reportDetailsLoading.value = false
   }
 }
 
