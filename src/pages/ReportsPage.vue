@@ -41,6 +41,17 @@
         <q-separator />
         <q-card-section>
           <q-form class="row q-col-gutter-md" @submit.prevent="submitReport">
+            <div class="col-12 col-md-6 col-lg-4">
+              <q-input
+                v-model="reportRunTitle"
+                label="Report Title"
+                outlined
+                dense
+                clearable
+                :disable="isLoading"
+                @blur="trimReportRunTitle"
+              />
+            </div>
             <div v-if="reportDetailsLoading" class="col-12 row items-center text-grey-7 q-gutter-sm">
               <q-spinner size="20px" color="primary" />
               <span>Loading report parameters...</span>
@@ -108,7 +119,7 @@
                 label="Reset"
                 flat
                 :disable="isLoading"
-                @click="resetParameterValues"
+                @click="resetReportForm"
               />
             </div>
           </q-form>
@@ -148,11 +159,13 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { tier3info_restful_request } from 'src/plugins/tier3info.js'
 import DataTable from 'src/components/DataTable.vue'
 import { useTitleStore } from 'stores/titleStore'
 
+const route = useRoute()
 const titleStore = useTitleStore()
 titleStore.setMainTitle('Reports')
 
@@ -160,6 +173,7 @@ const reportsLoading = ref(false)
 const reportDetailsLoading = ref(false)
 const reports = ref([])
 const selectedReport = ref(null)
+const reportRunTitle = ref('')
 const parameterValues = ref({})
 const resultRows = ref([])
 const resultColumns = ref([])
@@ -167,6 +181,9 @@ const isLoading = ref(false)
 const statusMessage = ref(null)
 const errorMessage = ref(null)
 const jobId = ref(null)
+const reportJob = ref(null)
+const reportJobOutputFileName = ref('')
+const reportJobLoading = ref(false)
 const waitCounter = ref(0)
 let pollTimer = null
 let resultsTimer = null
@@ -355,6 +372,129 @@ async function fetchReports() {
   }
 }
 
+function normalizeJob(data, fallbackJobId = '') {
+  if (!data || typeof data !== 'object') {
+    return { job_id: fallbackJobId }
+  }
+  const jobData = data.job || data.data || data
+  if (fallbackJobId && jobData[fallbackJobId] && typeof jobData[fallbackJobId] === 'object') {
+    return normalizeJob(jobData[fallbackJobId], fallbackJobId)
+  }
+  return {
+    ...jobData,
+    job_id: jobData.job_id || jobData.id || fallbackJobId,
+  }
+}
+
+function getJobType(job) {
+  return String(job?.type || job?.job_type || job?.jobType || job?.task_name || '').trim()
+}
+
+function findReportForJob(job) {
+  const reportId = String(job?.report_id || job?.reportId || job?.report || '').trim()
+  if (reportId) {
+    const exact = reports.value.find((report) => report.id === reportId)
+    if (exact) return exact
+  }
+
+  const jobType = getJobType(job)
+  if (jobType) {
+    const taskMatch = reports.value.find((report) => report.task_name === jobType)
+    if (taskMatch) return taskMatch
+
+    const derivedId = jobType.replace(/^reports\./, '').replaceAll('.', '_')
+    const derivedMatch = reports.value.find((report) => report.id === derivedId)
+    if (derivedMatch) return derivedMatch
+  }
+
+  return null
+}
+
+function pickReportOutputFile(filesIndex) {
+  const configuredOutput = getReportOutputFileName()
+  if (configuredOutput !== 'data.csv') return configuredOutput
+
+  const files = normalizeJobFiles(filesIndex)
+  const csvFile = files.find((file) => file.file_name.toLowerCase().endsWith('.csv'))
+  return csvFile?.file_name || configuredOutput
+}
+
+function normalizeJobFiles(data) {
+  if (Array.isArray(data)) {
+    return data.map((file) => normalizeJobFile(file)).filter((file) => file.file_name)
+  }
+  if (data && typeof data === 'object') {
+    return Object.entries(data)
+      .map(([fileName, file]) => normalizeJobFile(file, fileName))
+      .filter((file) => file.file_name)
+  }
+  return []
+}
+
+function normalizeJobFile(file, fallbackName = '') {
+  if (typeof file === 'string') {
+    return { file_name: file }
+  }
+  const normalized = file && typeof file === 'object' ? file : {}
+  const fileName = String(
+    normalized.file_name || normalized.filename || normalized.name || normalized.path || fallbackName,
+  ).trim()
+  return { ...normalized, file_name: fileName }
+}
+
+async function loadReportJob(jobIdFromRoute) {
+  const targetJobId = String(jobIdFromRoute || '').trim()
+  if (!targetJobId) return
+
+  clearPoll()
+  clearResultsTimer()
+  errorMessage.value = null
+  resultRows.value = []
+  resultColumns.value = []
+  jobId.value = targetJobId
+  reportJob.value = null
+  reportJobOutputFileName.value = ''
+  reportJobLoading.value = true
+  isLoading.value = true
+  statusMessage.value = `Loading report data for job ${targetJobId}...`
+
+  try {
+    const jobResponse = await tier3info_restful_request({
+      method: 'GET',
+      path: `/jobs/${encodeURIComponent(targetJobId)}`,
+    })
+    const job = normalizeJob(jobResponse?.data, targetJobId)
+    reportJob.value = job
+
+    const matchingReport = findReportForJob(job)
+    if (matchingReport) {
+      selectedReport.value = matchingReport
+      setGeneratedReportRunTitle(job.name || job.title || '')
+      resetParameterValues()
+    } else {
+      selectedReport.value = {
+        id: job.report_id || getJobType(job) || targetJobId,
+        title: job.name || job.title || `Report job ${targetJobId}`,
+      }
+      setGeneratedReportRunTitle(job.name || job.title || '')
+    }
+
+    const filesResponse = await tier3info_restful_request({
+      method: 'GET',
+      path: `/jobs/files/${encodeURIComponent(targetJobId)}?include=data`,
+    })
+    reportJobOutputFileName.value = pickReportOutputFile(filesResponse?.data)
+    await fetchResults()
+  } catch (error) {
+    console.error('ReportsPage: loadReportJob error:', error)
+    errorMessage.value = `Unable to load report data for job ${targetJobId}.`
+    statusMessage.value = null
+    isLoading.value = false
+  } finally {
+    reportJobLoading.value = false
+  }
+}
+
 async function selectReport(row) {
   clearPoll()
   clearResultsTimer()
@@ -362,7 +502,10 @@ async function selectReport(row) {
   statusMessage.value = null
   resultRows.value = []
   resultColumns.value = []
+  reportJob.value = null
+  reportJobOutputFileName.value = ''
   selectedReport.value = row
+  setGeneratedReportRunTitle()
   resetParameterValues()
   reportDetailsLoading.value = true
 
@@ -373,6 +516,7 @@ async function selectReport(row) {
     })
     if (response?.data) {
       selectedReport.value = normalizeReportDetail(response.data, row.id)
+      setGeneratedReportRunTitle()
       resetParameterValues()
     }
   } catch (error) {
@@ -389,6 +533,27 @@ function resetParameterValues() {
     values[parameter.name] = cloneValue(parameter.defaultValue)
   }
   parameterValues.value = values
+}
+
+function resetReportForm() {
+  setGeneratedReportRunTitle()
+  resetParameterValues()
+}
+
+function setGeneratedReportRunTitle(titleOverride = '') {
+  reportRunTitle.value = titleOverride || generateReportRunTitle()
+}
+
+function generateReportRunTitle() {
+  return `${selectedReportTitle.value} ${formatGeneratedTitleTimestamp(new Date())}`.trim()
+}
+
+function formatGeneratedTitleTimestamp(date) {
+  return date.toLocaleString('sv-SE').replace('T', ' ')
+}
+
+function trimReportRunTitle() {
+  reportRunTitle.value = String(reportRunTitle.value || '').trim()
 }
 
 function cloneValue(value) {
@@ -410,6 +575,8 @@ function buildRequestBody() {
     const value = parameterValues.value[parameter.name]
     body[parameter.name] = typeof value === 'string' ? value.trim() : value
   }
+  trimReportRunTitle()
+  body.title = reportRunTitle.value || generateReportRunTitle()
   return body
 }
 
@@ -419,6 +586,8 @@ async function submitReport() {
   clearResultsTimer()
   resultRows.value = []
   resultColumns.value = []
+  reportJob.value = null
+  reportJobOutputFileName.value = ''
   errorMessage.value = null
   statusMessage.value = `Running ${selectedReportTitle.value}...`
   isLoading.value = true
@@ -531,7 +700,14 @@ async function fetchResults() {
 }
 
 function getReportOutputFileName() {
-  const output = selectedReport.value?.output || selectedReport.value?.file_name || selectedReport.value?.filename
+  const output =
+    reportJobOutputFileName.value ||
+    selectedReport.value?.output ||
+    selectedReport.value?.file_name ||
+    selectedReport.value?.filename ||
+    reportJob.value?.output ||
+    reportJob.value?.file_name ||
+    reportJob.value?.filename
   const normalizedOutput = typeof output === 'string' ? output.trim() : ''
   return normalizedOutput || 'data.csv'
 }
@@ -627,7 +803,17 @@ function clearResultsTimer() {
   }
 }
 
-onMounted(fetchReports)
+onMounted(async () => {
+  await fetchReports()
+  await loadReportJob(route.query?.job_id)
+})
+
+watch(
+  () => route.query?.job_id,
+  async (newJobId) => {
+    await loadReportJob(newJobId)
+  },
+)
 
 onUnmounted(() => {
   clearPoll()

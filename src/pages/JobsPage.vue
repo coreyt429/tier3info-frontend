@@ -120,6 +120,13 @@ const jobColumns = [
   { name: 'type', label: 'Type', field: 'type', align: 'left', sortable: true },
   { name: 'status', label: 'Status', field: 'status', align: 'left', sortable: true },
   { name: 'name', label: 'Title', field: 'name', align: 'left', sortable: true },
+  {
+    name: 'reportAction',
+    label: 'Report',
+    field: 'reportAction',
+    align: 'center',
+    sortable: false,
+  },
 ]
 
 const fileColumns = [
@@ -143,6 +150,7 @@ const jobRows = computed(() =>
     name: job.name || job.title || '',
     type: job.type || job.job_type || job.jobType || '',
     status: job.status || '',
+    reportAction: buildReportAction(job),
   })),
 )
 
@@ -192,6 +200,25 @@ function normalizeFile(file, fallbackName = '') {
     bytes: normalized.bytes ?? normalized.size ?? '',
     content_type: normalized.content_type || normalized.contentType || '',
     last_modified: normalized.last_modified || normalized.lastModified || normalized.updated || '',
+  }
+}
+
+function getJobType(job) {
+  return String(job?.type || job?.job_type || job?.jobType || job?.task_name || '').trim()
+}
+
+function isReportJob(job) {
+  return getJobType(job).startsWith('reports.')
+}
+
+function buildReportAction(job) {
+  const jobId = job?.job_id || job?.id
+  if (!jobId || !isReportJob(job)) return null
+  return {
+    tooltip: `View report data for ${jobId}`,
+    action: () => {
+      window.location.href = `/#/reports?job_id=${encodeURIComponent(jobId)}`
+    },
   }
 }
 
