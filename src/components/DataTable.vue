@@ -160,6 +160,25 @@
           </q-btn>
         </q-td>
       </template>
+      <template v-slot:body-cell-downloadAction="props">
+        <q-td :props="props">
+          <q-btn
+            v-if="props.row.downloadAction?.action"
+            flat
+            dense
+            round
+            size="sm"
+            icon="download"
+            color="primary"
+            :loading="Boolean(props.row.downloadAction?.loading)"
+            @click.stop="props.row.downloadAction.action()"
+          >
+            <q-tooltip anchor="top middle" self="bottom middle">
+              {{ props.row.downloadAction.tooltip || 'Download' }}
+            </q-tooltip>
+          </q-btn>
+        </q-td>
+      </template>
       <template v-slot:body-cell="props">
         <q-td :props="props">
           <span v-if="props.col?.renderHtml" v-html="coerceHtml(props.value)"></span>

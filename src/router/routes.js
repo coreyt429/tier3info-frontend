@@ -102,22 +102,6 @@ const routePageMap = {
       },
     },
   },
-  '/jobs': {
-    page: ApiTableEditPage,
-    meta: {
-      title: 'Jobs',
-      docUrl: 'docs/jobs.html',
-      label: 'Job',
-      endpoint: '/jobs',
-      buttons: ['Delete'],
-      fields: [
-        { name: 'job_id', label: 'Job ID' },
-        { name: 'type', label: 'Type' },
-        { name: 'status', label: 'Status' },
-        { name: 'name', label: 'Title' },
-      ],
-    },
-  },
   '/menu': {
     page: ApiTableEditPage,
     meta: {
@@ -485,6 +469,17 @@ const routes = [
         path: '',
         component: () => import('pages/UsersPage.vue'),
         meta: { requiresAuth: true, title: 'Users', docUrl: 'docs/users.html' },
+      },
+    ],
+  },
+  {
+    path: '/jobs',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        component: () => import('pages/JobsPage.vue'),
+        meta: { requiresAuth: true, title: 'Jobs', docUrl: 'docs/jobs.html' },
       },
     ],
   },
