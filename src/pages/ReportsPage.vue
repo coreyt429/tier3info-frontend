@@ -160,12 +160,13 @@
 
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { tier3info_restful_request } from 'src/plugins/tier3info.js'
 import DataTable from 'src/components/DataTable.vue'
 import { useTitleStore } from 'stores/titleStore'
 
 const route = useRoute()
+const router = useRouter()
 const titleStore = useTitleStore()
 titleStore.setMainTitle('Reports')
 
@@ -390,6 +391,14 @@ function getJobType(job) {
   return String(job?.type || job?.job_type || job?.jobType || job?.task_name || '').trim()
 }
 
+function isCompletedStatus(status) {
+  return ['completed', 'complete', 'success', 'succeeded'].includes(String(status || '').toLowerCase())
+}
+
+function isFailedStatus(status) {
+  return ['failed', 'failure', 'error'].includes(String(status || '').toLowerCase())
+}
+
 function findReportForJob(job) {
   const reportId = String(job?.report_id || job?.reportId || job?.report || '').trim()
   if (reportId) {
@@ -468,15 +477,31 @@ async function loadReportJob(jobIdFromRoute) {
 
     const matchingReport = findReportForJob(job)
     if (matchingReport) {
-      selectedReport.value = matchingReport
+      await loadReportDefinition(matchingReport, { updateRoute: false, preserveJobContext: true })
       setGeneratedReportRunTitle(job.name || job.title || '')
-      resetParameterValues()
     } else {
       selectedReport.value = {
         id: job.report_id || getJobType(job) || targetJobId,
         title: job.name || job.title || `Report job ${targetJobId}`,
       }
       setGeneratedReportRunTitle(job.name || job.title || '')
+    }
+    hydrateJobParameters(job)
+
+    const status = job.status || ''
+    if (isFailedStatus(status)) {
+      errorMessage.value = `Report job ${targetJobId} failed.`
+      statusMessage.value = null
+      isLoading.value = false
+      return
+    }
+
+    if (!isCompletedStatus(status)) {
+      statusMessage.value = `Report job ${targetJobId} status: ${status || 'running'}`
+      isLoading.value = true
+      clearPoll()
+      pollTimer = setTimeout(() => loadReportJob(targetJobId), 5000)
+      return
     }
 
     const filesResponse = await tier3info_restful_request({
@@ -495,19 +520,42 @@ async function loadReportJob(jobIdFromRoute) {
   }
 }
 
-async function selectReport(row) {
+async function loadReportById(reportId) {
+  const targetReportId = String(reportId || '').trim()
+  if (!targetReportId) return
+
+  const existingReport = reports.value.find((report) => report.id === targetReportId)
+  await loadReportDefinition(existingReport || { id: targetReportId, title: targetReportId }, {
+    updateRoute: false,
+  })
+}
+
+async function loadReportDefinition(row, options = {}) {
+  const updateRoute = options.updateRoute === true
+  const preserveJobContext = options.preserveJobContext === true
+  if (!row?.id) return
+
   clearPoll()
   clearResultsTimer()
   errorMessage.value = null
   statusMessage.value = null
   resultRows.value = []
   resultColumns.value = []
-  reportJob.value = null
-  reportJobOutputFileName.value = ''
+  if (!preserveJobContext) {
+    reportJob.value = null
+    reportJobOutputFileName.value = ''
+  }
   selectedReport.value = row
   setGeneratedReportRunTitle()
   resetParameterValues()
   reportDetailsLoading.value = true
+  if (!preserveJobContext) {
+    jobId.value = null
+  }
+
+  if (updateRoute) {
+    updateRouteQuery({ report_id: row.id })
+  }
 
   try {
     const response = await tier3info_restful_request({
@@ -525,6 +573,10 @@ async function selectReport(row) {
   } finally {
     reportDetailsLoading.value = false
   }
+}
+
+async function selectReport(row) {
+  await loadReportDefinition(row, { updateRoute: true })
 }
 
 function resetParameterValues() {
@@ -569,6 +621,53 @@ function trimParameter(name) {
   }
 }
 
+function extractJobParameters(job) {
+  const candidates = [
+    job?.parameters,
+    job?.params,
+    job?.report_parameters,
+    job?.reportParameters,
+    job?.body,
+    job?.payload,
+    job?.request?.parameters,
+    job?.request?.params,
+    job?.request?.body,
+  ]
+
+  for (const candidate of candidates) {
+    if (candidate && typeof candidate === 'object' && !Array.isArray(candidate)) {
+      return candidate.report_parameters || candidate.parameters || candidate
+    }
+  }
+  return {}
+}
+
+function hydrateJobParameters(job) {
+  const jobParameters = extractJobParameters(job)
+  if (!jobParameters || typeof jobParameters !== 'object') return
+
+  const nextValues = { ...parameterValues.value }
+  for (const parameter of parameterFields.value) {
+    if (Object.prototype.hasOwnProperty.call(jobParameters, parameter.name)) {
+      nextValues[parameter.name] = jobParameters[parameter.name]
+    }
+  }
+  parameterValues.value = nextValues
+}
+
+function updateRouteQuery(query) {
+  router
+    .replace({
+      path: route.path,
+      query,
+    })
+    .catch((error) => {
+      if (error?.name !== 'NavigationDuplicated') {
+        console.warn('ReportsPage: route update failed:', error)
+      }
+    })
+}
+
 function buildRequestBody() {
   const body = {}
   for (const parameter of parameterFields.value) {
@@ -606,6 +705,7 @@ async function submitReport() {
       throw new Error('Missing job_id in response')
     }
     jobId.value = returnedJobId
+    updateRouteQuery({ job_id: returnedJobId })
     pollTimer = setTimeout(checkJobStatus, 500)
   } catch (error) {
     console.error('ReportsPage: submitReport error:', error)
@@ -623,12 +723,12 @@ async function checkJobStatus() {
     })
     const status = String(response?.data?.status || '').toLowerCase()
 
-    if (['completed', 'complete', 'success', 'succeeded'].includes(status)) {
+    if (isCompletedStatus(status)) {
       clearPoll()
       await fetchResults()
       return
     }
-    if (['failed', 'failure', 'error'].includes(status)) {
+    if (isFailedStatus(status)) {
       errorMessage.value = 'Report job failed on the server.'
       statusMessage.value = null
       isLoading.value = false
@@ -803,15 +903,35 @@ function clearResultsTimer() {
   }
 }
 
+async function hydrateFromRoute(query) {
+  const routeJobId = String(query?.job_id || '').trim()
+  const routeReportId = String(query?.report_id || '').trim()
+
+  if (routeJobId) {
+    if (routeJobId === String(jobId.value || '') && (isLoading.value || resultRows.value.length)) {
+      return
+    }
+    await loadReportJob(routeJobId)
+    return
+  }
+
+  if (routeReportId) {
+    if (routeReportId === selectedReport.value?.id && !jobId.value) {
+      return
+    }
+    await loadReportById(routeReportId)
+  }
+}
+
 onMounted(async () => {
   await fetchReports()
-  await loadReportJob(route.query?.job_id)
+  await hydrateFromRoute(route.query)
 })
 
 watch(
-  () => route.query?.job_id,
-  async (newJobId) => {
-    await loadReportJob(newJobId)
+  () => ({ ...route.query }),
+  async (newQuery) => {
+    await hydrateFromRoute(newQuery)
   },
 )
 
