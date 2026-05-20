@@ -143,7 +143,7 @@
         :rows="rows"
         :columns="columns"
         :filterable="true"
-        :exportable="false"
+        :exportable="true"
         :pagination-config="pagination"
         exportPrefix="ocom-registers-export"
         noDataLabel="No registers found"
