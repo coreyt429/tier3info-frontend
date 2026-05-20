@@ -117,6 +117,15 @@
         </div>
       </q-card-section>
 
+      <q-card-section class="row q-col-gutter-md q-pt-none">
+        <div class="col-auto">
+          <q-checkbox v-model="excludeFailures" dense label="Filter failures" />
+        </div>
+        <div class="col-auto">
+          <q-checkbox v-model="excludeInternalIps" dense label="Filter internal IPs" />
+        </div>
+      </q-card-section>
+
       <q-card-section v-if="statusMessage">
         <q-banner dense rounded class="bg-info text-primary">
           {{ statusMessage }}
@@ -167,6 +176,8 @@ const timeFilters = ref({ gte: 'now-15m' })
 const showCustom = ref(false)
 const customStartDT = ref(null)
 const customEndDT = ref(null)
+const excludeFailures = ref(true)
+const excludeInternalIps = ref(true)
 const pagination = ref({ rowsPerPage: 0 })
 
 const timeOptions = [
@@ -183,7 +194,9 @@ const timeOptions = [
 ]
 
 const columns = [
+  { name: 'timestamp', label: 'Timestamp', field: 'timestamp', align: 'left', sortable: true },
   { name: 'ip', label: 'IP', field: 'ipLink', align: 'left', sortable: true, renderHtml: true },
+  { name: 'destIp', label: 'Dest IP', field: 'destIp', align: 'left', sortable: true },
   { name: 'user', label: 'User', field: 'userLink', align: 'left', sortable: true, renderHtml: true },
   { name: 'device', label: 'Device', field: 'device', align: 'left', sortable: true },
   { name: 'type', label: 'Type', field: 'type', align: 'left', sortable: true },
@@ -209,6 +222,8 @@ watch(
 function applyRouteQuery(routeQuery) {
   const esquery = routeQuery?.esquery || routeQuery?.queryString || routeQuery?.query || ''
   queryString.value = typeof esquery === 'string' ? esquery.trim() : ''
+  excludeFailures.value = routeQuery?.excludeFailures !== 'false'
+  excludeInternalIps.value = routeQuery?.excludeInternalIps !== 'false'
   applyRouteTimeRange(routeQuery)
 }
 
@@ -260,6 +275,22 @@ function updateCustomRange() {
 function buildElasticQuery() {
   const trimmedQuery = queryString.value.trim()
   const must = trimmedQuery ? [{ query_string: { query: trimmedQuery } }] : []
+  const mustNot = []
+
+  if (excludeFailures.value) {
+    mustNot.push(
+      { match_phrase: { 'reg.type': 'Failed' } },
+      { match_phrase: { 'reg.type': 'Unauthorized' } },
+    )
+  }
+
+  if (excludeInternalIps.value) {
+    mustNot.push({
+      query_string: {
+        query: 'reg.ip:("10.255.0.0/16" OR "172.16.50.0/24")',
+      },
+    })
+  }
 
   return {
     query: {
@@ -277,7 +308,7 @@ function buildElasticQuery() {
             },
           ],
           should: [],
-          must_not: [],
+          must_not: mustNot,
         },
       },
     },
@@ -318,8 +349,10 @@ function mapRegisterRow(record, index) {
 
   return {
     id: getPath(record, 'reg.id') || `${getPath(record, '@timestamp') || 'register'}-${index}`,
+    timestamp: getPath(record, '@timestamp'),
     ip,
     ipLink: buildDrilldownLink('reg.ip', ip),
+    destIp: getPath(record, 'reg.dest_ip'),
     user,
     userLink: buildDrilldownLink('reg.user', user),
     device: getPath(record, 'reg.user_device'),
@@ -339,6 +372,8 @@ function buildDrilldownLink(field, value) {
     query: {
       esquery: query,
       ...getShareableTimeRange(),
+      excludeFailures: String(excludeFailures.value),
+      excludeInternalIps: String(excludeInternalIps.value),
     },
   })
 
@@ -354,12 +389,16 @@ function syncRouteQuery() {
   if (esquery) {
     nextQuery.esquery = esquery
   }
+  nextQuery.excludeFailures = String(excludeFailures.value)
+  nextQuery.excludeInternalIps = String(excludeInternalIps.value)
 
   const currentQuery = props.query || {}
   if (
     (currentQuery.esquery || '') === (nextQuery.esquery || '') &&
     (currentQuery.start || '') === (nextQuery.start || '') &&
-    (currentQuery.end || '') === (nextQuery.end || '')
+    (currentQuery.end || '') === (nextQuery.end || '') &&
+    (currentQuery.excludeFailures || 'true') === nextQuery.excludeFailures &&
+    (currentQuery.excludeInternalIps || 'true') === nextQuery.excludeInternalIps
   ) {
     return
   }
