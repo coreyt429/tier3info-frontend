@@ -417,6 +417,18 @@ const routes = [
     ],
   },
   {
+    path: '/ocom/registers',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        component: () => import('pages/OcomRegistersPage.vue'),
+        props: (route) => ({ query: route.query }),
+        meta: { requiresAuth: true },
+      },
+    ],
+  },
+  {
     path: '/tagtool',
     component: () => import('layouts/MainLayout.vue'),
     children: [
