@@ -287,7 +287,7 @@ function buildElasticQuery() {
   if (excludeInternalIps.value) {
     mustNot.push({
       query_string: {
-        query: 'reg.ip:("10.255.0.0/16" OR "172.16.50.0/24")',
+        query: 'reg.ip:(\\"10.255.0.0/16\\" OR \\"172.16.50.0/24\\")',
       },
     })
   }
