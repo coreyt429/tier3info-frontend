@@ -197,7 +197,14 @@ const columns = [
   { name: 'timestamp', label: 'Timestamp', field: 'timestamp', align: 'left', sortable: true },
   { name: 'ip', label: 'IP', field: 'ipLink', align: 'left', sortable: true, renderHtml: true },
   { name: 'destIp', label: 'Dest IP', field: 'destIp', align: 'left', sortable: true },
-  { name: 'user', label: 'User', field: 'userLink', align: 'left', sortable: true, renderHtml: true },
+  {
+    name: 'user',
+    label: 'User',
+    field: 'userLink',
+    align: 'left',
+    sortable: true,
+    renderHtml: true,
+  },
   { name: 'device', label: 'Device', field: 'device', align: 'left', sortable: true },
   { name: 'type', label: 'Type', field: 'type', align: 'left', sortable: true },
   { name: 'city', label: 'City', field: 'city', align: 'left', sortable: true },
@@ -287,7 +294,7 @@ function buildElasticQuery() {
   if (excludeInternalIps.value) {
     mustNot.push({
       query_string: {
-        query: 'reg.ip:(\\"10.255.0.0/16\\" OR \\"172.16.50.0/24\\")',
+        query: 'reg.ip:("10.255.0.0/16" OR "172.16.50.0/24")',
       },
     })
   }
