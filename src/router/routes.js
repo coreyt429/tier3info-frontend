@@ -33,6 +33,32 @@ const routePageMap = {
       },
     },
   },
+  '/ip_ranges': {
+    page: ApiTableEditPage,
+    meta: {
+      title: 'Tier3info IP Ranges',
+      docUrl: 'docs/ip-ranges.html',
+      label: 'IP Range',
+      endpoint: '/ip_ranges',
+      buttons: ['Save', 'Reset', 'Add', 'Delete'],
+      fields: [
+        { name: 'range_id', label: 'Name' },
+        { name: 'start', label: 'Start IP' },
+        { name: 'end', label: 'End IP' },
+        { name: 'description', label: 'Description' },
+        { name: 'organization', label: 'Organization' },
+        { name: 'disposition', label: 'Disposition' },
+      ],
+      template: {
+        range_id: 'newOption',
+        start: '',
+        end: '',
+        description: '',
+        organization: '',
+        disposition: '',
+      },
+    },
+  },
   '/config': {
     page: ApiSelectEditPage,
     meta: {
