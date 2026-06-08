@@ -5,6 +5,7 @@ import ChangeManagementPage from 'pages/ChangeManagementPage.vue'
 import ApiTableEditPage from 'pages/ApiTableEditPage.vue'
 import ApiSearchTableEditPage from 'pages/ApiSearchTableEditPage.vue'
 import BroadworksAccessDevicesPage from 'pages/BroadworksAccessDevicesPage.vue'
+import ChristeningDeviceTypesPage from 'pages/ChristeningDeviceTypesPage.vue'
 
 const routePageMap = {
   '/task_schedule': {
@@ -79,6 +80,13 @@ const routePageMap = {
       endpoint: '/tagtool/tagset',
       buttons: ['Save', 'Reset', 'Add', 'Delete'],
       template: { structure: 'freeform' },
+    },
+  },
+  '/christening/device_types': {
+    page: ChristeningDeviceTypesPage,
+    meta: {
+      title: 'Christening Device Types',
+      docUrl: 'docs/christening-device-types.html',
     },
   },
   '/change_management': {
@@ -367,7 +375,11 @@ const routePageMap = {
 //aliases
 routePageMap['/certs'] = routePageMap['/certificates']
 routePageMap['/cfg'] = routePageMap['/config']
-const selectedItemRoutePages = new Set([ApiSelectEditPage, ChangeManagementPage])
+const selectedItemRoutePages = new Set([
+  ApiSelectEditPage,
+  ChangeManagementPage,
+  ChristeningDeviceTypesPage,
+])
 
 const routes = [
   {
