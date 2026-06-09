@@ -227,6 +227,7 @@ const props = defineProps({
   selection: { type: String, default: 'none' }, // New prop for selection mode
   visibleColumns: { type: Array, default: () => [] },
   tableHeight: { type: String, default: '40vh' },
+  storageKey: { type: String, default: '' },
 })
 console.log('DataTable props:', JSON.stringify(props))
 const filter = ref('')
@@ -269,19 +270,59 @@ const computedColumns = computed(() => {
   })
 })
 
-const localVisibleColumns = ref(
-  props.visibleColumns.length ? [...props.visibleColumns] : computedColumns.value.map((col) => col.name),
-)
+function getColumnStorageKey() {
+  return props.storageKey ? `datatable:${props.storageKey}:visible-columns` : ''
+}
+
+function loadStoredVisibleColumns() {
+  const key = getColumnStorageKey()
+  if (!key || typeof window === 'undefined' || !window.localStorage) {
+    return []
+  }
+  try {
+    const storedValue = JSON.parse(window.localStorage.getItem(key) || '[]')
+    return Array.isArray(storedValue) ? storedValue.filter((columnName) => typeof columnName === 'string') : []
+  } catch {
+    return []
+  }
+}
+
+function saveStoredVisibleColumns(columnNames) {
+  const key = getColumnStorageKey()
+  if (!key || typeof window === 'undefined' || !window.localStorage) {
+    return
+  }
+  try {
+    window.localStorage.setItem(key, JSON.stringify(columnNames))
+  } catch {
+    // Ignore storage errors and keep the in-memory column selection.
+  }
+}
+
+function defaultVisibleColumns() {
+  const columnNames = computedColumns.value.map((col) => col.name)
+  const storedColumns = loadStoredVisibleColumns().filter((columnName) => columnNames.includes(columnName))
+  if (storedColumns.length) {
+    return storedColumns
+  }
+  const explicitColumns = props.visibleColumns.filter((columnName) => columnNames.includes(columnName))
+  return explicitColumns.length ? explicitColumns : columnNames
+}
+
+const localVisibleColumns = ref(defaultVisibleColumns())
 console.log('DataTable visibleColumns:', props.visibleColumns)
 console.log('DataTable localVisibleColumns:', localVisibleColumns.value)
 watch(
-  () => [props.visibleColumns, computedColumns.value],
-  ([newVisible]) => {
-    const cols = computedColumns.value
-    localVisibleColumns.value = newVisible.length ? [...newVisible] : cols.map((col) => col.name)
+  () => [props.visibleColumns, computedColumns.value, props.storageKey],
+  () => {
+    localVisibleColumns.value = defaultVisibleColumns()
   },
   { immediate: true },
 )
+
+watch(localVisibleColumns, (columnNames) => {
+  saveStoredVisibleColumns(columnNames)
+})
 
 // const visibleColumns = ref(
 //   props.visibleColumns.length ? [...props.visibleColumns] : props.columns.map((col) => col.name),

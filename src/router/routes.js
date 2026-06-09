@@ -5,6 +5,7 @@ import ChangeManagementPage from 'pages/ChangeManagementPage.vue'
 import ApiTableEditPage from 'pages/ApiTableEditPage.vue'
 import ApiSearchTableEditPage from 'pages/ApiSearchTableEditPage.vue'
 import BroadworksAccessDevicesPage from 'pages/BroadworksAccessDevicesPage.vue'
+import BroadworksAccessDeviceChristeningPage from 'pages/BroadworksAccessDeviceChristeningPage.vue'
 import ChristeningDeviceTypesPage from 'pages/ChristeningDeviceTypesPage.vue'
 
 const routePageMap = {
@@ -347,6 +348,13 @@ const routePageMap = {
     meta: {
       title: 'Broadworks Access Devices',
       docUrl: 'docs/start.html',
+    },
+  },
+  '/broadworks/access_devices/christening': {
+    page: BroadworksAccessDeviceChristeningPage,
+    meta: {
+      title: 'Broadworks Access Device Christening',
+      docUrl: 'docs/broadworks-access-device-christening.html',
     },
   },
   '/alerts': {
