@@ -1,6 +1,11 @@
 <template>
   <q-page class="q-pa-md">
     <q-card>
+      <q-card-section class="row items-center">
+        <div class="text-h6 col">Christening Queue</div>
+        <q-btn color="primary" icon="refresh" label="Refresh" :loading="isLoading" @click="fetchQueue" />
+      </q-card-section>
+      <q-separator />
       <DataTable
         :rows="rows"
         :columns="columns"
@@ -194,6 +199,7 @@ function selectRow(row) {
 
 async function fetchQueue() {
   isLoading.value = true
+  const selectedId = selectedRecord.value?.id || null
   try {
     const response = await tier3info_restful_request({
       method: 'GET',
@@ -201,7 +207,7 @@ async function fetchQueue() {
     })
     if (response && response.status === 200 && Array.isArray(response.data)) {
       rows.value = response.data.map(normalizeRecord)
-      selectedRecord.value = rows.value[0] || null
+      selectedRecord.value = rows.value.find((row) => row.id === selectedId) || rows.value[0] || null
       return
     }
     rows.value = []
