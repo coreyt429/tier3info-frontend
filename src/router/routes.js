@@ -426,6 +426,7 @@ const routePageMap = {
       postEndpoint: '/veinfo/host_tmp',
       buttons: [],
       rowIdField: 'host_id',
+      defaultSearch: 'bw_type:as',
       searchBody: { include_data: true },
       fields: [
         { name: 'host_type', label: 'Type' },

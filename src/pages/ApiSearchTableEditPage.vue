@@ -103,8 +103,8 @@
 
 <script setup>
 import { tier3info_restful_request, emit_notification } from 'src/plugins/tier3info.js'
-import { useRoute } from 'vue-router'
-import { reactive, ref, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { reactive, ref, computed, watch } from 'vue'
 import DataTable from 'src/components/DataTable.vue'
 import MyAceEditor from 'src/components/MyAceEditor.vue'
 
@@ -124,6 +124,7 @@ const selectLabel = computed(() => {
 })
 const selectedOption = ref(null)
 const route = useRoute()
+const router = useRouter()
 import { useTitleStore } from 'stores/titleStore'
 const titleStore = useTitleStore()
 titleStore.setMainTitle(route.meta.title || 'ApiSearchTableEditPage Title Not Set')
@@ -191,17 +192,51 @@ route.meta.fields.forEach((field) => {
 })
 
 const rows = ref([])
-const queryString = ref(defaultSearch.value)
+const queryString = ref(getRouteSearchQuery(route.query) || defaultSearch.value)
 
-async function executeSearch() {
+function getSingleQueryValue(value) {
+  if (Array.isArray(value)) {
+    return typeof value[0] === 'string' ? value[0].trim() : ''
+  }
+  return typeof value === 'string' ? value.trim() : ''
+}
+
+function getRouteSearchQuery(query) {
+  return getSingleQueryValue(query?.search) || getSingleQueryValue(query?.query)
+}
+
+function syncRouteSearchQuery(searchQuery) {
+  const nextQuery = { ...route.query }
+  const currentSearch = getSingleQueryValue(nextQuery.search)
+
+  if (currentSearch === searchQuery) {
+    return
+  }
+
+  nextQuery.search = searchQuery
+  delete nextQuery.query
+
+  router.replace({ path: route.path, query: nextQuery }).catch((error) => {
+    if (error?.name !== 'NavigationDuplicated') {
+      console.warn('ApiSearchTableEditPage: route update failed:', error)
+    }
+  })
+}
+
+async function executeSearch({ updateRoute = true } = {}) {
   try {
     const trimmedQuery = (queryString.value || '').trim()
+    const effectiveQuery = trimmedQuery || defaultSearch.value
+    queryString.value = effectiveQuery
+    if (updateRoute) {
+      syncRouteSearchQuery(effectiveQuery)
+    }
     const response = await tier3info_restful_request({
       method: 'POST',
       path: searchBody.value.include_data ? postEndpoint.value : `${postEndpoint.value}?include=data`,
       body: {
         ...searchBody.value,
-        query: trimmedQuery || defaultSearch.value,
+        query: effectiveQuery,
       },
     })
     if (response && response.status === 200) {
@@ -218,6 +253,17 @@ async function executeSearch() {
     emit_notification('negative', 'Failed to fetch results.')
   }
 }
+
+watch(
+  () => route.query,
+  (newQuery) => {
+    const routeSearchQuery = getRouteSearchQuery(newQuery) || defaultSearch.value
+    if (routeSearchQuery !== queryString.value) {
+      queryString.value = routeSearchQuery
+      executeSearch({ updateRoute: false })
+    }
+  },
+)
 
 function mapRow(item, id) {
   const resolvedId = item?.[rowIdField.value] || item?.id || id
@@ -262,7 +308,7 @@ function b64toBlob(b64Data, contentType = '', sliceSize = 512) {
   return new Blob(byteArrays, { type: contentType || 'application/octet-stream' })
 }
 
-await executeSearch()
+await executeSearch({ updateRoute: false })
 
 const editorContent = ref(null)
 
