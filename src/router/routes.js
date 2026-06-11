@@ -423,6 +423,7 @@ const routePageMap = {
       docUrl: 'docs/start.html',
       label: 'Host',
       endpoint: '/veinfo/host',
+      postEndpoint: '/veinfo/host_tmp',
       buttons: [],
       rowIdField: 'host_id',
       searchBody: { include_data: true },

@@ -128,6 +128,7 @@ import { useTitleStore } from 'stores/titleStore'
 const titleStore = useTitleStore()
 titleStore.setMainTitle(route.meta.title || 'ApiSearchTableEditPage Title Not Set')
 const endpoint = computed(() => route.meta.endpoint || '/cfg')
+const postEndpoint = computed(() => route.meta.postEndpoint || endpoint.value)
 const defaultSearch = computed(() => route.meta.defaultSearch || '*')
 const searchBody = computed(() => route.meta.searchBody || {})
 const rowIdField = computed(() => route.meta.rowIdField || 'id')
@@ -189,7 +190,7 @@ async function executeSearch() {
     const trimmedQuery = (queryString.value || '').trim()
     const response = await tier3info_restful_request({
       method: 'POST',
-      path: searchBody.value.include_data ? endpoint.value : `${endpoint.value}?include=data`,
+      path: searchBody.value.include_data ? postEndpoint.value : `${postEndpoint.value}?include=data`,
       body: {
         ...searchBody.value,
         query: trimmedQuery || defaultSearch.value,
