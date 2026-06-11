@@ -172,11 +172,19 @@ function selectItem(row) {
 }
 
 route.meta.fields.forEach((field) => {
+  const resolveFieldValue = (row) => {
+    const resolvedValue = field.name.split('.').reduce((acc, part) => acc?.[part], row)
+    if (resolvedValue !== undefined || field.name !== 'local.colo') {
+      return resolvedValue
+    }
+    return row?.colo
+  }
+
   const colDef = {
     name: field.name,
     label: field.label || field.name,
     align: 'left',
-    field: (row) => field.name.split('.').reduce((acc, part) => acc?.[part], row),
+    field: resolveFieldValue,
     sortable: true,
   }
   columns.value.push(colDef)

@@ -428,7 +428,6 @@ const routePageMap = {
       rowIdField: 'host_id',
       searchBody: { include_data: true },
       fields: [
-        { name: 'host_id', label: 'Host ID' },
         { name: 'host_type', label: 'Type' },
         { name: 'host_status', label: 'Status' },
         { name: 'last_updated', label: 'Last Updated' },
