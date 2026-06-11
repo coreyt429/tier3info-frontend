@@ -129,6 +129,8 @@ const titleStore = useTitleStore()
 titleStore.setMainTitle(route.meta.title || 'ApiSearchTableEditPage Title Not Set')
 const endpoint = computed(() => route.meta.endpoint || '/cfg')
 const defaultSearch = computed(() => route.meta.defaultSearch || '*')
+const searchBody = computed(() => route.meta.searchBody || {})
+const rowIdField = computed(() => route.meta.rowIdField || 'id')
 const tableStorageKey = computed(() => `api-search-table-edit:${route.path}`)
 
 const button_definitions = {
@@ -184,10 +186,14 @@ const queryString = ref(defaultSearch.value)
 
 async function executeSearch() {
   try {
+    const trimmedQuery = (queryString.value || '').trim()
     const response = await tier3info_restful_request({
       method: 'POST',
-      path: `${endpoint.value}?include=data`,
-      body: { query: queryString.value || defaultSearch.value },
+      path: searchBody.value.include_data ? endpoint.value : `${endpoint.value}?include=data`,
+      body: {
+        ...searchBody.value,
+        query: trimmedQuery || defaultSearch.value,
+      },
     })
     if (response && response.status === 200) {
       const data = response.data || []
@@ -205,7 +211,8 @@ async function executeSearch() {
 }
 
 function mapRow(item, id) {
-  const row = { id: item.id || id, ...item }
+  const resolvedId = item?.[rowIdField.value] || item?.id || id
+  const row = { id: resolvedId, ...item }
   if (row.kpi && row.format) {
     const filename = `${row.report || 'report'}.${row.server || 'server'}.${row.format}`
     row.kpi = filename

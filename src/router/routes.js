@@ -379,6 +379,63 @@ const routePageMap = {
       ],
     },
   },
+  '/veinfo/appliances': {
+    page: ApiSearchTableEditPage,
+    meta: {
+      title: 'VEInfo Appliances',
+      docUrl: 'docs/start.html',
+      label: 'Appliance',
+      endpoint: '/veinfo/appliance',
+      buttons: [],
+      rowIdField: 'appliance_id',
+      searchBody: { include_data: true },
+      fields: [
+        { name: 'appliance_id', label: 'Appliance ID' },
+        { name: 'description', label: 'Description' },
+        { name: 'host_name', label: 'Host Name' },
+        { name: 'host_status', label: 'Status' },
+        { name: 'host_type', label: 'Type' },
+        { name: 'colo', label: 'Colo' },
+        { name: 'management_ip_address', label: 'Management IP' },
+      ],
+    },
+  },
+  '/veinfo/templates': {
+    page: ApiSearchTableEditPage,
+    meta: {
+      title: 'VEInfo Templates',
+      docUrl: 'docs/start.html',
+      label: 'Template',
+      endpoint: '/veinfo/template',
+      buttons: [],
+      rowIdField: 'template_id',
+      searchBody: { include_data: true },
+      fields: [
+        { name: 'template_id', label: 'Template ID' },
+        { name: 'fields', label: 'Fields' },
+      ],
+    },
+  },
+  '/veinfo/hosts': {
+    page: ApiSearchTableEditPage,
+    meta: {
+      title: 'VEInfo Hosts',
+      docUrl: 'docs/start.html',
+      label: 'Host',
+      endpoint: '/veinfo/host',
+      buttons: [],
+      rowIdField: 'host_id',
+      searchBody: { include_data: true },
+      fields: [
+        { name: 'host_id', label: 'Host ID' },
+        { name: 'host_type', label: 'Type' },
+        { name: 'host_status', label: 'Status' },
+        { name: 'last_updated', label: 'Last Updated' },
+        { name: 'local.colo', label: 'Colo' },
+        { name: 'local.ssh_host', label: 'SSH Host' },
+      ],
+    },
+  },
 }
 //aliases
 routePageMap['/certs'] = routePageMap['/certificates']
