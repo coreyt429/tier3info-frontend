@@ -26,6 +26,7 @@
           :exportable="false"
           :onClick="selectReport"
           :pagination-config="{ rowsPerPage: 10 }"
+          storage-key="reports-list"
           table-height="32vh"
           no-data-label="No reports found"
         />
@@ -150,6 +151,7 @@
           :columns="resultColumns"
           :filterable="true"
           :exportable="true"
+          :storage-key="resultsStorageKey"
           exportPrefix="report-data"
           table-height="60vh"
         />
@@ -216,6 +218,7 @@ const selectedReportTitle = computed(
 const selectedReportDescription = computed(
   () => selectedReport.value?.description || selectedReport.value?.caption || '',
 )
+const resultsStorageKey = computed(() => `reports-results:${selectedReport.value?.id || reportJob.value?.job_id || 'default'}`)
 
 const parameterFields = computed(() =>
   normalizeParameters(selectedReport.value?.parameters || selectedReport.value?.Parameters),

@@ -28,6 +28,7 @@
         :exportable="true"
         :pagination-config="pagination"
         :onClick="selectItem"
+        storage-key="broadworks-access-devices"
         exportPrefix="access-devices-export"
         no-data-label="No access devices found"
         no-results-label="No matching access devices"

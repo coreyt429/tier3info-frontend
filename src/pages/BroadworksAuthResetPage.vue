@@ -85,6 +85,7 @@
         :exportable="true"
         :pagination-config="pagination"
         :visible-columns="visibleColumns"
+        storage-key="broadworks-auth-reset"
         exportPrefix="broadworks-auth-reset"
         table-height="60vh"
       />

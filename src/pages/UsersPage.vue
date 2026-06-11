@@ -14,6 +14,7 @@
         :pagination-config="pagination"
         @update:selected="handleSelection"
         :onClick="handleRowClick"
+        storage-key="users"
         table-height="45vh"
       />
     </q-card>

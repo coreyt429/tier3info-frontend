@@ -10,6 +10,7 @@
           :exportable="true"
           :onClick="selectItem"
           :allowAdd="allowAdd"
+          :storage-key="tableStorageKey"
           exportPrefix="locate-export"
           @add="handleAdd"
         />
@@ -111,6 +112,7 @@ import { useTitleStore } from 'stores/titleStore'
 const titleStore = useTitleStore()
 titleStore.setMainTitle(route.meta.title || 'ApiTableEditPage Title Not Set')
 const endpoint = computed(() => route.meta.endpoint || '/cfg')
+const tableStorageKey = computed(() => `api-table-edit:${route.path}`)
 console.log(`ApiTableEditPage.vue: Endpoint set to ${endpoint.value} `)
 const button_definitions = {
   Save: {

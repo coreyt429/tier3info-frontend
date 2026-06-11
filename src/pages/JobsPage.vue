@@ -17,6 +17,7 @@
         :filterable="true"
         :exportable="true"
         :onClick="selectJob"
+        storage-key="jobs-list"
         exportPrefix="jobs-export"
         no-data-label="No jobs found"
         table-height="45vh"
@@ -61,6 +62,7 @@
         :columns="fileColumns"
         :filterable="true"
         :exportable="false"
+        storage-key="job-files"
         no-data-label="No files found for this job"
         table-height="30vh"
       />

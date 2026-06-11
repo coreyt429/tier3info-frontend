@@ -145,6 +145,7 @@
         :filterable="true"
         :exportable="true"
         :pagination-config="pagination"
+        storage-key="ocom-registers"
         exportPrefix="ocom-registers-export"
         noDataLabel="No registers found"
       />

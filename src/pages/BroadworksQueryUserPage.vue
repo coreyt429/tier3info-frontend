@@ -195,6 +195,7 @@
                 :filterable="true"
                 :exportable="true"
                 :pagination-config="table.pagination"
+                :storage-key="buildTableStorageKey(section, table)"
                 table-height="35vh"
               />
             </div>
@@ -893,6 +894,10 @@ async function deleteJob() {
   } finally {
     isLoading.value = false
   }
+}
+
+function buildTableStorageKey(section, table) {
+  return `broadworks-query-user:${section.key}:${table.key}`
 }
 
 function clearPoll() {

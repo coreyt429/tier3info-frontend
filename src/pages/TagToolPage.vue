@@ -130,6 +130,7 @@
               :filterable="true"
               :exportable="true"
               :pagination-config="pagination"
+              storage-key="tag-tool-results"
               exportPrefix="tagtool-export"
               selection="multiple"
               @update:selected="handleSelection"

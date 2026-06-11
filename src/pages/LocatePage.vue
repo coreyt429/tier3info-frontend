@@ -24,6 +24,7 @@
           :exportable="true"
           :pagination-config="pagination"
           :onClick="selectItem"
+          storage-key="locate-search-results"
           exportPrefix="locate-export"
         />
       </q-card>

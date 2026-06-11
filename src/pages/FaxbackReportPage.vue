@@ -43,6 +43,7 @@
           :exportable="true"
           :pagination-config="pagination"
           :onClick="selectItem"
+          storage-key="faxback-report"
           exportPrefix="faxdata-export"
           table-height="60vh"
         />

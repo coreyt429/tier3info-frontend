@@ -25,13 +25,14 @@
           :rows="rows"
           :columns="columns"
           :filterable="true"
-        :exportable="true"
-        :onClick="selectItem"
-        :allowAdd="allowAdd"
-        exportPrefix="search-export"
-        table-height="70vh"
-        @add="handleAdd"
-      />
+          :exportable="true"
+          :onClick="selectItem"
+          :allowAdd="allowAdd"
+          :storage-key="tableStorageKey"
+          exportPrefix="search-export"
+          table-height="70vh"
+          @add="handleAdd"
+        />
       </q-card>
       <MyAceEditor
         v-if="selectedOption"
@@ -128,6 +129,7 @@ const titleStore = useTitleStore()
 titleStore.setMainTitle(route.meta.title || 'ApiSearchTableEditPage Title Not Set')
 const endpoint = computed(() => route.meta.endpoint || '/cfg')
 const defaultSearch = computed(() => route.meta.defaultSearch || '*')
+const tableStorageKey = computed(() => `api-search-table-edit:${route.path}`)
 
 const button_definitions = {
   Save: { label: 'Save', icon: 'save', color: 'primary', emit: 'save' },
