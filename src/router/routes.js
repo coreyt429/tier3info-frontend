@@ -7,7 +7,7 @@ import ApiSearchTableEditPage from 'pages/ApiSearchTableEditPage.vue'
 import BroadworksAccessDevicesPage from 'pages/BroadworksAccessDevicesPage.vue'
 import BroadworksAccessDeviceChristeningPage from 'pages/BroadworksAccessDeviceChristeningPage.vue'
 import ChristeningDeviceTypesPage from 'pages/ChristeningDeviceTypesPage.vue'
-import FraudReportPage from 'pages/FraudReportPage.vue'
+import FraudTracePage from 'pages/FraudTracePage.vue'
 
 const routePageMap = {
   '/task_schedule': {
@@ -486,14 +486,14 @@ const routes = [
     ],
   },
   {
-    path: '/locate/fraud_report',
+    path: '/fraud/trace',
     component: () => import('layouts/MainLayout.vue'),
     children: [
       {
         path: '',
-        component: FraudReportPage,
+        component: FraudTracePage,
         props: (route) => ({ query: route.query }),
-        meta: { requiresAuth: true, title: 'Fraud Report', docUrl: 'docs/fraud-report.html' },
+        meta: { requiresAuth: true, title: 'Fraud Trace', docUrl: 'docs/fraud-trace.html' },
       },
     ],
   },
