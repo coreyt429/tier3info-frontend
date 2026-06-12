@@ -1,0 +1,17 @@
+<h1>Fraud Report</h1>
+<p>
+  The Fraud Report page searches by IP address or phone number, submits an input string and span,
+  and renders the returned JSON keyed by IP address.
+</p>
+<h2>Inputs</h2>
+<ul>
+  <li><code>input_string</code>: IP address or phone number.</li>
+  <li><code>span</code>: Elasticsearch-friendly span, defaulting to <code>24h</code>.</li>
+</ul>
+<h2>Displayed Fields</h2>
+<ul>
+  <li>Organization and disposition for each IP address.</li>
+  <li>Users registered from the IP address.</li>
+  <li>Password change and last 200 timestamps, with a red indicator when last 200 is newer.</li>
+  <li>Last registration timestamp, code, and device.</li>
+</ul>
