@@ -1,16 +1,16 @@
 <template>
   <q-page class="flex flex-start fraud-trace-page">
     <div class="q-pa-md fraud-trace-shell">
-      <q-card class="fraud-hero text-white">
+      <q-card class="fraud-panel">
         <q-card-section class="q-pb-sm">
-          <div class="text-overline fraud-hero__eyebrow">Security review</div>
+          <div class="text-overline text-grey-7 fraud-panel__eyebrow">Security review</div>
           <div class="text-h4">Fraud Trace</div>
-          <div class="text-body2 fraud-hero__copy">
+          <div class="text-body2 text-grey-8 fraud-panel__copy">
             Search an IP address or phone number, then review the organization, disposition, and
             registered users tied to the source IP.
           </div>
         </q-card-section>
-        <q-separator dark class="fraud-separator" />
+        <q-separator />
         <q-card-section>
           <q-form class="row q-col-gutter-md items-end" @submit.prevent="runFraudTrace">
             <div class="col-12 col-md-7">
@@ -138,14 +138,14 @@
                 <q-td :props="props">
                   <div class="row items-center no-wrap q-gutter-xs">
                     <q-icon
-                      v-if="props.row.passwordChangeAlert"
+                      v-if="props.row.passwordChangeIndicatorColor"
                       name="brightness_1"
-                      color="negative"
+                      :color="props.row.passwordChangeIndicatorColor"
                       size="10px"
                       class="fraud-alert-dot"
                     >
                       <q-tooltip>
-                        Last 200 is newer than the password change timestamp.
+                        {{ props.row.passwordChangeIndicatorTooltip }}
                       </q-tooltip>
                     </q-icon>
                     <span>{{ props.value || 'Unknown' }}</span>
@@ -395,12 +395,37 @@ function collectUserCandidates(record) {
   return []
 }
 
-function isPasswordChangeStale(last200Raw, passwordChangedRaw) {
-  if (!last200Raw || !passwordChangedRaw) return false
+function getPasswordChangeIndicator(last200Raw, passwordChangedRaw) {
+  if (!last200Raw) {
+    return {
+      color: 'warning',
+      tooltip: 'Last 200 timestamp is unknown.',
+    }
+  }
+  if (!passwordChangedRaw) return null
+
   const last200 = Date.parse(last200Raw)
   const passwordChanged = Date.parse(passwordChangedRaw)
-  if (Number.isNaN(last200) || Number.isNaN(passwordChanged)) return false
-  return last200 > passwordChanged
+  if (Number.isNaN(last200)) {
+    return {
+      color: 'warning',
+      tooltip: 'Last 200 timestamp is unknown.',
+    }
+  }
+  if (Number.isNaN(passwordChanged)) return null
+  if (last200 > passwordChanged) {
+    return {
+      color: 'negative',
+      tooltip: 'Last 200 is newer than the password change timestamp.',
+    }
+  }
+  if (passwordChanged > last200) {
+    return {
+      color: 'positive',
+      tooltip: 'Password change is newer than the last 200 timestamp.',
+    }
+  }
+  return null
 }
 
 function normalizeUser(user, index, defaultTimeZone) {
@@ -443,6 +468,7 @@ function normalizeUser(user, index, defaultTimeZone) {
     user?.device_id ||
     user?.device ||
     ''
+  const passwordChangeIndicator = getPasswordChangeIndicator(last200Raw, passwordChangedRaw)
 
   return {
     key:
@@ -456,7 +482,8 @@ function normalizeUser(user, index, defaultTimeZone) {
     lastRegTimestampText: formatTimestamp(lastRegTimestampRaw, timezone),
     lastRegCode: lastRegCode || '',
     lastRegDevice: lastRegDevice || '',
-    passwordChangeAlert: isPasswordChangeStale(last200Raw, passwordChangedRaw),
+    passwordChangeIndicatorColor: passwordChangeIndicator?.color || '',
+    passwordChangeIndicatorTooltip: passwordChangeIndicator?.tooltip || '',
   }
 }
 
@@ -592,31 +619,22 @@ watch(
   width: 100%;
 }
 
-.fraud-hero {
-  border-radius: 18px;
-  overflow: hidden;
-  background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 48%, #0f766e 100%);
-  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.25);
+.fraud-panel {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 4px;
 }
 
-.fraud-hero__eyebrow {
+.fraud-panel__eyebrow {
   letter-spacing: 0.14em;
-  opacity: 0.8;
 }
 
-.fraud-hero__copy {
+.fraud-panel__copy {
   max-width: 72ch;
-  opacity: 0.92;
-}
-
-.fraud-separator {
-  opacity: 0.12;
 }
 
 .fraud-result-card {
-  border-radius: 16px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.07);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 4px;
 }
 
 .fraud-result-card--negative {
