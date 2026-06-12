@@ -7,6 +7,7 @@ import ApiSearchTableEditPage from 'pages/ApiSearchTableEditPage.vue'
 import BroadworksAccessDevicesPage from 'pages/BroadworksAccessDevicesPage.vue'
 import BroadworksAccessDeviceChristeningPage from 'pages/BroadworksAccessDeviceChristeningPage.vue'
 import ChristeningDeviceTypesPage from 'pages/ChristeningDeviceTypesPage.vue'
+import FraudReportPage from 'pages/FraudReportPage.vue'
 
 const routePageMap = {
   '/task_schedule': {
@@ -481,6 +482,18 @@ const routes = [
         component: () => import('pages/FaxbackReportPage.vue'),
         props: (route) => ({ query: route.query }),
         meta: { requiresAuth: true, docUrl: 'docs/faxback-report.html' },
+      },
+    ],
+  },
+  {
+    path: '/locate/fraud_report',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        component: FraudReportPage,
+        props: (route) => ({ query: route.query }),
+        meta: { requiresAuth: true, title: 'Fraud Report', docUrl: 'docs/fraud-report.html' },
       },
     ],
   },
