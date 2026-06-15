@@ -59,7 +59,10 @@
       </q-card-section>
       <q-card-section v-if="statusMessage">
         <q-banner dense rounded class="bg-info text-primary">
-          {{ statusMessage }}
+          <div v-if="jobStatus" class="text-weight-medium">
+            Status: {{ jobStatus }}
+          </div>
+          <div>{{ statusMessage }}</div>
         </q-banner>
       </q-card-section>
       <q-card-section v-if="errorMessage">
@@ -110,8 +113,10 @@ export default {
       error: false,
       traceFile: null,
       jobId: null,
+      jobStatus: null,
       statusMessage: null,
       waitCounter: 0,
+      searchStartedAt: null,
       searchDisabled: true,
       searchResults: null,
       errorMessage: null,
@@ -128,6 +133,8 @@ export default {
     async executeSearch() {
       this.errorMessage = null
       this.statusMessage = `Searching for ${this.correlationId}... Please wait.`
+      this.jobStatus = null
+      this.searchStartedAt = Date.now()
       console.log(
         'CorrelationIdSearch.vue: executeSearch called with correlationId:',
         this.correlationId,
@@ -143,6 +150,8 @@ export default {
       if (!response || !response.data) {
         this.errorMessage = 'Invalid response from server. Please try again later.'
         this.statusMessage = null
+        this.jobStatus = null
+        this.searchStartedAt = null
         console.error('CorrelationIdSearch.vue: Invalid response data:', response)
         return
       }
@@ -164,6 +173,8 @@ export default {
       console.log('CorrelationIdSearch.vue: checkJobStatus response:', response)
       if (!response || !response.data) {
         this.statusMessage = null
+        this.jobStatus = null
+        this.searchStartedAt = null
         this.errorMessage = 'Invalid response from server. Please try again later.'
         console.error('CorrelationIdSearch.vue: Invalid response data:', response)
         return
@@ -184,24 +195,34 @@ export default {
           this.errorMessage = 'Error parsing search results. Please try again later.'
           this.searchResults = null
         }
+        this.jobStatus = null
+        this.searchStartedAt = null
         this.statusMessage = null
       } else {
         this.waitCounter += 1
         if (this.waitCounter > 60) {
           this.statusMessage = 'Job is taking too long. Please try again later.'
+          this.jobStatus = response.data.status || null
+          this.searchStartedAt = null
           console.error('CorrelationIdSearch.vue: Job is taking too long.')
           setTimeout(() => {
             this.statusMessage = null
+            this.jobStatus = null
           }, 5000)
           return
         } else {
-          this.statusMessage = `Waiting on search data... (${this.waitCounter / 2} seconds)`
+          this.jobStatus = response.data.status || 'unknown'
+          this.statusMessage = `Elapsed: ${this.getElapsedSeconds()} seconds`
           console.log('CorrelationIdSearch.vue: Job is still processing...')
           setTimeout(() => {
             this.checkJobStatus()
           }, 5000)
         }
       }
+    },
+    getElapsedSeconds() {
+      if (!this.searchStartedAt) return '0.0'
+      return ((Date.now() - this.searchStartedAt) / 1000).toFixed(1)
     },
     onMust(event) {
       console.log('CorrelationIdSearch.vue: onMust called with event:', event)
