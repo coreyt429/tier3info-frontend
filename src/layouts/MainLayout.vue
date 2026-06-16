@@ -217,34 +217,94 @@ onMounted(() => {
 
 // const mainTitle = ref('Voice Engineering Information Center')
 const filter = ref('')
+const loggedNonStringMenuLinks = new Set()
+
+function normalizeMenuText(value) {
+  if (value === null || value === undefined) {
+    return ''
+  }
+
+  if (typeof value === 'string') {
+    return value
+  }
+
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value)
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(normalizeMenuText).join(' ')
+  }
+
+  if (typeof value === 'object') {
+    return Object.values(value).map(normalizeMenuText).join(' ')
+  }
+
+  return ''
+}
+
+function getMenuLinkHref(link) {
+  if (typeof link === 'string') {
+    return link
+  }
+
+  if (link && typeof link === 'object') {
+    return link.href || link.path || link.to || link.url || ''
+  }
+
+  return ''
+}
+
+function logNonStringMenuLink(item) {
+  if (!item || item.link === null || item.link === undefined || typeof item.link === 'string') {
+    return
+  }
+
+  const title = normalizeMenuText(item.title) || 'Untitled menu item'
+  const key = `${title}:${normalizeMenuText(item.link)}`
+
+  if (loggedNonStringMenuLinks.has(key)) {
+    return
+  }
+
+  loggedNonStringMenuLinks.add(key)
+  console.warn('Menu item link is not a string:', {
+    title,
+    link: item.link,
+    linkType: typeof item.link,
+  })
+}
 
 function onMenuEnter() {
-  console.log('onMenuEnter called with menu count:', filter.value.length)
+  const query = normalizeMenuText(filter.value).trim()
+  console.log('onMenuEnter called with menu count:', query.length)
   if (linksListFiltered.value.length === 1) {
     console.log('Single link found, navigating to:', linksListFiltered.value[0].link)
     const singleLink = linksListFiltered.value[0]
-    if (singleLink.link) {
+    const link = getMenuLinkHref(singleLink.link)
+    if (link) {
       // Navigate to the link
-      window.location.href = singleLink.link
+      window.location.href = link
     } else {
       if (singleLink.children && singleLink.children.length === 1) {
         let child = singleLink.children[0]
         while (child.children && child.children.length === 1) {
           child = child.children[0]
         }
-        if (child.link) {
-          window.location.href = child.link
+        const childLink = getMenuLinkHref(child.link)
+        if (childLink) {
+          window.location.href = childLink
         } else {
-          window.location.href = `/#/locate?query=${encodeURIComponent(filter.value)}`
+          window.location.href = `/#/locate?query=${encodeURIComponent(query)}`
         }
       } else {
-        window.location.href = `/#/locate?query=${encodeURIComponent(filter.value)}`
+        window.location.href = `/#/locate?query=${encodeURIComponent(query)}`
       }
     }
   } else if (linksListFiltered.value.length === 0) {
-    console.log('No links found, navigating to locate with query:', filter.value)
-    console.log('Navigating to locate with query:', encodeURIComponent(filter.value))
-    window.location.href = `/#/locate?query=${encodeURIComponent(filter.value)}`
+    console.log('No links found, navigating to locate with query:', query)
+    console.log('Navigating to locate with query:', encodeURIComponent(query))
+    window.location.href = `/#/locate?query=${encodeURIComponent(query)}`
   } else {
     console.log('Multiple links found, not navigating:', linksListFiltered.value.length)
   }
@@ -252,15 +312,29 @@ function onMenuEnter() {
 
 function filterLinks(links, filterValue = '') {
   console.log('filterLinks called with filterValue:', filterValue)
+  if (!Array.isArray(links)) {
+    return []
+  }
+
+  const normalizedFilter = normalizeMenuText(filterValue).trim().toLowerCase()
+
+  if (!normalizedFilter) {
+    return links
+  }
+
   const filteredLinks = links
     .map((item) => {
+      logNonStringMenuLink(item)
+      const title = normalizeMenuText(item.title).toLowerCase()
+      const caption = normalizeMenuText(item.caption).toLowerCase()
+      const link = normalizeMenuText(item.link).toLowerCase()
       const matches =
-        item.title.toLowerCase().includes(filterValue) ||
-        item.caption.toLowerCase().includes(filterValue) ||
-        item.link.toLowerCase().includes(filterValue)
+        title.includes(normalizedFilter) ||
+        caption.includes(normalizedFilter) ||
+        link.includes(normalizedFilter)
 
       if (item.children) {
-        const filteredChildren = filterLinks(item.children, filterValue)
+        const filteredChildren = filterLinks(item.children, normalizedFilter)
         if (filteredChildren.length > 0 || matches) {
           return { ...item, children: filteredChildren }
         }
@@ -276,7 +350,7 @@ function filterLinks(links, filterValue = '') {
 function onMenuSearchChange(val) {
   console.log('onMenuSearchChange called with:', val)
   // Now receives the latest value as 'val'
-  linksListFiltered.value = filterLinks(linksList.value, val.toLowerCase())
+  linksListFiltered.value = filterLinks(linksList.value, val)
 }
 
 import { onMounted } from 'vue'

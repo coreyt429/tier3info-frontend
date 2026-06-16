@@ -122,6 +122,7 @@ const jobColumns = [
   { name: 'type', label: 'Type', field: 'type', align: 'left', sortable: true },
   { name: 'status', label: 'Status', field: 'status', align: 'left', sortable: true },
   { name: 'name', label: 'Title', field: 'name', align: 'left', sortable: true },
+  { name: 'logAction', label: 'Log Tool', field: 'logAction', align: 'center', sortable: false },
   {
     name: 'reportAction',
     label: 'Report',
@@ -152,6 +153,7 @@ const jobRows = computed(() =>
     name: job.name || job.title || '',
     type: job.type || job.job_type || job.jobType || '',
     status: job.status || '',
+    logAction: buildLogAction(job),
     reportAction: buildReportAction(job),
   })),
 )
@@ -211,6 +213,26 @@ function getJobType(job) {
 
 function isReportJob(job) {
   return getJobType(job).startsWith('reports.')
+}
+
+function isLogToolJob(job) {
+  return getJobType(job).startsWith('logtool')
+}
+
+function buildLogAction(job) {
+  const jobId = job?.job_id || job?.id
+  if (!jobId || !isLogToolJob(job)) return null
+
+  const jobType = getJobType(job).toLowerCase()
+  const route = jobType.includes('correlation') ? '/#/logtool/correlationId' : '/#/logtool'
+  const label = jobType.includes('correlation') ? 'Reload correlation search' : 'Reload log search'
+
+  return {
+    tooltip: `${label} for ${jobId}`,
+    action: () => {
+      window.location.href = `${route}?job_id=${encodeURIComponent(jobId)}`
+    },
+  }
 }
 
 function buildReportAction(job) {

@@ -126,6 +126,9 @@
       </q-card-section>
       <q-card-section v-if="statusMessage">
         <q-banner dense rounded class="bg-info text-primary">
+          <div v-if="jobStatus" class="text-weight-medium">
+            Status: {{ jobStatus }}
+          </div>
           {{ statusMessage }}
         </q-banner>
       </q-card-section>
@@ -188,8 +191,8 @@ export default {
   created() {
     const titleStore = useTitleStore()
     titleStore.setMainTitle('Query String Log Search')
-    this.applyRouteQuery(this.$route?.query)
-    if (this.queryString) {
+    const hasJobId = this.applyRouteQuery(this.$route?.query)
+    if (!hasJobId && this.queryString) {
       console.log('LogSearch.vue: Query String valid, executing search')
       this.executeSearch()
     }
@@ -200,8 +203,10 @@ export default {
       error: false,
       traceFile: null,
       jobId: null,
+      jobStatus: null,
       statusMessage: null,
       waitCounter: 0,
+      searchStartedAt: null,
       searchDisabled: true,
       searchResults: null,
       errorMessage: null,
@@ -252,6 +257,12 @@ export default {
   },
   methods: {
     applyRouteQuery(routeQuery) {
+      const routeJobId = typeof routeQuery?.job_id === 'string' ? routeQuery.job_id.trim() : ''
+      if (routeJobId) {
+        this.resumeJob(routeJobId)
+        return true
+      }
+
       const esquery = routeQuery?.esquery || routeQuery?.queryString || ''
       const trimmedQuery = typeof esquery === 'string' ? esquery.trim() : ''
       if (trimmedQuery !== this.queryString) {
@@ -260,6 +271,23 @@ export default {
 
       this.applyRouteFilters(routeQuery)
       this.applyRouteTimeRange(routeQuery)
+      return false
+    },
+
+    resumeJob(jobId) {
+      if (!jobId) return
+
+      this.queryString = ''
+      this.jobId = jobId
+      this.jobStatus = null
+      this.statusMessage = `Loading job ${jobId}... Please wait.`
+      this.waitCounter = 0
+      this.searchResults = null
+      this.errorMessage = null
+      this.searchStartedAt = Date.now()
+      setTimeout(() => {
+        this.checkJobStatus()
+      }, 500)
     },
 
     applyRouteFilters(routeQuery) {
@@ -635,6 +663,8 @@ export default {
       }
       this.syncRouteQuery()
       this.statusMessage = `Searching for ${this.queryString}... Please wait.`
+      this.jobStatus = null
+      this.searchStartedAt = Date.now()
       console.log('LogSearch.vue: executeSearch called with queryString:', this.queryString)
       console.log('LogSearch.vue: executeSearch called with queryFilters:', this.queryFilters)
       console.log('LogSearch.vue: executeSearch called with timeFilters:', this.timeFilters)
@@ -652,6 +682,7 @@ export default {
       if (!response || !response.data) {
         this.errorMessage = 'Invalid response from server. Please try again later.'
         this.statusMessage = null
+        this.searchStartedAt = null
         console.error('LogSearch.vue: Invalid response data:', response)
         return
       }
@@ -678,7 +709,9 @@ export default {
         return
       }
       console.log('LogSearch.vue: checkJobStatus response:', response)
-      if (response.data.status === 'completed') {
+      const status = String(response.data.status || '').toLowerCase()
+      this.jobStatus = response.data.status || 'unknown'
+      if (this.isCompletedStatus(status)) {
         // Handle completed job status
         console.log('LogSearch.vue: Job completed', response.data)
         try {
@@ -705,23 +738,46 @@ export default {
           this.searchResults = null
         }
         this.statusMessage = null
+        this.jobStatus = null
+        this.searchStartedAt = null
+      } else if (this.isTerminalStatus(status)) {
+        this.statusMessage = `Job ${response.data.status || 'unknown'} on the server.`
+        this.searchStartedAt = null
+        console.error('LogSearch.vue: Job ended without results.')
       } else {
         this.waitCounter += 1
         if (this.waitCounter > 60) {
           this.statusMessage = 'Job is taking too long. Please try again later.'
+          this.searchStartedAt = null
           console.error('LogSearch.vue: Job is taking too long.')
           setTimeout(() => {
             this.statusMessage = null
+            this.jobStatus = null
           }, 5000)
           return
         } else {
-          this.statusMessage = `Waiting on search data... (${this.waitCounter / 2} seconds)`
+          this.statusMessage = `Elapsed: ${this.getElapsedSeconds()} seconds`
           console.log('LogSearch.vue: Job is still processing...')
           setTimeout(() => {
             this.checkJobStatus()
           }, 5000)
         }
       }
+    },
+
+    isCompletedStatus(status) {
+      return ['completed', 'complete', 'success', 'succeeded'].includes(String(status || '').toLowerCase())
+    },
+
+    isTerminalStatus(status) {
+      return ['failed', 'failure', 'error', 'aborted', 'cancelled', 'canceled'].includes(
+        String(status || '').toLowerCase(),
+      )
+    },
+
+    getElapsedSeconds() {
+      if (!this.searchStartedAt) return '0.0'
+      return ((Date.now() - this.searchStartedAt) / 1000).toFixed(1)
     },
     onMust(event) {
       // event: { key: string, value: any }

@@ -99,7 +99,8 @@ export default {
     titleStore.setMainTitle('Correlation Id Log Search')
 
     const route = useRoute()
-    if (route.query.correlationId) {
+    const hasJobId = this.applyRouteQuery(route.query)
+    if (!hasJobId && route.query.correlationId) {
       this.correlationId = route.query.correlationId
       if (this.checkValidation()) {
         console.log('CorrelationIdSearch.vue: Correlation IDs valid, executing search')
@@ -129,6 +130,34 @@ export default {
       } catch (e) {
         console.error('CorrelationIdSearch.vue: error dispatching log-entry-selected', e)
       }
+    },
+    applyRouteQuery(routeQuery) {
+      const routeJobId = typeof routeQuery?.job_id === 'string' ? routeQuery.job_id.trim() : ''
+      if (routeJobId) {
+        this.resumeJob(routeJobId)
+        return true
+      }
+
+      const correlationId = typeof routeQuery?.correlationId === 'string' ? routeQuery.correlationId.trim() : ''
+      if (correlationId && correlationId !== this.correlationId) {
+        this.correlationId = correlationId
+      }
+      return false
+    },
+    resumeJob(jobId) {
+      if (!jobId) return
+
+      this.correlationId = ''
+      this.jobId = jobId
+      this.jobStatus = null
+      this.statusMessage = `Loading job ${jobId}... Please wait.`
+      this.waitCounter = 0
+      this.searchResults = null
+      this.errorMessage = null
+      this.searchStartedAt = Date.now()
+      setTimeout(() => {
+        this.checkJobStatus()
+      }, 500)
     },
     async executeSearch() {
       this.errorMessage = null
@@ -180,7 +209,9 @@ export default {
         return
       }
       console.log('CorrelationIdSearch.vue: checkJobStatus response:', response)
-      if (response.data.status === 'completed') {
+      const status = String(response.data.status || '').toLowerCase()
+      this.jobStatus = response.data.status || 'unknown'
+      if (this.isCompletedStatus(status)) {
         // Handle completed job status
         console.log('CorrelationIdSearch.vue: Job completed', response.data)
         try {
@@ -198,6 +229,10 @@ export default {
         this.jobStatus = null
         this.searchStartedAt = null
         this.statusMessage = null
+      } else if (this.isTerminalStatus(status)) {
+        this.statusMessage = `Job ${response.data.status || 'unknown'} on the server.`
+        this.searchStartedAt = null
+        console.error('CorrelationIdSearch.vue: Job ended without results.')
       } else {
         this.waitCounter += 1
         if (this.waitCounter > 60) {
@@ -211,7 +246,6 @@ export default {
           }, 5000)
           return
         } else {
-          this.jobStatus = response.data.status || 'unknown'
           this.statusMessage = `Elapsed: ${this.getElapsedSeconds()} seconds`
           console.log('CorrelationIdSearch.vue: Job is still processing...')
           setTimeout(() => {
@@ -219,6 +253,14 @@ export default {
           }, 5000)
         }
       }
+    },
+    isCompletedStatus(status) {
+      return ['completed', 'complete', 'success', 'succeeded'].includes(String(status || '').toLowerCase())
+    },
+    isTerminalStatus(status) {
+      return ['failed', 'failure', 'error', 'aborted', 'cancelled', 'canceled'].includes(
+        String(status || '').toLowerCase(),
+      )
     },
     getElapsedSeconds() {
       if (!this.searchStartedAt) return '0.0'
@@ -376,6 +418,9 @@ export default {
       if (newFile) {
         this.parseCorrelationIdFromFile()
       }
+    },
+    '$route.query'(newQuery) {
+      this.applyRouteQuery(newQuery)
     },
   },
 }

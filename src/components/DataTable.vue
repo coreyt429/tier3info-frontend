@@ -197,6 +197,24 @@
           </q-btn>
         </q-td>
       </template>
+      <template v-slot:body-cell-logAction="props">
+        <q-td :props="props">
+          <q-btn
+            v-if="props.row.logAction?.action"
+            flat
+            dense
+            round
+            size="sm"
+            icon="restart_alt"
+            color="primary"
+            @click.stop="props.row.logAction.action()"
+          >
+            <q-tooltip anchor="top middle" self="bottom middle">
+              {{ props.row.logAction.tooltip || 'Reload log job' }}
+            </q-tooltip>
+          </q-btn>
+        </q-td>
+      </template>
       <template v-slot:body-cell="props">
         <q-td :props="props">
           <span v-if="props.col?.renderHtml" v-html="coerceHtml(props.value)"></span>
