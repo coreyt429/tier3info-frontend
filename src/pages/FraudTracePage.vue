@@ -79,9 +79,21 @@
               {{ reportCards.length }} IP{{ reportCards.length === 1 ? '' : 's' }} returned.
             </div>
           </div>
-          <q-chip outline color="primary" text-color="primary">
-            Span: {{ selectedSpanLabel }}
-          </q-chip>
+          <div class="row items-center q-gutter-sm">
+            <q-chip outline color="primary" text-color="primary">
+              Span: {{ selectedSpanLabel }}
+            </q-chip>
+            <q-btn
+              dense
+              flat
+              round
+              icon="content_copy"
+              color="primary"
+              @click="copyReportCardsHtml"
+            >
+              <q-tooltip>Copy report cards as HTML</q-tooltip>
+            </q-btn>
+          </div>
         </q-card-section>
         <q-separator />
         <q-tabs
@@ -201,6 +213,21 @@
           </q-tab-panel>
 
           <q-tab-panel :name="tabNames.ipAddresses" class="q-px-none">
+            <div class="row items-center justify-between q-mb-sm q-px-md">
+              <div class="text-caption text-grey-7">
+                Copy the unique IP addresses as a simple list.
+              </div>
+              <q-btn
+                dense
+                flat
+                round
+                icon="content_copy"
+                color="primary"
+                @click="copyIpAddressList"
+              >
+                <q-tooltip>Copy IP address list</q-tooltip>
+              </q-btn>
+            </div>
             <q-table
               :rows="ipAddressRows"
               :columns="ipAddressColumns"
@@ -226,6 +253,21 @@
           </q-tab-panel>
 
           <q-tab-panel :name="tabNames.compromisedUsers" class="q-px-none">
+            <div class="row items-center justify-between q-mb-sm q-px-md">
+              <div class="text-caption text-grey-7">
+                Copy the compromised users as a simple list.
+              </div>
+              <q-btn
+                dense
+                flat
+                round
+                icon="content_copy"
+                color="primary"
+                @click="copyCompromisedUserList"
+              >
+                <q-tooltip>Copy user list</q-tooltip>
+              </q-btn>
+            </div>
             <q-table
               :rows="compromisedUserRows"
               :columns="compromisedUserColumns"
@@ -253,6 +295,11 @@
                     </q-icon>
                     <span>{{ props.value || 'Unknown' }}</span>
                   </div>
+                </q-td>
+              </template>
+              <template v-slot:body-cell-ipAddresses="props">
+                <q-td :props="props">
+                  <span class="text-wrap fraud-ip-addresses-cell">{{ props.value || 'Unknown' }}</span>
                 </q-td>
               </template>
               <template v-slot:body-cell-last_reg_timestamp="props">
@@ -291,6 +338,7 @@
 
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
+import { useQuasar } from 'quasar'
 import { tier3info_restful_request } from 'src/plugins/tier3info.js'
 import { usePreferencesStore } from 'src/stores/preferences'
 import { useTitleStore } from 'stores/titleStore'
@@ -301,6 +349,7 @@ const props = defineProps({
 
 const titleStore = useTitleStore()
 titleStore.setMainTitle('Fraud Trace')
+const $q = useQuasar()
 
 const preferencesStore = usePreferencesStore()
 const preferences = preferencesStore.preferences
@@ -355,8 +404,16 @@ const ipAddressColumns = [
 ]
 
 const compromisedUserColumns = [
-  { name: 'ipAddress', label: 'IP Address', field: 'ipAddress', align: 'left', sortable: true },
   ...userColumns,
+  {
+    name: 'ipAddresses',
+    label: 'IP Addresses',
+    field: 'ipAddressesText',
+    align: 'left',
+    sortable: true,
+    classes: 'fraud-ip-addresses-column',
+    style: 'min-width: 280px; max-width: 420px;',
+  },
 ]
 
 const tabNames = {
@@ -395,17 +452,182 @@ const ipAddressRows = computed(() => {
   }, [])
 })
 
-const compromisedUserRows = computed(() =>
-  reportCards.value.flatMap((card) =>
+const compromisedUserRows = computed(() => {
+  const groupedUsers = new Map()
+
+  reportCards.value.forEach((card) => {
+    const ipAddress = String(card.ipAddress || '').trim()
     card.users
       .filter((user) => user.passwordChangeIndicatorColor === 'negative')
-      .map((user, userIndex) => ({
-        ...user,
-        key: `${card.ipAddress}|${user.key || userIndex}|${userIndex}`,
-        ipAddress: card.ipAddress,
-      })),
-  ),
+      .forEach((user, userIndex) => {
+        const userKey = String(user.userLabel || user.key || `user-${userIndex}`).trim()
+        const existing = groupedUsers.get(userKey)
+        if (existing) {
+          if (ipAddress && !existing.ipAddresses.includes(ipAddress)) {
+            existing.ipAddresses.push(ipAddress)
+          }
+          return
+        }
+
+        groupedUsers.set(userKey, {
+          ...user,
+          key: userKey,
+          ipAddresses: ipAddress ? [ipAddress] : [],
+        })
+      })
+  })
+
+  return Array.from(groupedUsers.values()).map((row) => ({
+    ...row,
+    ipAddressesText: row.ipAddresses.join(', '),
+  }))
+})
+
+const ipAddressListText = computed(() => ipAddressRows.value.map((row) => row.ipAddress).join('\n'))
+
+const compromisedUserListText = computed(() =>
+  compromisedUserRows.value.map((row) => row.userLabel || row.key).join('\n'),
 )
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;')
+}
+
+function notifyCopySuccess(message) {
+  $q.notify({ type: 'positive', message })
+}
+
+function notifyCopyFailure(message) {
+  $q.notify({ type: 'warning', message })
+}
+
+async function writeClipboardText(text, successMessage) {
+  try {
+    await navigator.clipboard.writeText(text)
+    notifyCopySuccess(successMessage)
+  } catch (error) {
+    console.error('FraudTracePage: clipboard write failed', error)
+    notifyCopyFailure('Copy failed')
+  }
+}
+
+async function writeClipboardHtml(html, textFallback, successMessage) {
+  try {
+    if (navigator.clipboard?.write && typeof ClipboardItem !== 'undefined') {
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          'text/html': new Blob([html], { type: 'text/html' }),
+          'text/plain': new Blob([textFallback], { type: 'text/plain' }),
+        }),
+      ])
+      notifyCopySuccess(successMessage)
+      return
+    }
+    await writeClipboardText(textFallback, successMessage)
+  } catch (error) {
+    console.error('FraudTracePage: html clipboard write failed', error)
+    await writeClipboardText(textFallback, successMessage)
+  }
+}
+
+function buildReportCardsHtml() {
+  const cardsHtml = reportCards.value
+    .map((card) => {
+      const usersHtml = card.users.length
+        ? `
+          <table style="width:100%; border-collapse:collapse; font-size:12px;">
+            <thead>
+              <tr>
+                <th style="text-align:left; border:1px solid #d0d0d0; padding:6px;">User</th>
+                <th style="text-align:left; border:1px solid #d0d0d0; padding:6px;">Timezone</th>
+                <th style="text-align:left; border:1px solid #d0d0d0; padding:6px;">Password Change</th>
+                <th style="text-align:left; border:1px solid #d0d0d0; padding:6px;">Last 200</th>
+                <th style="text-align:left; border:1px solid #d0d0d0; padding:6px;">Last Reg Timestamp</th>
+                <th style="text-align:left; border:1px solid #d0d0d0; padding:6px;">Last Reg Code</th>
+                <th style="text-align:left; border:1px solid #d0d0d0; padding:6px;">Last Reg Device</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${card.users
+                .map(
+                  (user) => `
+                    <tr>
+                      <td style="border:1px solid #d0d0d0; padding:6px;">${escapeHtml(user.userLabel || 'Unknown')}</td>
+                      <td style="border:1px solid #d0d0d0; padding:6px;">${escapeHtml(user.timezone || 'Unknown')}</td>
+                      <td style="border:1px solid #d0d0d0; padding:6px;">${escapeHtml(user.passwordChangedText || 'Unknown')}</td>
+                      <td style="border:1px solid #d0d0d0; padding:6px;">${escapeHtml(user.last200Text || 'Unknown')}</td>
+                      <td style="border:1px solid #d0d0d0; padding:6px;">${escapeHtml(user.lastRegTimestampText || 'Unknown')}</td>
+                      <td style="border:1px solid #d0d0d0; padding:6px;">${escapeHtml(user.lastRegCode || 'Unknown')}</td>
+                      <td style="border:1px solid #d0d0d0; padding:6px;">${escapeHtml(user.lastRegDevice || 'Unknown')}</td>
+                    </tr>
+                  `,
+                )
+                .join('')}
+            </tbody>
+          </table>`
+        : '<div style="font-size:12px; color:#666;">No registered users found.</div>'
+
+      return `
+        <div style="border:1px solid #d0d0d0; border-radius:8px; padding:12px; margin:0 0 16px 0; font-family:Arial, sans-serif;">
+          <div style="font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:#666;">IP Address</div>
+          <div style="font-size:18px; font-weight:700; margin:4px 0 8px 0;">${escapeHtml(card.ipAddress || 'Unknown')}</div>
+          <div style="margin-bottom:8px;"><strong>Organization:</strong> ${escapeHtml(card.organization || 'Unknown')}</div>
+          <div style="margin-bottom:12px;"><strong>Disposition:</strong> ${escapeHtml(card.disposition || 'Unknown')}</div>
+          ${usersHtml}
+        </div>
+      `
+    })
+    .join('')
+
+  return `<div>${cardsHtml}</div>`
+}
+
+function buildReportCardsPlainText() {
+  return reportCards.value
+    .map((card) => {
+      const usersText = card.users
+        .map(
+          (user) =>
+            [
+              `User: ${user.userLabel || 'Unknown'}`,
+              `Timezone: ${user.timezone || 'Unknown'}`,
+              `Password Change: ${user.passwordChangedText || 'Unknown'}`,
+              `Last 200: ${user.last200Text || 'Unknown'}`,
+              `Last Reg Timestamp: ${user.lastRegTimestampText || 'Unknown'}`,
+              `Last Reg Code: ${user.lastRegCode || 'Unknown'}`,
+              `Last Reg Device: ${user.lastRegDevice || 'Unknown'}`,
+            ].join(' | '),
+        )
+        .join('\n')
+
+      return [
+        `IP Address: ${card.ipAddress || 'Unknown'}`,
+        `Organization: ${card.organization || 'Unknown'}`,
+        `Disposition: ${card.disposition || 'Unknown'}`,
+        usersText ? `Users:\n${usersText}` : 'Users: None',
+      ].join('\n')
+    })
+    .join('\n\n')
+}
+
+async function copyIpAddressList() {
+  await writeClipboardText(ipAddressListText.value, 'Copied IP address list')
+}
+
+async function copyCompromisedUserList() {
+  await writeClipboardText(compromisedUserListText.value, 'Copied user list')
+}
+
+async function copyReportCardsHtml() {
+  const html = buildReportCardsHtml()
+  const textFallback = buildReportCardsPlainText()
+  await writeClipboardHtml(html, textFallback, 'Copied report cards as HTML')
+}
 
 function trimInputString() {
   inputString.value = String(inputString.value || '').trim()
@@ -810,6 +1032,11 @@ watch(
 }
 
 .fraud-device-cell {
+  word-break: break-word;
+  white-space: normal;
+}
+
+.fraud-ip-addresses-cell {
   word-break: break-word;
   white-space: normal;
 }
