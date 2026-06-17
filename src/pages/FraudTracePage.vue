@@ -84,55 +84,158 @@
           </q-chip>
         </q-card-section>
         <q-separator />
-      </q-card>
-
-      <div v-if="reportCards.length" class="q-mt-md column q-gutter-md">
-        <q-card
-          v-for="card in reportCards"
-          :key="card.ipAddress"
-          class="fraud-result-card"
-          :class="`fraud-result-card--${card.tone}`"
+        <q-tabs
+          v-model="activeTab"
+          dense
+          align="left"
+          active-color="primary"
+          indicator-color="primary"
+          class="fraud-result-tabs"
         >
-          <q-card-section class="row items-start justify-between q-gutter-md">
-            <div>
-              <div class="text-overline text-grey-7">IP Address</div>
-              <div class="text-h6">{{ card.ipAddress }}</div>
-              <div class="text-body2 text-grey-8 q-mt-xs">
-                <strong>Organization:</strong> {{ card.organization || 'Unknown' }}
-              </div>
-              <div class="text-body2 text-grey-8">
-                <strong>Disposition:</strong>
-                <q-chip
-                  dense
-                  square
-                  :color="dispositionTone(card.disposition)"
-                  text-color="white"
-                  class="q-ml-xs"
-                >
-                  {{ card.disposition || 'Unknown' }}
-                </q-chip>
-              </div>
-            </div>
-            <div class="row items-center q-gutter-sm">
-              <q-chip outline color="primary" text-color="primary">
-                Users: {{ card.users.length }}
-              </q-chip>
-            </div>
-          </q-card-section>
+          <q-tab :name="tabNames.trace" :label="`Trace (${reportCards.length})`" icon="timeline" />
+          <q-tab
+            :name="tabNames.ipAddresses"
+            :label="`IP addresses (${ipAddressRows.length})`"
+            icon="dns"
+          />
+          <q-tab
+            :name="tabNames.compromisedUsers"
+            :label="`Compromised users (${compromisedUserRows.length})`"
+            icon="person_alert"
+          />
+        </q-tabs>
+        <q-separator />
 
-          <q-separator />
+        <q-tab-panels v-model="activeTab" animated>
+          <q-tab-panel :name="tabNames.trace" class="q-px-none">
+            <div class="column q-gutter-md">
+              <q-card
+                v-for="card in reportCards"
+                :key="card.ipAddress"
+                class="fraud-result-card"
+                :class="`fraud-result-card--${card.tone}`"
+              >
+                <q-card-section class="row items-start justify-between q-gutter-md">
+                  <div>
+                    <div class="text-overline text-grey-7">IP Address</div>
+                    <div class="text-h6">{{ card.ipAddress }}</div>
+                    <div class="text-body2 text-grey-8 q-mt-xs">
+                      <strong>Organization:</strong> {{ card.organization || 'Unknown' }}
+                    </div>
+                    <div class="text-body2 text-grey-8">
+                      <strong>Disposition:</strong>
+                      <q-chip
+                        dense
+                        square
+                        :color="dispositionTone(card.disposition)"
+                        text-color="white"
+                        class="q-ml-xs"
+                      >
+                        {{ card.disposition || 'Unknown' }}
+                      </q-chip>
+                    </div>
+                  </div>
+                  <div class="row items-center q-gutter-sm">
+                    <q-chip outline color="primary" text-color="primary">
+                      Users: {{ card.users.length }}
+                    </q-chip>
+                  </div>
+                </q-card-section>
 
-          <q-card-section>
+                <q-separator />
+
+                <q-card-section>
+                  <q-table
+                    :rows="card.users"
+                    :columns="userColumns"
+                    dense
+                    flat
+                    bordered
+                    hide-bottom
+                    row-key="key"
+                    :pagination="{ rowsPerPage: 0 }"
+                    no-data-label="No registered users found"
+                  >
+                    <template v-slot:body-cell-password_changed="props">
+                      <q-td :props="props">
+                        <div class="row items-center no-wrap q-gutter-xs">
+                          <q-icon
+                            v-if="props.row.passwordChangeIndicatorColor"
+                            name="brightness_1"
+                            :color="props.row.passwordChangeIndicatorColor"
+                            size="10px"
+                            class="fraud-alert-dot"
+                          >
+                            <q-tooltip>
+                              {{ props.row.passwordChangeIndicatorTooltip }}
+                            </q-tooltip>
+                          </q-icon>
+                          <span>{{ props.value || 'Unknown' }}</span>
+                        </div>
+                      </q-td>
+                    </template>
+                    <template v-slot:body-cell-last_reg_timestamp="props">
+                      <q-td :props="props">
+                        <span>{{ props.value || 'Unknown' }}</span>
+                      </q-td>
+                    </template>
+                    <template v-slot:body-cell-last_reg_code="props">
+                      <q-td :props="props">
+                        <span>{{ props.value || 'Unknown' }}</span>
+                      </q-td>
+                    </template>
+                    <template v-slot:body-cell-last_reg_device="props">
+                      <q-td :props="props">
+                        <span class="text-wrap fraud-device-cell">{{ props.value || 'Unknown' }}</span>
+                      </q-td>
+                    </template>
+                    <template v-slot:body-cell="props">
+                      <q-td :props="props">
+                        <span class="text-wrap">{{ props.value || 'Unknown' }}</span>
+                      </q-td>
+                    </template>
+                  </q-table>
+                </q-card-section>
+              </q-card>
+            </div>
+          </q-tab-panel>
+
+          <q-tab-panel :name="tabNames.ipAddresses" class="q-px-none">
             <q-table
-              :rows="card.users"
-              :columns="userColumns"
+              :rows="ipAddressRows"
+              :columns="ipAddressColumns"
               dense
               flat
               bordered
               hide-bottom
               row-key="key"
               :pagination="{ rowsPerPage: 0 }"
-              no-data-label="No registered users found"
+              no-data-label="No unique IP addresses found"
+            >
+              <template v-slot:body-cell-ipAddress="props">
+                <q-td :props="props">
+                  <div class="text-weight-medium">{{ props.value || 'Unknown' }}</div>
+                </q-td>
+              </template>
+              <template v-slot:body-cell-organization="props">
+                <q-td :props="props">
+                  <span class="text-wrap">{{ props.value || 'Unknown' }}</span>
+                </q-td>
+              </template>
+            </q-table>
+          </q-tab-panel>
+
+          <q-tab-panel :name="tabNames.compromisedUsers" class="q-px-none">
+            <q-table
+              :rows="compromisedUserRows"
+              :columns="compromisedUserColumns"
+              dense
+              flat
+              bordered
+              hide-bottom
+              row-key="key"
+              :pagination="{ rowsPerPage: 0 }"
+              no-data-label="No compromised users found"
             >
               <template v-slot:body-cell-password_changed="props">
                 <q-td :props="props">
@@ -173,9 +276,9 @@
                 </q-td>
               </template>
             </q-table>
-          </q-card-section>
-        </q-card>
-      </div>
+          </q-tab-panel>
+        </q-tab-panels>
+      </q-card>
 
       <q-card v-else-if="!isLoading && !statusMessage && !errorMessage" class="q-mt-md">
         <q-card-section class="text-grey-7">
@@ -246,17 +349,63 @@ const userColumns = [
   },
 ]
 
+const ipAddressColumns = [
+  { name: 'ipAddress', label: 'IP Address', field: 'ipAddress', align: 'left', sortable: true },
+  { name: 'organization', label: 'Organization', field: 'organization', align: 'left', sortable: true },
+]
+
+const compromisedUserColumns = [
+  { name: 'ipAddress', label: 'IP Address', field: 'ipAddress', align: 'left', sortable: true },
+  ...userColumns,
+]
+
+const tabNames = {
+  trace: 'trace',
+  ipAddresses: 'ipAddresses',
+  compromisedUsers: 'compromisedUsers',
+}
+
 const inputString = ref('')
 const span = ref(defaultSpan)
 const reportCards = ref([])
 const isLoading = ref(false)
 const statusMessage = ref(null)
 const errorMessage = ref(null)
+const activeTab = ref(tabNames.trace)
 
 const selectedSpanLabel = computed(() => {
   const selectedSpan = span.value || defaultSpan
   return spanOptions.find((option) => option.value === selectedSpan)?.label || selectedSpan
 })
+
+const ipAddressRows = computed(() => {
+  const seen = new Set()
+  return reportCards.value.reduce((rows, card) => {
+    const key = String(card.ipAddress || '').trim()
+    if (!key || seen.has(key)) {
+      return rows
+    }
+    seen.add(key)
+    rows.push({
+      key,
+      ipAddress: card.ipAddress,
+      organization: card.organization || '',
+    })
+    return rows
+  }, [])
+})
+
+const compromisedUserRows = computed(() =>
+  reportCards.value.flatMap((card) =>
+    card.users
+      .filter((user) => user.passwordChangeIndicatorColor === 'negative')
+      .map((user, userIndex) => ({
+        ...user,
+        key: `${card.ipAddress}|${user.key || userIndex}|${userIndex}`,
+        ipAddress: card.ipAddress,
+      })),
+  ),
+)
 
 function trimInputString() {
   inputString.value = String(inputString.value || '').trim()
@@ -272,6 +421,7 @@ function resetForm() {
   reportCards.value = []
   statusMessage.value = null
   errorMessage.value = null
+  activeTab.value = tabNames.trace
 }
 
 function dispositionTone(value) {
@@ -561,6 +711,7 @@ async function runFraudTrace() {
   statusMessage.value = `Running fraud trace for "${inputString.value}"...`
   errorMessage.value = null
   reportCards.value = []
+  activeTab.value = tabNames.trace
 
   try {
     const response = await getFraudTrace(inputString.value, span.value || defaultSpan)
@@ -586,6 +737,7 @@ function hydrateFromQuery(query) {
   const querySpan = String(query?.span || '').trim()
 
   if (queryInput) {
+    activeTab.value = tabNames.trace
     inputString.value = queryInput
   }
   if (querySpan) {

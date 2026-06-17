@@ -4,6 +4,7 @@ import ApiSelectEditPage from 'pages/ApiSelectEditPage.vue'
 import ChangeManagementPage from 'pages/ChangeManagementPage.vue'
 import ApiTableEditPage from 'pages/ApiTableEditPage.vue'
 import ApiSearchTableEditPage from 'pages/ApiSearchTableEditPage.vue'
+import SuggestionSystemPage from 'pages/SuggestionSystemPage.vue'
 import BroadworksAccessDevicesPage from 'pages/BroadworksAccessDevicesPage.vue'
 import BroadworksAccessDeviceChristeningPage from 'pages/BroadworksAccessDeviceChristeningPage.vue'
 import ChristeningDeviceTypesPage from 'pages/ChristeningDeviceTypesPage.vue'
@@ -378,6 +379,15 @@ const routePageMap = {
         { name: 'message', label: 'Message' },
         { name: 'severity', label: 'Severity' },
       ],
+    },
+  },
+  '/suggestions_test21': {
+    page: SuggestionSystemPage,
+    meta: {
+      title: 'Suggestion System',
+      docUrl: 'docs/start.html',
+      endpoint: '/suggestions/',
+      buttons: ['Save', 'Add', 'Delete'],
     },
   },
   '/veinfo/appliances': {

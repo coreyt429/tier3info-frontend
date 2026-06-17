@@ -1,7 +1,8 @@
 <h1>Fraud Trace</h1>
 <p>
   The Fraud Trace page searches by IP address or phone number, applies an Elasticsearch-friendly
-  span, and renders the returned JSON keyed by IP address.
+  span, and renders the returned JSON in tabs for the trace cards, unique IP addresses, and
+  compromised users.
 </p>
 <h2>Inputs</h2>
 <ul>
@@ -10,10 +11,14 @@
 </ul>
 <h2>Endpoint</h2>
 <p><code>/fraud/scope/&lt;ip_address|phone_number&gt;/&lt;span&gt;</code></p>
-<h2>Displayed Fields</h2>
+<h2>Tabs</h2>
 <ul>
-  <li>Organization and disposition for each IP address.</li>
-  <li>Users registered from the IP address.</li>
-  <li>Password change and last 200 timestamps, with a red indicator when last 200 is newer.</li>
-  <li>Last registration timestamp, code, and device.</li>
+  <li><strong>Trace</strong>: the current IP address cards with their user tables.</li>
+  <li>
+    <strong>IP addresses</strong>: one row per unique IP address with its organization.
+  </li>
+  <li>
+    <strong>Compromised users</strong>: rows for users with a red indicator, including the user
+    table fields plus the IP address that produced the match.
+  </li>
 </ul>
