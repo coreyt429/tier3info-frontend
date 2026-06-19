@@ -40,6 +40,19 @@
         </div>
       </q-card-section>
 
+      <q-card-section v-if="showManualApproveAction" class="q-pt-none">
+        <div class="row justify-end">
+          <q-btn
+            color="warning"
+            icon="done"
+            label="Manual Approve"
+            :loading="isManualApproveLoading"
+            :disable="isManualApproveLoading"
+            @click="manualApproveSelectedRecord"
+          />
+        </div>
+      </q-card-section>
+
       <q-separator />
 
       <q-card-section>
@@ -72,6 +85,7 @@ const titleStore = useTitleStore()
 titleStore.setMainTitle(route.meta.title || 'Broadworks Access Device Christening')
 
 const isLoading = ref(false)
+const isManualApproveLoading = ref(false)
 const rows = ref([])
 const selectedRecord = ref(null)
 const pagination = ref({
@@ -153,6 +167,18 @@ const detailFields = computed(() =>
   })),
 )
 
+const showManualApproveAction = computed(() => {
+  const record = selectedRecord.value
+  if (!record) {
+    return false
+  }
+
+  const state = String(record.state || '').toLowerCase()
+  const manualApproval = record.manual_approval === true || record.manual_approval === 'true'
+
+  return state !== 'christened' && !manualApproval && Boolean(record.ip_address) && Boolean(record.mac_address)
+})
+
 const columns = computed(() =>
   allFieldNames.value.map((fieldName) => ({
     name: fieldName,
@@ -195,6 +221,38 @@ function normalizeRecord(record, index) {
 
 function selectRow(row) {
   selectedRecord.value = row
+}
+
+async function manualApproveSelectedRecord() {
+  const record = selectedRecord.value
+  if (!record || isManualApproveLoading.value || !showManualApproveAction.value) {
+    return
+  }
+
+  const ipAddress = String(record.ip_address || '').trim()
+  const macAddress = String(record.mac_address || '').trim()
+  if (!ipAddress || !macAddress) {
+    emit_notification('negative', 'Manual approval requires both IP address and MAC address.')
+    return
+  }
+
+  isManualApproveLoading.value = true
+  try {
+    const response = await tier3info_restful_request({
+      method: 'POST',
+      path: `/broadworks/access_device/christening/queue/${encodeURIComponent(ipAddress)}/${encodeURIComponent(macAddress)}`,
+    })
+
+    if (response?.status >= 200 && response.status < 300) {
+      emit_notification('positive', 'Manual approval submitted.')
+      await fetchQueue()
+      return
+    }
+
+    emit_notification('negative', 'Failed to submit manual approval.')
+  } finally {
+    isManualApproveLoading.value = false
+  }
 }
 
 async function fetchQueue() {
